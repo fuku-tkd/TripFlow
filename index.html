@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>旅行マネージャー - スマート行程表＆タイムライン</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=Inter:wght@300;400;600;800&display=swap');
+  
+  body {
+    font-family: 'Inter', 'BIZ UDGothic', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(circle at top, #0f172a 0%, #020617 100%);
+    color: #f1f5f9;
+    min-height: 100vh;
+  }
+
+  .glass-card {
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.4);
+  }
+
+  /* 横スクロールエリアのスクロールバーを非表示（お洒落で見やすく） */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .neon-glow-indigo { box-shadow: 0 0 12px rgba(99, 102, 241, 0.6); }
+  .premium-input {
+    background: rgba(10, 15, 30, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.25s;
+  }
+  .premium-input:focus {
+    background: rgba(20, 30, 55, 0.9);
+    border-color: #6366f1;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
+  }
+
+  input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(0.85); cursor: pointer; }
+
+  .theme-card-train { border-left: 4px solid #3b82f6; background: linear-gradient(90deg, rgba(59, 130, 246, 0.06) 0%, rgba(15, 23, 42, 0.5) 100%); }
+  .theme-card-bus { border-left: 4px solid #f97316; background: linear-gradient(90deg, rgba(249, 115, 22, 0.06) 0%, rgba(15, 23, 42, 0.5) 100%); }
+  .theme-card-car { border-left: 4px solid #a855f7; background: linear-gradient(90deg, rgba(168, 85, 247, 0.06) 0%, rgba(15, 23, 42, 0.5) 100%); }
+  .theme-card-walk { border-left: 4px solid #14b8a6; background: linear-gradient(90deg, rgba(20, 184, 166, 0.06) 0%, rgba(15, 23, 42, 0.5) 100%); }
+  .theme-card-eat { border-left: 4px solid #f59e0b; background: linear-gradient(90deg, rgba(245, 158, 11, 0.06) 0%, rgba(15, 23, 42, 0.5) 100%); }
+  .theme-card-stay { border-left: 4px solid #10b981; background: linear-gradient(90deg, rgba(16, 185, 129, 0.06) 0%, rgba(15, 23, 42, 0.5) 100%); }
+
+  .screen-hidden { display: none !important; }
+</style>
+</head>
+<body class="pb-12">
+
+  <!-- ヘッダー構造をスマホ最適化：フレックス方向と折り返し制御 -->
+  <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-900 px-4 py-2.5 md:px-8">
+    <div class="max-w-6xl mx-auto flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
+      
+      <!-- 1列目: タイトルロゴ ＆ ユーザー情報/ログインエリア -->
+      <div class="flex items-center justify-between w-full lg:w-auto">
+        <div onclick="goHome()" class="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-all shrink-0">
+          <div class="bg-gradient-to-tr from-indigo-500 to-indigo-600 p-1.5 rounded-lg shadow-lg shadow-indigo-500/20">
+            <i class="fa-solid fa-map-location-dot text-white text-sm"></i>
+          </div>
+          <div>
+            <h1 class="font-extrabold text-sm md:text-base tracking-wider bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">
+              旅行マネージャー
+            </h1>
+            <p id="subHeaderTitle" class="text-[8px] text-slate-400 font-medium tracking-widest uppercase">TRIP MANAGER HOME</p>
+          </div>
+        </div>
+
+        <!-- 右端：プロフィールまたはログインボタン -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <!-- ログイン済みユーザーエリア -->
+          <div id="userInfoArea" class="hidden flex items-center gap-1.5 bg-slate-900/80 border border-slate-800 p-0.5 pr-2.5 rounded-full">
+            <div onclick="openProfileModal()" class="w-5.5 h-5.5 rounded-full bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-[10px] text-white border border-indigo-400/30 cursor-pointer transition-colors" title="プロフィール編集">
+              <i class="fa-solid fa-user text-[9px]"></i>
+            </div>
+            <span id="userName" onclick="openProfileModal()" class="text-[10px] font-bold text-slate-300 max-w-[80px] sm:max-w-[120px] truncate cursor-pointer hover:text-indigo-400 transition-colors">...</span>
+            <button onclick="handleSignOut()" class="text-slate-500 hover:text-rose-400 text-[10px] pl-1" title="ログアウト">
+              <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+          </div>
+
+          <!-- ゲスト・未ログイン時表示エリア -->
+          <div id="guestHeaderArea" class="flex items-center">
+            <button onclick="openAuthModal()" class="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:brightness-110 border border-indigo-500/30 rounded-lg text-[10px] font-bold text-white transition-all">
+              <i class="fa-solid fa-right-to-bracket text-[8px]"></i> <span>ログイン</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2列目: はみ出さない横スクロール対応クイック遷移アクションバー -->
+      <div id="navigationBar" class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar pb-0.5 -mx-4 px-4 lg:mx-0 lg:px-0 lg:pb-0 scroll-smooth shrink-0">
+        <button id="btnBackToHome" onclick="goHome()" class="hidden flex items-center gap-1 px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-[11px] font-bold text-slate-300 transition-all shrink-0">
+          <i class="fa-solid fa-house text-[10px]"></i> <span>ホーム</span>
+        </button>
+        
+        <button id="btnSwitchEdit" onclick="switchToEditView()" class="hidden flex items-center gap-1 px-2.5 py-1.5 bg-pink-950/40 hover:bg-pink-900/60 border border-pink-900/30 rounded-lg text-[11px] font-bold text-pink-400 transition-all shrink-0">
+          <i class="fa-solid fa-pen-to-square text-[10px]"></i> <span>旅程編集</span>
+        </button>
+        
+        <button id="btnSwitchTimeline" onclick="switchToTimelineView()" class="hidden flex items-center gap-1 px-2.5 py-1.5 bg-indigo-950/40 hover:bg-indigo-900/60 border border-indigo-900/30 rounded-lg text-[11px] font-bold text-indigo-300 transition-all shrink-0">
+          <i class="fa-solid fa-route text-[10px]"></i> <span>行程表</span>
+        </button>
+        
+        <button id="btnSwitchNavi" onclick="switchToNaviView()" class="hidden flex items-center gap-1 px-2.5 py-1.5 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-900/30 rounded-lg text-[11px] font-bold text-emerald-400 transition-all shrink-0">
+          <i class="fa-solid fa-location-crosshairs text-[10px]"></i> <span>ナビ画面</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- サンドボックス（お試しモード）警告バナー -->
+  <div id="sandboxBanner" class="bg-gradient-to-r from-amber-600/90 to-amber-700/90 border-b border-amber-500/30 py-2 px-4 text-center hidden">
+    <p class="text-[10px] sm:text-xs font-bold text-white flex items-center justify-center gap-1.5">
+      <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i>
+      <span>お試し稼働中。クラウド保存やアカウント同期にはログインを行ってください。</span>
+    </p>
+  </div>
+
+  <!-- ウェルカム／ポータル画面 (未ログイン時に最初に見せるランディングページ) -->
+  <div id="screen-welcome" class="max-w-5xl mx-auto px-4 mt-6 md:mt-12">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+      <div class="lg:col-span-7 space-y-4 md:space-y-6 text-left">
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-full text-xs font-semibold">
+          <i class="fa-solid fa-sparkles"></i> 次世代のスマート旅行計画ツール
+        </div>
+        <h2 class="text-xl md:text-4xl font-black text-white leading-tight">
+          全ての旅を一元管理。<br>
+          <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">あなただけの旅程タイムライン。</span>
+        </h2>
+        <p class="text-xs md:text-sm text-slate-400 leading-relaxed max-w-xl">
+          「旅行マネージャー」は、電車・バス・車（ドライブ）・徒歩などあらゆる移動手段を網羅した、直感的で美しい旅行スケジュールエディタです。予算自動集計やリアルタイム行程追従機能で、あなたの旅をよりスマートにサポートします。
+        </p>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <div class="glass-card p-3 rounded-xl border border-slate-800 flex gap-3 items-start">
+            <div class="text-indigo-400 text-sm mt-0.5"><i class="fa-solid fa-route"></i></div>
+            <div>
+              <h4 class="text-xs font-bold text-white">スタフ型タイムライン</h4>
+              <p class="text-[11px] text-slate-400">駅やスポットでの滞在、食事、移動経路を1本の線に見やすく美しく集約。</p>
+            </div>
+          </div>
+          <div class="glass-card p-3 rounded-xl border border-slate-800 flex gap-3 items-start">
+            <div class="text-purple-400 text-sm mt-0.5"><i class="fa-solid fa-car"></i></div>
+            <div>
+              <h4 class="text-xs font-bold text-white">多様な移動に対応</h4>
+              <p class="text-[11px] text-slate-400">公共交通機関はもちろん、車移動（レンタカー・マイカー）の計画もバッチリ。</p>
+            </div>
+          </div>
+          <div class="glass-card p-3 rounded-xl border border-slate-800 flex gap-3 items-start">
+            <div class="text-amber-400 text-sm mt-0.5"><i class="fa-solid fa-coins"></i></div>
+            <div>
+              <h4 class="text-xs font-bold text-white">コスト・時間を自動分析</h4>
+              <p class="text-[11px] text-slate-400">移動、滞在、待ち時間の内訳や、旅全体の予算・概算費用を自動で算出。</p>
+            </div>
+          </div>
+          <div class="glass-card p-3 rounded-xl border border-slate-800 flex gap-3 items-start">
+            <div class="text-emerald-400 text-sm mt-0.5"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <div>
+              <h4 class="text-xs font-bold text-white">ライブ追従ナビ＆シミュレータ</h4>
+              <p class="text-[11px] text-slate-400">現在時刻、または任意の擬似時間に合わせて今何をするべきかを自動追従表示。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5 text-center">
+        <div class="glass-card rounded-2xl p-5 md:p-8 border border-slate-800 space-y-6 text-left">
+          <div class="text-center space-y-2">
+            <div class="w-12 h-12 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-xl mx-auto flex items-center justify-center shadow-lg shadow-indigo-500/10">
+              <i class="fa-solid fa-compass text-white text-xl"></i>
+            </div>
+            <h3 class="text-base font-bold text-white pt-1">機能をお試し</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              ログインしなくても、今すぐサンプルデータを使って行程エディタやナビ画面をお試しいただけます！
+            </p>
+          </div>
+
+          <div class="space-y-3 pt-2">
+            <button onclick="launchSandboxDemo()" class="w-full flex items-center justify-center gap-2.5 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-xs font-bold text-white rounded-xl transition-all shadow-md shadow-emerald-500/20 hover:scale-[1.01]">
+              <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+              <span>ログインなしでお試し利用する</span>
+            </button>
+
+            <div class="relative flex py-1 items-center">
+              <div class="flex-grow border-t border-slate-800"></div>
+              <span class="flex-shrink mx-3 text-slate-600 text-[10px] font-bold uppercase tracking-wider">OR</span>
+              <div class="flex-grow border-t border-slate-800"></div>
+            </div>
+
+            <button onclick="openAuthModal()" class="w-full flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs font-bold text-slate-200 rounded-xl transition-all">
+              <i class="fa-solid fa-right-to-bracket"></i>
+              <span>サインイン / 新規登録する</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ログイン専用ポータル・ホーム（マイデータ一覧）画面 -->
+  <div id="screen-home" class="max-w-4xl mx-auto px-4 mt-6 space-y-6 screen-hidden">
+    <div class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4 border border-slate-800">
+      <div class="flex items-center gap-3 text-left w-full sm:w-auto">
+        <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-indigo-400 border border-slate-800 shrink-0">
+          <i class="fa-solid fa-hand-wave text-base"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h2 class="text-sm font-bold text-white truncate"><span id="welcomeUserName" class="text-indigo-400">...</span> さん、お帰りなさい！</h2>
+          <p id="welcomeUserEmail" class="text-[11px] text-slate-500 font-mono truncate">...</p>
+        </div>
+      </div>
+      <button onclick="openProfileModal()" class="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs font-bold text-slate-300 transition-all">
+        <i class="fa-solid fa-user-gear text-indigo-400"></i> <span>プロフィール編集</span>
+      </button>
+    </div>
+
+    <div class="glass-card rounded-2xl p-6 text-center relative overflow-hidden border border-indigo-500/20">
+      <h2 class="text-sm md:text-base font-bold text-white mb-1">新しい旅の行程を計画する</h2>
+      <p class="text-xs text-slate-400 mb-5">スポットベース of タイムライン設計、乗換や経路・費用の自動集計エディタを起動します。</p>
+      <button onclick="startNewTripCreation()" class="inline-flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-xs font-bold text-white rounded-xl transition-all shadow-lg shadow-indigo-500/20 hover:scale-[1.01]">
+        <i class="fa-solid fa-file-circle-plus text-sm"></i>
+        <span>新規の旅程を作成する</span>
+      </button>
+    </div>
+
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-1.5 h-4 bg-indigo-500 rounded-full"></span>
+          <h2 class="text-sm font-bold text-slate-200">登録されている旅程一覧</h2>
+        </div>
+        <span id="globalSyncStatus" class="text-[10px] text-slate-500 font-mono">同期確認中...</span>
+      </div>
+      <div id="dashboardTripList" class="space-y-3">
+        <div class="text-center p-8 text-xs text-slate-500">データを読み込んでいます...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ナビゲーション画面 -->
+  <div id="screen-navi" class="max-w-4xl mx-auto px-3 mt-4 space-y-3 screen-hidden">
+    <div class="glass-card rounded-xl p-3 md:p-4 shadow-lg relative overflow-hidden">
+      <div class="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-800/60">
+        <h2 id="naviDisplayTitle" class="text-sm md:text-base font-bold text-white truncate max-w-[70%]">未選択</h2>
+        <div id="currentTimeBadge" class="px-2.5 py-0.5 bg-slate-800 border border-slate-700 rounded-full text-[11px] text-slate-300 font-mono shrink-0">--:--</div>
+      </div>
+      <div class="overflow-x-auto custom-scrollbar pb-2 pt-1">
+        <div id="line" class="inline-flex items-center min-w-full py-1 px-1"></div>
+      </div>
+    </div>
+
+    <div id="status"></div>
+
+    <div class="glass-card rounded-xl p-3 border border-slate-800/80">
+      <details class="group" open>
+        <summary class="flex justify-between items-center font-semibold text-xs text-slate-400 cursor-pointer select-none">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-indigo-400"></i>
+            <span>デバッグ・時刻シミュレータ</span>
+          </div>
+          <span class="transition-transform duration-200 group-open:rotate-180"><i class="fa-solid fa-chevron-down"></i></span>
+        </summary>
+        <div class="mt-3 pt-3 border-t border-slate-800/60 space-y-2.5">
+          <div class="flex flex-col gap-2">
+            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+              <input type="radio" name="time-mode" value="real" checked onchange="setTimeMode(this.value)" class="w-4 h-4 text-indigo-600 bg-slate-800 border-slate-700">
+              <span>リアルタイム自動追従</span>
+            </label>
+            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+              <input type="radio" name="time-mode" value="custom" onchange="setTimeMode(this.value)" class="w-4 h-4 text-indigo-600 bg-slate-800 border-slate-700">
+              <span>カスタムシミュレート時間を使う</span>
+            </label>
+          </div>
+          <div id="customTimeControls" class="flex flex-wrap items-center gap-2 bg-slate-900/50 p-2 rounded-lg border border-slate-800/80 opacity-50 pointer-events-none transition-opacity">
+            <input type="time" id="customTimeInput" value="12:00" oninput="updateCustomTimeInput(this.value)" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded-md text-xs font-bold text-white">
+            <button onclick="adjustSimulatorTime(-30)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-300 shadow">-30分</button>
+            <button onclick="adjustSimulatorTime(30)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-300 shadow">+30分</button>
+            <span id="simulatorIndicator" class="text-[11px] font-bold text-amber-400 hidden animate-pulse"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>動作模擬中</span>
+          </div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- 行程表タイムライン表示画面 -->
+  <div id="screen-timeline" class="max-w-2xl mx-auto px-4 mt-6 space-y-6 screen-hidden">
+    <div class="glass-card rounded-2xl p-4 flex justify-between items-center border border-slate-800">
+      <div class="min-w-0 pr-2">
+        <h2 id="timelineDisplayTitle" class="text-sm md:text-base font-extrabold text-white truncate">旅の行程表</h2>
+        <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 truncate">全体の行動プランを一覧で俯瞰します。</p>
+      </div>
+      <div class="text-right shrink-0">
+        <span class="text-[9px] sm:text-[10px] text-slate-400 block font-semibold">合計予算</span>
+        <span id="timelineTotalCost" class="text-sm sm:text-base font-black text-amber-400 font-mono">0円</span>
+      </div>
+    </div>
+
+    <div id="timelineContainer" class="space-y-0 relative pl-4 md:pl-8"></div>
+  </div>
+
+  <!-- 行程エディタ画面 -->
+  <div id="screen-edit" class="max-w-6xl mx-auto px-4 mt-6 space-y-6 screen-hidden">
+    <div class="glass-card rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3 w-full md:w-auto">
+        <div class="relative flex h-3.5 w-3.5 shrink-0">
+          <span id="cloudStatusPulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span id="cloudStatusDot" class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
+        </div>
+        <div class="min-w-0">
+          <span class="text-[9px] text-slate-400 block font-semibold leading-none mb-1">エディタ接続コンテキスト</span>
+          <span id="editorStatusText" class="text-xs text-slate-300 font-bold truncate block">新規作成モード</span>
+        </div>
+      </div>
+      <button id="btnSaveCloud" onclick="saveCurrentTripToCloud()" class="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 text-xs font-bold text-white rounded-xl transition-all hover:brightness-110 shadow-md shadow-rose-500/10">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <span>クラウドへ保存・上書きする</span>
+      </button>
+    </div>
+
+    <div class="glass-card rounded-2xl p-4 relative overflow-hidden">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="w-1.5 h-3.5 bg-indigo-500 rounded-full"></span>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">旅行タイトル</h2>
+      </div>
+      <input type="text" id="tripTitle" class="w-full text-sm sm:text-base font-bold px-4 py-2.5 rounded-xl premium-input text-white placeholder-slate-500" placeholder="例: 北海道グルメ＆絶景ドライブの旅">
+    </div>
+
+    <div class="glass-card rounded-2xl p-4 md:p-6 space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800/80">
+        <div class="flex items-center gap-2">
+          <span class="w-1.5 h-3.5 bg-indigo-500 rounded-full"></span>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">行動プランの構成・編集</h2>
+        </div>
+      </div>
+      <div id="editorRowsContainer" class="space-y-4"></div>
+      <div class="flex flex-wrap items-center gap-3 pt-2">
+        <button onclick="addNewEditorRow()" class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-200 transition-all">
+          <i class="fa-solid fa-plus text-indigo-400"></i> <span>行動を追加</span>
+        </button>
+        <button onclick="sortEditorRowsByTime()" class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-xl text-xs font-bold text-indigo-300 transition-all">
+          <i class="fa-solid fa-arrow-down-1-9"></i> <span>🕒 自動整列</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
+      <h2 class="text-xs font-bold text-slate-300 uppercase"><i class="fa-regular fa-clock text-indigo-400 mr-1"></i>旅程の自動集計分析</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="bg-slate-900/40 border border-slate-800/80 p-3 rounded-xl">
+          <span class="text-[9px] text-slate-400 block mb-0.5">総時間</span>
+          <span class="text-xs sm:text-sm font-extrabold text-indigo-400" id="totalDuration">-</span>
+        </div>
+        <div class="bg-slate-900/40 border border-slate-800/80 p-3 rounded-xl">
+          <span class="text-[9px] text-slate-400 block mb-0.5">移動時間</span>
+          <span class="text-xs sm:text-sm font-extrabold text-sky-400" id="moveTime">0分</span>
+        </div>
+        <div class="bg-slate-900/40 border border-slate-800/80 p-3 rounded-xl">
+          <span class="text-[9px] text-slate-400 block mb-0.5">滞在・観光時間</span>
+          <span class="text-xs sm:text-sm font-extrabold text-emerald-400" id="stayTime">0分</span>
+        </div>
+        <div class="bg-slate-900/40 border border-slate-800/80 p-3 rounded-xl">
+          <span class="text-[9px] text-slate-400 block mb-0.5">のりかえ・待ち時間</span>
+          <span class="text-xs sm:text-sm font-extrabold text-teal-400" id="transferTime">0分</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card rounded-2xl p-4">
+      <h2 class="text-xs font-bold text-slate-300 mb-3 uppercase"><i class="fa-solid fa-route text-indigo-400 mr-1"></i>リアルタイム行程ルートプレビュー</h2>
+      <!-- エディタ行程プレビューコンテナ（駅・スポット基準） -->
+      <div id="editorTimelinePreview" class="relative py-2"></div>
+    </div>
+  </div>
+
+  <!-- 認証用モーダル (ログイン / アカウント作成) -->
+  <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+    <div class="glass-card rounded-2xl w-full max-w-sm p-6 border border-slate-800 space-y-4 text-left">
+      <div class="flex items-center justify-between border-b border-slate-900 pb-2">
+        <h3 id="authFormTitle" class="text-sm font-bold text-white">アカウントにサインイン</h3>
+        <button onclick="closeAuthModal()" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p id="authFormDesc" class="text-[11px] text-slate-400 leading-relaxed">
+        旅程をクラウド保存・同期するために認証を行ってください。
+      </p>
+
+      <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+        <div id="authDisplayNameField" class="hidden">
+          <label class="block text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">お名前 / 表示名</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-signature text-xs"></i></span>
+            <input type="text" id="authDisplayName" class="w-full pl-9 pr-4 py-2 rounded-xl premium-input text-xs text-white placeholder-slate-600 font-medium" placeholder="例: 旅先太郎">
+          </div>
+        </div>
+
+        <div>
+          <label id="authEmailLabel" class="block text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">独自ID または メール</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-envelope text-xs"></i></span>
+            <input type="text" id="authEmailOrUser" required class="w-full pl-9 pr-4 py-2 rounded-xl premium-input text-xs text-white placeholder-slate-600 font-medium" placeholder="任意のIDまたはメール">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">パスワード (6文字以上)</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-lock text-xs"></i></span>
+            <input type="password" id="authPassword" required class="w-full pl-9 pr-4 py-2 rounded-xl premium-input text-xs text-white font-mono tracking-widest" placeholder="••••••••">
+          </div>
+        </div>
+
+        <button type="submit" id="btnAuthSubmit" class="w-full flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-xs font-bold text-white rounded-xl transition-all shadow-md shadow-indigo-500/10">
+          <span>ログインする</span> <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
+        </button>
+      </form>
+
+      <div class="text-center pt-2 border-t border-slate-900">
+        <button id="btnToggleAuthMode" onclick="toggleAuthMode()" class="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+          新規アカウントを作成する（サインアップ）
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- プロフィールモーダル -->
+  <div id="profileModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+    <div class="glass-card rounded-2xl w-full max-w-sm p-6 border border-slate-800 space-y-4 text-left">
+      <div class="flex items-center justify-between border-b border-slate-900 pb-2">
+        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-user-gear text-indigo-400 mr-1"></i>プロフィール設定編集</h3>
+        <button onclick="closeProfileModal()" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">新しいお名前 (表示名)</label>
+          <input type="text" id="profileDisplayName" class="w-full px-3 py-2 rounded-xl premium-input text-xs text-white">
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">新しいパスワードに変更 (任意)</label>
+          <input type="password" id="profileNewPassword" class="w-full px-3 py-2 rounded-xl premium-input text-xs text-white font-mono tracking-widest" placeholder="変更しない場合は空欄">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-900">
+        <button onclick="closeProfileModal()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 rounded-xl transition-all">キャンセル</button>
+        <button onclick="handleUpdateProfileSubmit()" class="px-4 py-1.5 bg-gradient-to-r from-indigo-500 to-blue-600 text-xs font-bold text-white rounded-xl transition-all shadow-md shadow-indigo-500/10">更新を保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- カスタム確認ダイアログ -->
+  <div id="confirmDialog" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+    <div class="glass-card rounded-2xl w-full max-w-sm p-5 border border-slate-800">
+      <h4 id="confirmTitle" class="text-sm font-bold text-white mb-1">確認</h4>
+      <p id="confirmDesc" class="text-xs text-slate-400 mb-5">メッセージ</p>
+      <div class="flex justify-end gap-2">
+        <button id="btnConfirmCancel" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 rounded-xl transition-all">キャンセル</button>
+        <button id="btnConfirmOk" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white rounded-xl transition-all">実行する</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDxL4FFosUkypjh3_c3NdordYG4RJekIgc",
+    authDomain: "noritetsu-navi.firebaseapp.com",
+    projectId: "noritetsu-navi",
+    storageBucket: "noritetsu-navi.firebasestorage.app",
+    messagingSenderId: "812530924307",
+    appId: "1:812530924307:web:ebd99b66ae7a37a66a38e6",
+    measurementId: "G-TVDGYFQGRS"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let currentUser = null;      
+let allTripsCache = [];      
+let currentTripId = null;    
+let currentTripData = [];    
+let isCustomTimeMode = false;
+let customTimeMinutes = 720; 
+let editingTripIsSample = false; 
+let isSandboxMode = false;
+let authMode = 'login';
+
+// サンドボックス(お試し用)北海道観光サンプルデータ
+const sandboxSampleTrip = [
+  { type: "train", from: "新函館北斗駅", to: "函館駅", line: "JR快速はこだてライナー", start: "10:00", end: "10:20", cost: "440" },
+  { type: "eat", place: "函館朝市どんぶり横丁", memo: "ウニ・いくらなど贅沢海鮮丼のランチ", start: "10:30", end: "11:30", cost: "2800" },
+  { type: "stay", place: "函館金森赤レンガ倉庫", memo: "ベイエリアを潮風を感じながら散策。お土産購入", start: "11:40", end: "12:50", cost: "0" },
+  { type: "car", from: "函館駅前レンタカー店", to: "五稜郭公園", line: "函館市内ドライブルート", start: "13:00", end: "13:20", cost: "1500" },
+  { type: "stay", place: "五稜郭タワー", memo: "星型城郭を展望台から見下ろす。歴史解説展示の見学", start: "13:20", end: "14:40", cost: "1000" },
+  { type: "bus", from: "五稜郭タワー前", to: "湯の川温泉", line: "函館バス 系統6系統", start: "15:00", end: "15:30", cost: "300" },
+  { type: "stay", place: "湯の川温泉（老舗旅館）", memo: "チェックイン。露天風呂にて名湯を堪能、会席料理の夕食", start: "16:00", end: "21:00", cost: "18000" }
+];
+
+function resolveEmailFormat(input) {
+  const trimmed = input.trim();
+  return trimmed.includes('@') ? trimmed : `${trimmed.toLowerCase()}@internal.app`;
+}
+
+// 認証モーダル開閉
+window.openAuthModal = function() {
+  authMode = 'login';
+  syncAuthFormUI();
+  document.getElementById('authModal').classList.remove('opacity-0', 'pointer-events-none');
+}
+
+window.closeAuthModal = function() {
+  document.getElementById('authModal').classList.add('opacity-0', 'pointer-events-none');
+}
+
+window.toggleAuthMode = function() {
+  authMode = (authMode === 'login') ? 'signup' : 'login';
+  syncAuthFormUI();
+}
+
+function syncAuthFormUI() {
+  const title = document.getElementById('authFormTitle');
+  const desc = document.getElementById('authFormDesc');
+  const submitBtn = document.getElementById('btnAuthSubmit');
+  const toggleBtn = document.getElementById('btnToggleAuthMode');
+  const nameField = document.getElementById('authDisplayNameField');
+  const emailLabel = document.getElementById('authEmailLabel');
+  
+  if (authMode === 'signup') {
+    title.textContent = "新規アカウントを作成";
+    desc.textContent = "メールアドレスまたは独自ID、表示名、パスワードを設定して登録してください。";
+    submitBtn.innerHTML = `<span>新規登録する</span> <i class="fa-solid fa-user-plus text-xs"></i>`;
+    toggleBtn.textContent = "既にアカウントをお持ちの方（サインイン）";
+    nameField.classList.remove('hidden');
+    document.getElementById('authDisplayName').required = true;
+    emailLabel.textContent = "メールアドレス または 登録用独自ID";
+  } else {
+    title.textContent = "アカウントにサインイン";
+    desc.textContent = "旅程をクラウド保存・同期するために認証を行ってください。";
+    submitBtn.innerHTML = `<span>ログインする</span> <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>`;
+    toggleBtn.textContent = "新規アカウントを作成する（サインアップ）";
+    nameField.classList.add('hidden');
+    document.getElementById('authDisplayName').required = false;
+    emailLabel.textContent = "メールアドレス または 独自ID";
+  }
+}
+
+window.handleAuthSubmit = async function(event) {
+  event.preventDefault();
+  const emailOrUser = document.getElementById('authEmailOrUser').value;
+  const password = document.getElementById('authPassword').value;
+  const displayName = document.getElementById('authDisplayName').value.trim();
+  
+  if (password.length < 6) {
+    showToast("⚠️ パスワードは6文字以上で入力してください", "error");
+    return;
+  }
+  const finalEmail = resolveEmailFormat(emailOrUser);
+  try {
+    if (authMode === 'login') {
+      await signInWithEmailAndPassword(auth, finalEmail, password);
+      showToast("👋 ログインに成功しました！", "success");
+    } else {
+      const userCredential = await createUserWithEmailAndPassword(auth, finalEmail, password);
+      if (displayName) await updateProfile(userCredential.user, { displayName: displayName });
+      showToast("🎉 アカウントを作成し、ログインしました！", "success");
+    }
+    document.getElementById('authForm').reset();
+    closeAuthModal();
+  } catch (error) {
+    console.error(error);
+    let errorMsg = "認証に失敗しました。";
+    if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+      errorMsg = "IDまたはパスワードが正しくありません。";
+    } else if (error.code === 'auth/email-already-in-use') {
+      errorMsg = "このID/メールアドレスは既に登録されています。";
+    }
+    showToast(`⚠️ ${errorMsg}`, "error");
+  }
+}
+
+window.handleSignOut = async function() {
+  if (!await showConfirm("ログアウト", "ログアウトしてもよろしいですか？")) return;
+  try {
+    await signOut(auth);
+    isSandboxMode = false;
+    document.getElementById('sandboxBanner').classList.add('hidden');
+    showToast("🔒 ログアウトしました", "success");
+  } catch (error) {
+    showToast("ログアウト失敗", "error");
+  }
+}
+
+window.openProfileModal = function() {
+  if(!currentUser) return;
+  document.getElementById('profileDisplayName').value = currentUser.displayName || "";
+  document.getElementById('profileNewPassword').value = "";
+  document.getElementById('profileModal').classList.remove('opacity-0', 'pointer-events-none');
+}
+
+window.closeProfileModal = function() {
+  document.getElementById('profileModal').classList.add('opacity-0', 'pointer-events-none');
+}
+
+window.handleUpdateProfileSubmit = async function() {
+  if (!currentUser) return;
+  const newName = document.getElementById('profileDisplayName').value.trim();
+  const newPassword = document.getElementById('profileNewPassword').value;
+
+  if(!newName) {
+    showToast("⚠️ お名前を入力してください", "error");
+    return;
+  }
+  try {
+    await updateProfile(currentUser, { displayName: newName });
+    if(newPassword) {
+      if(newPassword.length < 6) {
+        showToast("⚠️ 新しいパスワードは6文字以上必要です", "error");
+        return;
+      }
+      await updatePassword(currentUser, newPassword);
+    }
+    showToast("👤 プロフィール設定を更新しました！", "success");
+    syncUserInterfaceElements(currentUser);
+    closeProfileModal();
+  } catch (e) {
+    if(e.code === "auth/requires-recent-login") {
+      showToast("⚠️ セキュリティ保護のため、再ログイン後に変更してください。", "error");
+    } else {
+      showToast("更新失敗: " + e.message, "error");
+    }
+  }
+}
+
+function syncUserInterfaceElements(user) {
+  const nameToDisplay = user.displayName || (user.email ? user.email.split('@')[0] : 'ユーザー');
+  document.getElementById('userName').textContent = nameToDisplay;
+  document.getElementById('welcomeUserName').textContent = nameToDisplay;
+  document.getElementById('welcomeUserEmail').textContent = user.email || "";
+}
+
+// 認証ステート監視
+onAuthStateChanged(auth, (user) => {
+  const welcomeScreen = document.getElementById('screen-welcome');
+  const userInfoArea = document.getElementById('userInfoArea');
+  const guestHeaderArea = document.getElementById('guestHeaderArea');
+  
+  if (user) {
+    currentUser = user;
+    isSandboxMode = false;
+    document.getElementById('sandboxBanner').classList.add('hidden');
+    welcomeScreen.classList.add('screen-hidden');
+    userInfoArea.classList.remove('hidden');
+    guestHeaderArea.classList.add('hidden');
+    syncUserInterfaceElements(user);
+    showScreen('home'); 
+  } else {
+    currentUser = null;
+    userInfoArea.classList.add('hidden');
+    guestHeaderArea.classList.remove('hidden');
+    
+    if (isSandboxMode) {
+      document.getElementById('sandboxBanner').classList.remove('hidden');
+      welcomeScreen.classList.add('screen-hidden');
+    } else {
+      document.getElementById('sandboxBanner').classList.add('hidden');
+      hideAllScreens();
+      welcomeScreen.classList.remove('screen-hidden');
+      document.getElementById('subHeaderTitle').textContent = "TRIP MANAGER";
+    }
+  }
+});
+
+// お試し（Sandbox）デモモード起動
+window.launchSandboxDemo = function() {
+  isSandboxMode = true;
+  document.getElementById('sandboxBanner').classList.remove('hidden');
+  document.getElementById('screen-welcome').classList.add('screen-hidden');
+  
+  currentTripId = "sandbox-demo-trip-id";
+  currentTripData = JSON.parse(JSON.stringify(sandboxSampleTrip));
+  editingTripIsSample = true;
+  
+  showToast("🚀 お試しモードを起動しました！", "success");
+  
+  document.getElementById('tripTitle').value = "【お試し】函館・湯の川温泉満喫プラン";
+  document.getElementById('editorStatusText').textContent = "お試し（Sandbox）デモモード";
+  showScreen('edit');
+}
+
+function hideAllScreens() {
+  document.getElementById('screen-home').classList.add('screen-hidden');
+  document.getElementById('screen-navi').classList.add('screen-hidden');
+  document.getElementById('screen-timeline').classList.add('screen-hidden');
+  document.getElementById('screen-edit').classList.add('screen-hidden');
+  document.getElementById('btnBackToHome').classList.add('hidden');
+  document.getElementById('btnSwitchTimeline').classList.add('hidden');
+  document.getElementById('btnSwitchNavi').classList.add('hidden');
+  document.getElementById('btnSwitchEdit').classList.add('hidden');
+}
+
+window.goHome = function() {
+  if (currentUser) {
+    showScreen('home');
+  } else if (isSandboxMode) {
+    showConfirm("デモを終了", "ホーム画面に戻り、お試しデモデータをリセットしますか？").then((ok) => {
+      if(ok) {
+        isSandboxMode = false;
+        document.getElementById('sandboxBanner').classList.add('hidden');
+        hideAllScreens();
+        document.getElementById('screen-welcome').classList.remove('screen-hidden');
+        document.getElementById('subHeaderTitle').textContent = "TRIP MANAGER";
+      }
+    });
+  } else {
+    hideAllScreens();
+    document.getElementById('screen-welcome').classList.remove('screen-hidden');
+  }
+}
+
+window.showScreen = function(screenName) {
+  if (!currentUser && !isSandboxMode && screenName !== 'home') {
+    goHome();
+    return;
+  }
+
+  hideAllScreens();
+  const subHeader = document.getElementById('subHeaderTitle');
+
+  if (screenName === 'home') {
+    if (!currentUser) {
+      goHome();
+      return;
+    }
+    document.getElementById('screen-home').classList.remove('screen-hidden');
+    subHeader.textContent = "TRIP MANAGER HOME";
+    loadDashboardTrips(); 
+  } else {
+    document.getElementById('btnBackToHome').classList.remove('hidden');
+    
+    // アクションメニュー群の出し分け
+    if (currentTripData && currentTripData.length > 0) {
+      if (screenName === 'navi') {
+        document.getElementById('btnSwitchTimeline').classList.remove('hidden');
+        document.getElementById('btnSwitchEdit').classList.remove('hidden');
+      } else if (screenName === 'timeline') {
+        document.getElementById('btnSwitchNavi').classList.remove('hidden');
+        document.getElementById('btnSwitchEdit').classList.remove('hidden');
+      } else if (screenName === 'edit') {
+        document.getElementById('btnSwitchTimeline').classList.remove('hidden');
+        document.getElementById('btnSwitchNavi').classList.remove('hidden');
+      }
+    }
+    
+    if (screenName === 'navi') {
+      document.getElementById('screen-navi').classList.remove('screen-hidden');
+      subHeader.textContent = "LIVE NAVIGATION";
+      updateNaviView();
+    } else if (screenName === 'timeline') {
+      document.getElementById('screen-timeline').classList.remove('screen-hidden');
+      subHeader.textContent = "TRIP TIMELINE BROWSER";
+      renderTripTimelineView();
+    } else if (screenName === 'edit') {
+      document.getElementById('screen-edit').classList.remove('screen-hidden');
+      subHeader.textContent = "TRIP TIMELINE EDITOR";
+      renderEditorRows();
+    }
+  }
+}
+
+window.switchToTimelineView = function() { showScreen('timeline'); }
+window.switchToNaviView = function() { showScreen('navi'); }
+window.switchToEditView = function() { showScreen('edit'); }
+
+async function loadDashboardTrips() {
+  if (!currentUser) return;
+  const container = document.getElementById('dashboardTripList');
+  const syncStatus = document.getElementById('globalSyncStatus');
+  container.innerHTML = `<div class="text-center p-8 text-xs text-slate-500 font-mono animate-pulse">同期データをロード中...</div>`;
+  try {
+    allTripsCache = [];
+    const userQuery = query(collection(db, "trips"), where("userId", "==", currentUser.uid));
+    const userSnapshot = await getDocs(userQuery);
+    userSnapshot.forEach((docSnap) => {
+      allTripsCache.push({ id: docSnap.id, title: docSnap.data().title || docSnap.id, trip: docSnap.data().trip || [], isSample: false });
+    });
+    const sampleQuery = query(collection(db, "trips"), where("userId", "==", "sample"));
+    const sampleSnapshot = await getDocs(sampleQuery);
+    sampleSnapshot.forEach((docSnap) => {
+      allTripsCache.push({ id: docSnap.id, title: docSnap.data().title || docSnap.id, trip: docSnap.data().trip || [], isSample: true });
+    });
+    allTripsCache.sort((a, b) => (b.isSample ? 1 : 0) - (a.isSample ? 1 : 0));
+    container.innerHTML = "";
+    if (allTripsCache.length === 0) {
+      container.innerHTML = `<div class="text-center p-8 glass-card rounded-xl text-xs text-slate-500">計画データがありません。新規作成してください。</div>`;
+      syncStatus.textContent = "同期完了";
+      return;
+    }
+    allTripsCache.forEach(item => {
+      const card = document.createElement('div');
+      card.className = "glass-card rounded-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-slate-800/40 hover:border-slate-700/60 transition-all";
+      const badge = item.isSample ? `<span class="px-2 py-0.5 bg-amber-500/10 border border-amber-500/30 rounded text-[10px] text-amber-400 font-bold">サンプル</span>` : `<span class="px-2 py-0.5 bg-indigo-500/10 border border-indigo-500/30 rounded text-[10px] text-indigo-400 font-bold">マイデータ</span>`;
+      card.innerHTML = `
+        <div class="space-y-1 flex-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            ${badge} <h3 class="text-sm font-bold text-white">${item.title}</h3>
+          </div>
+          <p class="text-[11px] text-slate-400 font-mono">${item.trip.length} 行動ステップ</p>
+        </div>
+        <div class="flex items-center gap-2 w-full md:w-auto pt-2 md:pt-0 border-t border-slate-800/60 md:border-none justify-end">
+          <button onclick="launchNavi('${item.id}')" class="flex items-center justify-center gap-1 px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600 text-[11px] font-bold text-emerald-400 hover:text-white border border-emerald-500/30 rounded-xl transition-all"><i class="fa-solid fa-location-crosshairs"></i> <span>ナビ開始</span></button>
+          <button onclick="launchTimelineOnly('${item.id}')" class="flex items-center justify-center gap-1 px-3 py-2 bg-indigo-600/20 hover:bg-indigo-600 text-[11px] font-bold text-indigo-400 hover:text-white border border-indigo-500/30 rounded-xl transition-all"><i class="fa-solid fa-route"></i> <span>行程表</span></button>
+          <button onclick="launchEditor('${item.id}')" class="flex items-center justify-center gap-1 px-2.5 py-2 bg-slate-800 hover:bg-slate-700 text-[11px] font-bold text-slate-300 border border-slate-700 rounded-xl transition-all"><i class="fa-solid fa-pen-to-square"></i></button>
+          ${item.isSample ? '' : `<button onclick="deleteTripClick('${item.id}', '${item.title}')" class="p-2 bg-slate-900 hover:bg-rose-600/20 text-slate-500 hover:text-rose-400 rounded-xl border border-slate-800 transition-all"><i class="fa-solid fa-trash-can text-xs"></i></button>`}
+        </div>
+      `;
+      container.appendChild(card);
+    });
+    syncStatus.textContent = "同期完了";
+  } catch (err) {
+    syncStatus.textContent = "同期失敗";
+    container.innerHTML = `<div class="text-center p-8 text-xs text-rose-400">データの読み込みに失敗しました。</div>`;
+  }
+}
+
+window.launchNavi = function(id) {
+  const found = allTripsCache.find(x => x.id === id); if (!found) return;
+  currentTripId = id; currentTripData = JSON.parse(JSON.stringify(found.trip));
+  document.getElementById('naviDisplayTitle').textContent = found.title;
+  showScreen('navi');
+}
+window.launchTimelineOnly = function(id) {
+  const found = allTripsCache.find(x => x.id === id); if (!found) return;
+  currentTripId = id; currentTripData = JSON.parse(JSON.stringify(found.trip));
+  document.getElementById('timelineDisplayTitle').textContent = found.title;
+  showScreen('timeline');
+}
+window.launchEditor = function(id) {
+  const found = allTripsCache.find(x => x.id === id); if (!found) return;
+  currentTripData = JSON.parse(JSON.stringify(found.trip));
+  editingTripIsSample = found.isSample;
+  if (found.isSample) {
+    currentTripId = "trip_" + Date.now(); document.getElementById('tripTitle').value = found.title + " (コピー)";
+    document.getElementById('editorStatusText').textContent = "サンプルから新規コピー作成モード";
+  } else {
+    currentTripId = id; document.getElementById('tripTitle').value = found.title;
+    document.getElementById('editorStatusText').textContent = `マイデータ編集モード (ID: ${id})`;
+  }
+  showScreen('edit');
+}
+window.startNewTripCreation = function() {
+  currentTripId = "trip_" + Date.now(); currentTripData = []; editingTripIsSample = false;
+  document.getElementById('tripTitle').value = ""; document.getElementById('editorStatusText').textContent = "新規作成モード";
+  showScreen('edit');
+}
+window.deleteTripClick = async function(id, title) {
+  if (!await showConfirm("旅程の削除確認", `『${title}』をクラウドから完全に削除しますか？`)) return;
+  try {
+    await deleteDoc(doc(db, "trips", id)); showToast("🗑️ 旅程を削除しました", "success"); loadDashboardTrips();
+  } catch(e) { showToast("削除失敗: " + e.message, "error"); }
+}
+
+function parseTimeStr(v) { if(!v) return 0; const [h,m] = v.split(":").map(Number); return h * 60 + m; }
+function formatMinutesStr(min) { const h = Math.floor(min / 60) % 24; const m = min % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; }
+function getNaviNow() { return isCustomTimeMode ? customTimeMinutes : (new Date().getHours() * 60 + new Date().getMinutes()); }
+function getTripStartTime() { return currentTripData.length ? Math.min(...currentTripData.map(x => parseTimeStr(x.start))) : 0; }
+function getTripEndTime() { return currentTripData.length ? Math.max(...currentTripData.map(x => parseTimeStr(x.end))) : 0; }
+
+function isMoveType(type) {
+  return type === "train" || type === "bus" || type === "car" || type === "walk";
+}
+
+/* ==========================================
+   🌟 【バグ修正】ナビゲーション用の駅・接続点リスト作成ロジック
+========================================== */
+function buildNaviStations() {
+  if (currentTripData.length === 0) return [];
+  
+  const sortedSteps = [...currentTripData].sort((a, b) => parseTimeStr(a.start) - parseTimeStr(b.start));
+  const st = [];
+  
+  sortedSteps.forEach((x) => {
+    if (isMoveType(x.type)) {
+      if (x.from && x.from.trim() !== "") {
+        if (st.length === 0 || st[st.length - 1] !== x.from) {
+          st.push(x.from);
+        }
+      }
+      if (x.to && x.to.trim() !== "") {
+        if (st.length === 0 || st[st.length - 1] !== x.to) {
+          st.push(x.to);
+        }
+      }
+    } else {
+      if (x.place && x.place.trim() !== "") {
+        if (st.length === 0 || st[st.length - 1] !== x.place) {
+          st.push(x.place);
+        }
+      }
+    }
+  });
+  
+  return st.filter(Boolean);
+}
+
+function getMoveEvent(n) {
+  return currentTripData.find(x => isMoveType(x.type) && n >= parseTimeStr(x.start) && n < parseTimeStr(x.end)) || null;
+}
+
+function getActiveStationOrPlace(n) {
+  if (currentTripData.length === 0) return null;
+  if (getMoveEvent(n)) return null; 
+  const stayOrEat = currentTripData.find(x => (x.type==="stay"||x.type==="eat") && n >= parseTimeStr(x.start) && n < parseTimeStr(x.end));
+  if (stayOrEat) return stayOrEat.place;
+  let prevMove = null, nextMove = null;
+  for (const x of currentTripData) {
+    if (isMoveType(x.type)) {
+      if (parseTimeStr(x.end) <= n) { if(!prevMove || parseTimeStr(x.end) > parseTimeStr(prevMove.end)) prevMove = x; }
+      if (parseTimeStr(x.start) > n) { if(!nextMove || parseTimeStr(x.start) < parseTimeStr(nextMove.start)) nextMove = x; }
+    }
+  }
+  if (n < getTripStartTime() || n >= getTripEndTime()) return null;
+  return prevMove ? prevMove.to : (nextMove ? nextMove.from : null);
+}
+
+function updateNaviView() {
+  const n = getNaviNow();
+  document.getElementById('currentTimeBadge').textContent = formatMinutesStr(n);
+  const lineCont = document.getElementById('line');
+  const statusCont = document.getElementById('status');
+  if (currentTripData.length === 0) {
+    lineCont.innerHTML = `<span class="text-xs text-slate-500">行程データが空です。</span>`; statusCont.innerHTML = ""; return;
+  }
+  const stations = buildNaviStations(); const activePlace = getActiveStationOrPlace(n); const currentMove = getMoveEvent(n);
+  let html = "";
+  stations.forEach((stName, idx) => {
+    const isActive = (stName === activePlace);
+    const bgClass = isActive ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white font-bold neon-glow-indigo' : 'bg-slate-900 text-slate-300 border border-slate-800';
+    html += `<div class="station-node flex items-center shrink-0" data-station-name="${stName}" data-active="${isActive}"><div class="px-3 py-1 rounded-lg text-xs tracking-wide ${bgClass}">${stName}</div></div>`;
+    if (idx < stations.length - 1) {
+      let lineBg = "bg-slate-800"; let iconHtml = `<div class="w-2 h-2 rounded-full bg-slate-700"></div>`; let isActiveLine = false;
+      if (currentMove) {
+        if (currentMove.from === stName && currentMove.to === stations[idx + 1]) {
+          lineBg = "bg-gradient-to-r from-indigo-500 to-emerald-500";
+          let mIcon = currentMove.type==="bus"?"fa-bus":(currentMove.type==="walk"?"fa-person-walking":(currentMove.type==="car"?"fa-car":"fa-train"));
+          let mColor = currentMove.type==="car"?"text-purple-400":"text-emerald-400";
+          iconHtml = `<i class="fa-solid ${mIcon} text-xs ${mColor} animate-bounce"></i>`; isActiveLine = true;
+        }
+      }
+      html += `<div class="w-12 h-1 ${lineBg} mx-1 flex items-center justify-center shrink-0 relative" data-active-line="${isActiveLine}">${iconHtml}</div>`;
+    }
+  });
+  lineCont.innerHTML = html;
+  setTimeout(() => {
+    let targetEl = lineCont.querySelector('[data-active="true"]') || lineCont.querySelector('[data-active-line="true"]');
+    if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, 50);
+
+  let statusHtml = "";
+  if (n < getTripStartTime()) {
+    statusHtml = `<div class="glass-card rounded-xl p-4 border border-indigo-500/20 text-center"><span class="text-[10px] uppercase font-bold tracking-widest text-indigo-400 block mb-1">📋 出発準備中</span><h3 class="text-sm font-bold text-white">旅程の開始前です</h3><p class="text-xs text-slate-400 mt-1">最初の行動は ${currentTripData[0].start} から始まります。</p></div>`;
+  } else if (n >= getTripEndTime()) {
+    statusHtml = `<div class="glass-card rounded-xl p-4 border border-slate-800 text-center"><span class="text-[10px] uppercase font-bold tracking-widest text-slate-500 block mb-1">🏁 ARCHIVED</span><h3 class="text-sm font-bold text-slate-300">全ての行程が終了しました</h3></div>`;
+  } else if (currentMove) {
+    const remain = parseTimeStr(currentMove.end) - n;
+    let icon = currentMove.type==="bus"?"fa-bus":(currentMove.type==="walk"?"fa-person-walking":(currentMove.type==="car"?"fa-car":"fa-train"));
+    let label = currentMove.type==="car"?"運転・乗車中":"現在移動中";
+    let badgeColor = currentMove.type==="car"?"bg-purple-500/10 border-purple-500/30 text-purple-400":"bg-sky-500/10 border-sky-500/30 text-sky-400";
+    statusHtml = `
+      <div class="glass-card rounded-xl p-4 border border-slate-800 space-y-3">
+        <div class="flex justify-between items-start">
+          <div><span class="px-2 py-0.5 ${badgeColor} border rounded text-[10px] font-bold uppercase"><i class="fa-solid ${icon} mr-1"></i>${label}</span><h3 class="text-base font-extrabold text-white mt-1.5">${currentMove.line || currentMove.name || "移動"}</h3></div>
+          <div class="text-right"><span class="text-[10px] text-slate-400 block">あと約</span><span class="text-lg font-black text-emerald-400 font-mono">${remain}<span class="text-xs font-normal text-slate-300 ml-0.5">分</span></span></div>
+        </div>
+        <div class="bg-slate-950/60 p-3 rounded-lg border border-slate-800/60 grid grid-cols-2 gap-4 text-xs">
+          <div><span class="text-slate-500 block text-[10px]">📍 出発</span><span class="font-bold text-slate-200">${currentMove.from}</span> <span class="text-slate-400 font-mono ml-1">${currentMove.start}</span></div>
+          <div><span class="text-slate-500 block text-[10px]">🏁 到着予定</span><span class="font-bold text-slate-200">${currentMove.to}</span> <span class="text-slate-400 font-mono ml-1">${currentMove.end}</span></div>
+        </div>
+      </div>`;
+  } else {
+    const currentEat = currentTripData.find(x => x.type === "eat" && n >= parseTimeStr(x.start) && n < parseTimeStr(x.end));
+    const currentStay = currentTripData.find(x => x.type === "stay" && n >= parseTimeStr(x.start) && n < parseTimeStr(x.end));
+    if (currentEat) {
+      statusHtml = `<div class="glass-card rounded-xl p-4 border border-amber-500/20 space-y-2"><div class="flex justify-between"><div><span class="px-2 py-0.5 bg-amber-500/10 border border-amber-500/30 rounded text-[10px] text-amber-400 font-bold uppercase"><i class="fa-solid fa-utensils mr-1"></i>🍽️ 食事中</span><h3 class="text-base font-extrabold text-white mt-1.5">${currentEat.place}</h3><p class="text-xs text-amber-300/80 mt-1">${currentEat.memo || "美味しいご当地グルメを堪能中"}</p></div><div class="text-right"><span class="text-[10px] text-slate-400 block">終了まで</span><span class="text-lg font-black text-amber-400 font-mono">${parseTimeStr(currentEat.end) - n}<span class="text-xs font-normal text-slate-300">分</span></span></div></div></div>`;
+    } else if (currentStay) {
+      statusHtml = `<div class="glass-card rounded-xl p-4 border border-emerald-500/20 space-y-2"><div class="flex justify-between"><div><span class="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded text-[10px] text-emerald-400 font-bold uppercase"><i class="fa-solid fa-hotel mr-1"></i>🏨 観光・滞在中</span><h3 class="text-base font-extrabold text-white mt-1.5">${currentStay.place}</h3><p class="text-xs text-emerald-300/80 mt-1">${currentStay.memo || "周辺を観光・滞在中"}</p></div><div class="text-right"><span class="text-[10px] text-slate-400 block">終了まで</span><span class="text-lg font-black text-emerald-400 font-mono">${parseTimeStr(currentStay.end) - n}<span class="text-xs font-normal text-slate-300">分</span></span></div></div></div>`;
+    } else {
+      let nextEv = currentTripData.find(x => parseTimeStr(x.start) > n);
+      statusHtml = `<div class="glass-card rounded-xl p-4 border border-indigo-500/20 text-center space-y-1"><span class="text-[10px] uppercase font-bold tracking-widest text-indigo-400 block"><i class="fa-solid fa-arrow-left-right text-[9px] mr-1"></i>次の行動まで待機</span><h3 class="text-sm font-bold text-white">現在 ${activePlace || "スポット"} に滞在中</h3><p class="text-xs text-slate-400">次の出発まであと <span class="font-bold text-amber-400 font-mono text-sm">${nextEv ? (parseTimeStr(nextEv.start) - n) : 0}</span> 分です。</p></div>`;
+    }
+  }
+  statusCont.innerHTML = statusHtml;
+}
+
+/* ==========================================
+   🌟 【駅・スポット基準（スタフ型）】マージ処理エンジン
+========================================== */
+function buildTimelineNodes(tripData) {
+  if (!tripData || tripData.length === 0) return [];
+  const sortedSteps = [...tripData].sort((a, b) => parseTimeStr(a.start) - parseTimeStr(b.start));
+  
+  const nodes = [];
+  
+  sortedSteps.forEach((item) => {
+    if (isMoveType(item.type)) {
+      // 1. 出発駅ノード
+      let fromNode = null;
+      if (nodes.length > 0 && nodes[nodes.length - 1].type === "station" && nodes[nodes.length - 1].name === item.from) {
+        fromNode = nodes[nodes.length - 1];
+      } else {
+        fromNode = { type: "station", name: item.from, arrival: "", departure: "", events: [] };
+        nodes.push(fromNode);
+      }
+      if (!fromNode.departure || parseTimeStr(item.start) < parseTimeStr(fromNode.departure)) {
+        fromNode.departure = item.start;
+      }
+
+      // 2. 移動区間（ライン）
+      nodes.push({
+        type: "line",
+        moveType: item.type,
+        start: item.start,
+        end: item.end,
+        lineName: item.line || (item.type === "train" ? "列車移動" : item.type === "bus" ? "バス移動" : item.type === "car" ? "車移動" : "徒歩"),
+        from: item.from,
+        to: item.to,
+        cost: item.cost
+      });
+
+      // 3. 到着駅ノード
+      let toNode = { type: "station", name: item.to, arrival: item.end, departure: "", events: [] };
+      nodes.push(toNode);
+      
+    } else {
+      // 滞在スポットノード
+      let placeName = item.place || "周辺エリア";
+      let targetNode = null;
+      
+      if (nodes.length > 0 && nodes[nodes.length - 1].type === "station" && nodes[nodes.length - 1].name === placeName) {
+        targetNode = nodes[nodes.length - 1];
+      } else {
+        targetNode = { type: "station", name: placeName, arrival: "", departure: "", events: [] };
+        nodes.push(targetNode);
+      }
+      
+      targetNode.events.push(item);
+      if (!targetNode.arrival || parseTimeStr(item.start) < parseTimeStr(targetNode.arrival)) {
+        targetNode.arrival = item.start;
+      }
+      if (!targetNode.departure || parseTimeStr(item.end) > parseTimeStr(targetNode.departure)) {
+        targetNode.departure = item.end;
+      }
+    }
+  });
+
+  // 連続して隣り合う、同一名のスポットを統合
+  const merged = [];
+  nodes.forEach((node) => {
+    if (node.type === "station") {
+      if (merged.length > 0 && merged[merged.length - 1].type === "station" && merged[merged.length - 1].name === node.name) {
+        let prev = merged[merged.length - 1];
+        if (node.arrival && (!prev.arrival || parseTimeStr(node.arrival) < parseTimeStr(prev.arrival))) {
+          prev.arrival = node.arrival;
+        }
+        if (node.departure && (!prev.departure || parseTimeStr(node.departure) > parseTimeStr(prev.departure))) {
+          prev.departure = node.departure;
+        }
+        node.events.forEach(ev => {
+          if (!prev.events.includes(ev)) prev.events.push(ev);
+        });
+      } else {
+        merged.push(node);
+      }
+    } else {
+      merged.push(node);
+    }
+  });
+
+  return merged;
+}
+
+/* ==========================================
+   行程表タイムライン表示
+========================================== */
+function renderTripTimelineView() {
+  const container = document.getElementById('timelineContainer');
+  const costBadge = document.getElementById('timelineTotalCost');
+  container.innerHTML = "";
+  if (currentTripData.length === 0) {
+    container.innerHTML = `<div class="text-center p-8 text-xs text-slate-500">行程データが空です。</div>`;
+    costBadge.textContent = "0円"; return;
+  }
+
+  const renderedElements = buildTimelineNodes(currentTripData);
+  let totalExpenses = currentTripData.reduce((sum, item) => sum + (parseInt(item.cost) || 0), 0);
+
+  renderedElements.forEach((node) => {
+    const wrapper = document.createElement('div');
+    
+    if (node.type === "station") {
+      let timeStampHtml = "";
+      if (node.arrival && node.departure) {
+        timeStampHtml = `<div class="font-mono text-[11px] font-bold bg-slate-900 border border-slate-800 text-slate-300 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-inner"><span>着</span><span class="text-rose-400 font-extrabold">${node.arrival}</span><span class="text-slate-600">|</span><span>発</span><span class="text-emerald-400 font-extrabold">${node.departure}</span></div>`;
+      } else if (node.arrival) {
+        timeStampHtml = `<div class="font-mono text-[11px] font-bold bg-slate-900 border border-slate-800 text-rose-400 px-2 py-0.5 rounded-md shadow-inner">着 ${node.arrival}</div>`;
+      } else if (node.departure) {
+        timeStampHtml = `<div class="font-mono text-[11px] font-bold bg-slate-900 border border-slate-800 text-emerald-400 px-2 py-0.5 rounded-md shadow-inner">発 ${node.departure}</div>`;
+      }
+
+      let innerEventsHtml = "";
+      if (node.events && node.events.length > 0) {
+        innerEventsHtml = `<div class="mt-2.5 ml-4 border-l-2 border-dashed border-slate-800 pl-4 space-y-2">`;
+        node.events.forEach(ev => {
+          const costBadgeHtml = ev.cost ? `<span class="text-[10px] font-mono text-amber-400 bg-amber-400/5 px-1.5 py-0.2 rounded border border-amber-500/10">${parseInt(ev.cost).toLocaleString()}円</span>` : '';
+          if (ev.type === "eat") {
+            innerEventsHtml += `
+              <div class="glass-card p-2.5 rounded-xl border border-amber-500/20 border-l-4 border-l-amber-500 space-y-1 relative">
+                <div class="flex items-center justify-between gap-1">
+                  <div class="flex items-center gap-1.5"><span class="text-[10px] font-extrabold px-1.5 py-0.5 bg-amber-500/10 text-amber-400 rounded"><i class="fa-solid fa-utensils mr-1"></i>🍽️ 食事</span><span class="text-[10px] text-slate-400 font-mono">${ev.start}〜${ev.end}</span></div>
+                  ${costBadgeHtml}
+                </div>
+                <p class="text-xs font-bold text-white">${ev.memo || '美味しいグルメを堪能'}</p>
+              </div>`;
+          } else if (ev.type === "stay") {
+            innerEventsHtml += `
+              <div class="glass-card p-2.5 rounded-xl border border-emerald-500/20 border-l-4 border-l-emerald-500 space-y-1 relative">
+                <div class="flex items-center justify-between gap-1">
+                  <div class="flex items-center gap-1.5"><span class="text-[10px] font-extrabold px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded"><i class="fa-solid fa-hotel mr-1"></i>🏨 観光・滞在</span><span class="text-[10px] text-slate-400 font-mono">${ev.start}〜${ev.end}</span></div>
+                  ${costBadgeHtml}
+                </div>
+                <p class="text-xs font-bold text-white">${ev.memo || '周辺を観光'}</p>
+              </div>`;
+          }
+        });
+        innerEventsHtml += `</div>`;
+      }
+
+      wrapper.className = "relative pb-4 pt-2";
+      wrapper.innerHTML = `
+        <div class="absolute -left-[7px] top-4 w-3.5 h-3.5 rounded-full bg-slate-950 border-4 border-indigo-500 z-20 shadow-md ring-2 ring-indigo-500/20"></div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pl-4 md:pl-6">
+          <div class="flex items-center gap-2.5">
+            <h3 class="text-base font-black text-white tracking-wide"><i class="fa-solid fa-location-dot text-xs text-indigo-400 mr-1.5"></i>${node.name}</h3>
+          </div>
+          ${timeStampHtml}
+        </div>
+        ${innerEventsHtml}
+      `;
+    } else if (node.type === "line") {
+      let lineColorClass = "bg-blue-500";
+      let iconClass = "fa-train";
+      let typeLabel = "列車";
+      if (node.moveType === "bus") { lineColorClass = "bg-orange-500"; iconClass = "fa-bus"; typeLabel = "バス"; }
+      if (node.moveType === "car") { lineColorClass = "bg-purple-500"; iconClass = "fa-car"; typeLabel = "車"; }
+      if (node.moveType === "walk") { lineColorClass = "bg-teal-500"; iconClass = "fa-person-walking"; typeLabel = "徒歩"; }
+
+      const costBadgeHtml = node.cost ? `<span class="text-[10px] font-mono text-slate-400 ml-2">(${parseInt(node.cost).toLocaleString()}円)</span>` : '';
+
+      wrapper.className = "relative pl-4 md:pl-6 my-1";
+      wrapper.innerHTML = `
+        <div class="absolute -left-[1px] top-0 bottom-0 w-0.5 ${lineColorClass} opacity-80 z-10"></div>
+        <div class="py-3 px-3 bg-slate-950/40 rounded-xl border border-slate-900/60 flex items-center gap-3 transition-colors hover:bg-slate-900/20">
+          <div class="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400">
+            <i class="fa-solid ${iconClass} text-[11px]"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-slate-200 truncate">${node.lineName}</span>
+              <span class="text-[10px] font-mono text-slate-500 bg-slate-900/80 px-1 py-0.2 rounded">${node.start} ➔ ${node.end}</span>
+            </div>
+            <p class="text-[10px] text-slate-500 font-medium mt-0.5">${typeLabel}区間: ${node.from} ➔ ${node.to} ${costBadgeHtml}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    container.appendChild(wrapper);
+  });
+
+  costBadge.textContent = `${totalExpenses.toLocaleString()} 円`;
+}
+
+/* ==========================================
+   シミュレーターヘルパー
+========================================== */
+window.setTimeMode = function(mode) {
+  isCustomTimeMode = (mode === 'custom');
+  const controls = document.getElementById('customTimeControls');
+  const indicator = document.getElementById('simulatorIndicator');
+  if (isCustomTimeMode) {
+    controls.classList.remove('opacity-50', 'pointer-events-none');
+    indicator.classList.remove('hidden');
+    customTimeMinutes = parseTimeStr(document.getElementById('customTimeInput').value);
+  } else {
+    controls.classList.add('opacity-50', 'pointer-events-none');
+    indicator.classList.add('hidden');
+  }
+  updateNaviView();
+}
+
+window.updateCustomTimeInput = function(value) {
+  if (isCustomTimeMode) {
+    customTimeMinutes = parseTimeStr(value);
+    updateNaviView();
+  }
+}
+
+/* ==========================================
+   EDITOR (行程編集画面) ロジック群
+========================================== */
+function renderEditorRows() {
+  const container = document.getElementById('editorRowsContainer');
+  container.innerHTML = "";
+  if (currentTripData.length === 0) { addNewEditorRow(); return; }
+  currentTripData.forEach((item, index) => { container.appendChild(createEditorRowElement(item, index)); });
+  updateEditorCalculationsAndPreview();
+}
+
+function createEditorRowElement(item, index) {
+  const row = document.createElement('div');
+  row.className = `glass-card rounded-xl p-4 space-y-3 relative transition-all theme-card-${item.type || 'train'}`;
+  const isMove = isMoveType(item.type);
+
+  row.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-900/60">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-slate-400 font-mono">#${index + 1}</span>
+        <select onchange="updateRowType(${index}, this.value)" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs font-bold focus:outline-none cursor-pointer">
+          <option value="train" ${item.type==='train'?'selected':''}>🚇 列車・新幹線</option>
+          <option value="car" ${item.type==='car'?'selected':''}>🚗 自家用車・レンタカー</option>
+          <option value="bus" ${item.type==='bus'?'selected':''}>🚌 路線・高速バス</option>
+          <option value="walk" ${item.type==='walk'?'selected':''}>🚶 徒歩・徒歩移動</option>
+          <option value="eat" ${item.type==='eat'?'selected':''}>🍔 食事・グルメ</option>
+          <option value="stay" ${item.type==='stay'?'selected':''}>🏨 観光・ホテル滞在</option>
+        </select>
+      </div>
+      <button onclick="deleteEditorRow(${index})" class="text-slate-500 hover:text-rose-400 p-1 transition-all"><i class="fa-solid fa-trash-can text-xs"></i></button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 text-xs">
+      <div class="md:col-span-3 flex items-center gap-1">
+        <input type="time" value="${item.start || ''}" onchange="updateRowField(${index}, 'start', this.value)" class="w-full px-2 py-1.5 rounded-lg premium-input text-white font-mono text-center">
+        <span class="text-slate-500 font-bold">➔</span>
+        <input type="time" value="${item.end || ''}" onchange="updateRowField(${index}, 'end', this.value)" class="w-full px-2 py-1.5 rounded-lg premium-input text-white font-mono text-center">
+      </div>
+
+      ${isMove ? `
+        <div class="md:col-span-3"><input type="text" value="${item.from || ''}" oninput="updateRowField(${index}, 'from', this.value)" class="w-full px-3 py-1.5 rounded-lg premium-input text-white font-bold placeholder-indigo-300/60" placeholder="📍 出発地/出発駅"></div>
+        <div class="md:col-span-3"><input type="text" value="${item.to || ''}" oninput="updateRowField(${index}, 'to', this.value)" class="w-full px-3 py-1.5 rounded-lg premium-input text-white font-bold placeholder-emerald-300/60" placeholder="🏁 到着地/到着駅"></div>
+        <div class="md:col-span-3"><input type="text" value="${item.line || ''}" oninput="updateRowField(${index}, 'line', this.value)" class="w-full px-3 py-1.5 rounded-lg premium-input text-white placeholder-slate-500" placeholder="✍️ 路線・道路・便名など"></div>
+      ` : `
+        <div class="md:col-span-4"><input type="text" value="${item.place || ''}" oninput="updateRowField(${index}, 'place', this.value)" class="w-full px-3 py-1.5 rounded-lg premium-input text-white font-bold placeholder-amber-300/60" placeholder="📍 スポット名・都市名"></div>
+        <div class="md:col-span-5"><input type="text" value="${item.memo || ''}" oninput="updateRowField(${index}, 'memo', this.value)" class="w-full px-3 py-1.5 rounded-lg premium-input text-white placeholder-slate-500" placeholder="✍️ メモ・予定内容"></div>
+      `}
+    </div>
+
+    <div class="pt-2 border-t border-slate-900/40 flex flex-wrap items-center gap-4 text-xs">
+      <div class="flex items-center gap-1.5">
+        <span class="text-slate-500 font-medium">💰 概算費用:</span>
+        <input type="number" value="${item.cost || ''}" oninput="updateRowField(${index}, 'cost', this.value)" class="w-24 px-2 py-1 rounded-md premium-input text-white text-right font-mono" placeholder="0">
+        <span class="text-slate-500 font-medium">円</span>
+      </div>
+    </div>
+  `;
+  return row;
+}
+
+window.addNewEditorRow = function() {
+  currentTripData.push({ type: "train", start: "09:00", end: "10:00", from: "", to: "", line: "", cost: "" });
+  renderEditorRows();
+}
+window.deleteEditorRow = function(index) { currentTripData.splice(index, 1); renderEditorRows(); }
+window.updateRowType = function(index, newType) {
+  const item = currentTripData[index]; item.type = newType;
+  if (isMoveType(newType)) {
+    item.from = item.from || item.place || ""; item.to = item.to || ""; item.line = item.line || item.memo || "";
+  } else {
+    item.place = item.place || item.from || ""; item.memo = item.memo || item.line || "";
+  }
+  renderEditorRows();
+}
+window.updateRowField = function(index, field, value) { currentTripData[index][field] = value; updateEditorCalculationsAndPreview(); }
+window.sortEditorRowsByTime = function() { currentTripData.sort((a, b) => parseTimeStr(a.start) - parseTimeStr(b.start)); renderEditorRows(); }
+
+/* ==========================================
+   🌟 【駅・スポット基準（スタフ型）】エディタ内リアルタイムプレビュー
+========================================== */
+function updateEditorCalculationsAndPreview() {
+  let moveMinutes = 0, stayMinutes = 0, totalExpenses = 0;
+  currentTripData.forEach(x => {
+    const duration = parseTimeStr(x.end) - parseTimeStr(x.start); totalExpenses += (parseInt(x.cost) || 0);
+    if (isMoveType(x.type)) { moveMinutes += duration; } else { stayMinutes += duration; }
+  });
+  const totalMin = getTripEndTime() - getTripStartTime();
+  document.getElementById('totalDuration').textContent = totalMin > 0 ? `${Math.floor(totalMin/60)}時間 ${totalMin%60}分` : '-';
+  document.getElementById('moveTime').textContent = `${moveMinutes}分`;
+  document.getElementById('stayTime').textContent = `${stayMinutes}分`;
+  document.getElementById('transferTime').textContent = `${Math.max(0, totalMin - (moveMinutes + stayMinutes))}分`;
+
+  // クイック切り替えバーの制御
+  const hasData = currentTripData.length > 0;
+  if (!document.getElementById('screen-edit').classList.contains('screen-hidden')) {
+    document.getElementById('btnSwitchTimeline').classList.toggle('hidden', !hasData);
+    document.getElementById('btnSwitchNavi').classList.toggle('hidden', !hasData);
+    document.getElementById('btnSwitchEdit').classList.add('hidden');
+  }
+
+  const previewCont = document.getElementById('editorTimelinePreview');
+  if (!previewCont) return;
+
+  if (currentTripData.length === 0) {
+    previewCont.innerHTML = `<div class="text-center p-6 text-xs text-slate-500 bg-slate-900/30 rounded-xl border border-slate-800">行動プランを追加すると、リアルタイムに美しいスタフ型のタイムラインプレビューが構成されます。</div>`;
+    return;
+  }
+
+  const nodes = buildTimelineNodes(currentTripData);
+
+  let html = `<div class="relative pl-6 border-l-2 border-indigo-500/30 space-y-4">`;
+  nodes.forEach((node) => {
+    if (node.type === "station") {
+      let timeBadge = "";
+      if (node.arrival && node.departure) {
+        timeBadge = `<span class="font-mono text-[10px] text-slate-400 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">着 ${node.arrival} | 発 ${node.departure}</span>`;
+      } else if (node.arrival) {
+        timeBadge = `<span class="font-mono text-[10px] text-slate-400 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">着 ${node.arrival}</span>`;
+      } else if (node.departure) {
+        timeBadge = `<span class="font-mono text-[10px] text-slate-400 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">発 ${node.departure}</span>`;
+      }
+
+      let innerEvents = "";
+      if (node.events && node.events.length > 0) {
+        innerEvents = `<div class="mt-2 pl-3 border-l-2 border-dashed border-slate-800 space-y-1.5">`;
+        node.events.forEach(ev => {
+          let badge = ev.type === 'eat' 
+            ? `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.2 rounded text-[9px] font-bold">🍽️ 食事</span>`
+            : `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.2 rounded text-[9px] font-bold">🏨 滞在</span>`;
+          
+          let evCost = ev.cost ? `<span class="text-[10px] font-mono text-amber-400 bg-amber-400/5 px-1 py-0.2 rounded border border-amber-500/10 ml-auto">${parseInt(ev.cost).toLocaleString()}円</span>` : '';
+          
+          innerEvents += `
+            <div class="flex items-center justify-between text-xs py-1.5 px-2 bg-slate-900/40 rounded-lg border border-slate-800/40 gap-2">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="font-mono text-[10px] text-indigo-300 font-bold shrink-0">${ev.start}〜${ev.end}</span>
+                ${badge}
+                <span class="text-slate-200 font-medium truncate">${ev.memo || (ev.type === 'eat' ? 'お食事' : '観光')}</span>
+              </div>
+              ${evCost}
+            </div>
+          `;
+        });
+        innerEvents += `</div>`;
+      }
+
+      html += `
+        <div class="relative group">
+          <div class="absolute -left-[29px] top-1.5 w-3 h-3 rounded-full bg-slate-950 border-2 border-indigo-500 shadow ring-2 ring-indigo-500/20"></div>
+          <div class="flex flex-col gap-1.5">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <span class="text-xs font-black text-white"><i class="fa-solid fa-location-dot text-[10px] text-indigo-400 mr-1"></i>${node.name}</span>
+              ${timeBadge}
+            </div>
+            ${innerEvents}
+          </div>
+        </div>
+      `;
+    } else if (node.type === "line") {
+      let badgeColor = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+      let icon = "fa-train";
+      if (node.moveType === "bus") { badgeColor = "bg-orange-500/10 text-orange-400 border-orange-500/20"; icon = "fa-bus"; }
+      if (node.moveType === "car") { badgeColor = "bg-purple-500/10 text-purple-400 border-purple-500/20"; icon = "fa-car"; }
+      if (node.moveType === "walk") { badgeColor = "bg-teal-500/10 text-teal-400 border-teal-500/20"; icon = "fa-person-walking"; }
+
+      let lineCost = node.cost ? `<span class="text-[10px] font-mono text-slate-400 ml-1">(${parseInt(node.cost).toLocaleString()}円)</span>` : '';
+
+      html += `
+        <div class="relative pl-3">
+          <div class="absolute -left-[1px] top-0 bottom-0 w-0.5 bg-slate-800 opacity-60"></div>
+          <div class="flex items-center justify-between text-xs py-1.5 px-2.5 bg-slate-950/40 rounded-xl border border-slate-900/60 gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="px-1.5 py-0.5 rounded ${badgeColor} border text-[9px] font-bold shrink-0"><i class="fa-solid ${icon} mr-1"></i>${node.lineName}</span>
+              <span class="text-slate-300 font-bold truncate">${node.from} ➔ ${node.to}</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span class="font-mono text-[10px] text-slate-500">${node.start}〜${node.end}</span>
+              ${lineCost}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  });
+  html += `</div>`;
+  previewCont.innerHTML = html;
+}
+
+window.saveCurrentTripToCloud = async function() {
+  if (isSandboxMode) {
+    showToast("⚠️ お試しデモモードでは保存できません。右上のログインからアカウントを登録してください。", "error");
+    return;
+  }
+  if (!currentUser) { showToast("⚠️ ログインセッションがありません", "error"); return; }
+  const title = document.getElementById('tripTitle').value.trim();
+  if (!title) { showToast("⚠️ 旅行タイトルを入力してください", "error"); return; }
+  if (currentTripData.length === 0) { showToast("⚠️ 行動プランを追加してください", "error"); return; }
+  try {
+    const docRef = doc(db, "trips", currentTripId);
+    await setDoc(docRef, { userId: currentUser.uid, userEmail: currentUser.email, title: title, trip: currentTripData, updatedAt: Date.now() });
+    showToast("💾 クラウドマイデータに保存・上書きしました！", "success");
+    showScreen('home'); 
+  } catch (e) { showToast("保存失敗: " + e.message, "error"); }
+}
+
+window.showToast = function(msg, type="success") {
+  const container = document.getElementById('toastContainer'); const toast = document.createElement('div');
+  toast.className = `glass-card p-3 rounded-xl text-xs font-bold shadow-xl transition-all duration-300 transform translate-y-2 opacity-0 flex items-center gap-2 border ${type==='success'?'border-emerald-500/30 text-emerald-400':'border-rose-500/30 text-rose-400'}`;
+  toast.innerHTML = `<i class="fa-solid ${type==='success'?'fa-circle-check':'fa-triangle-exclamation'}"></i> <span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 10);
+  setTimeout(() => { toast.classList.add('translate-y-2', 'opacity-0'); setTimeout(() => { toast.remove(); }, 300); }, 3500);
+}
+
+window.showConfirm = function(title, desc) {
+  return new Promise((resolve) => {
+    const diag = document.getElementById('confirmDialog');
+    document.getElementById('confirmTitle').textContent = title; document.getElementById('confirmDesc').innerText = desc;
+    diag.classList.remove('opacity-0', 'pointer-events-none');
+    const cleanUp = (res) => {
+      diag.classList.add('opacity-0', 'pointer-events-none');
+      document.getElementById('btnConfirmOk').onclick = null; document.getElementById('btnConfirmCancel').onclick = null; resolve(res);
+    };
+    document.getElementById('btnConfirmOk').onclick = () => cleanUp(true);
+    document.getElementById('btnConfirmCancel').onclick = () => cleanUp(false);
+  });
+}
+
+setInterval(() => {
+  if (!isCustomTimeMode && !document.getElementById('screen-navi').classList.contains('screen-hidden')) { updateNaviView(); }
+}, 15000);
+</script>
+</body>
+</html>
