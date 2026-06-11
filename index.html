@@ -26,7 +26,7 @@
     box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.4);
   }
 
-  /* 横スクロールエリアのスクロールバーを非表示（お洒落で見やすく） */
+  /* 横スクロールエリアのスクロールバーを非表示 */
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -61,12 +61,12 @@
 </head>
 <body class="pb-12">
 
-  <!-- ヘッダー構造をスマホ最適化：フレックス方向と折り返し制御 -->
+  <!-- ヘッダーUIを徹底刷新。スマホ/PCを問わず「右上が常にログイン・プロフィール」になるように固定 -->
   <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-900 px-4 py-2.5 md:px-8">
-    <div class="max-w-6xl mx-auto flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
+    <div class="max-w-6xl mx-auto flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
       
-      <!-- 1列目: タイトルロゴ ＆ ユーザー情報/ログインエリア -->
-      <div class="flex items-center justify-between w-full lg:w-auto">
+      <!-- 1行目：ロゴ ＆ 【スマホ用】右上端ログイン・ユーザープロフィール表示 -->
+      <div class="flex items-center justify-between w-full md:w-auto shrink-0">
         <div onclick="goHome()" class="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-all shrink-0">
           <div class="bg-gradient-to-tr from-indigo-500 to-indigo-600 p-1.5 rounded-lg shadow-lg shadow-indigo-500/20">
             <i class="fa-solid fa-map-location-dot text-white text-sm"></i>
@@ -79,30 +79,29 @@
           </div>
         </div>
 
-        <!-- 右端：プロフィールまたはログインボタン -->
-        <div class="flex items-center gap-1.5 shrink-0">
-          <!-- ログイン済みユーザーエリア -->
-          <div id="userInfoArea" class="hidden flex items-center gap-1.5 bg-slate-900/80 border border-slate-800 p-0.5 pr-2.5 rounded-full">
-            <div onclick="openProfileModal()" class="w-5.5 h-5.5 rounded-full bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-[10px] text-white border border-indigo-400/30 cursor-pointer transition-colors" title="プロフィール編集">
+        <!-- 【スマホのみ表示】最右上に常に配置されるログイン/ユーザーコンテナ -->
+        <div class="flex md:hidden items-center gap-1.5 shrink-0">
+          <!-- スマホ用ログイン済エリア -->
+          <div id="userInfoAreaMobile" class="hidden flex items-center gap-1.5 bg-slate-900/80 border border-slate-800 p-0.5 pr-2.5 rounded-full">
+            <div onclick="openProfileModal()" class="w-5.5 h-5.5 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] text-white">
               <i class="fa-solid fa-user text-[9px]"></i>
             </div>
-            <span id="userName" onclick="openProfileModal()" class="text-[10px] font-bold text-slate-300 max-w-[80px] sm:max-w-[120px] truncate cursor-pointer hover:text-indigo-400 transition-colors">...</span>
-            <button onclick="handleSignOut()" class="text-slate-500 hover:text-rose-400 text-[10px] pl-1" title="ログアウト">
+            <span id="userNameMobile" onclick="openProfileModal()" class="text-[10px] font-bold text-slate-300 max-w-[80px] truncate">...</span>
+            <button onclick="handleSignOut()" class="text-slate-500 hover:text-rose-400 text-[10px] pl-1">
               <i class="fa-solid fa-right-from-bracket"></i>
             </button>
           </div>
-
-          <!-- ゲスト・未ログイン時表示エリア -->
-          <div id="guestHeaderArea" class="flex items-center">
-            <button onclick="openAuthModal()" class="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:brightness-110 border border-indigo-500/30 rounded-lg text-[10px] font-bold text-white transition-all">
+          <!-- スマホ用ゲストログインボタン -->
+          <div id="guestHeaderAreaMobile" class="flex items-center">
+            <button onclick="openAuthModal()" class="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-indigo-600 to-indigo-700 border border-indigo-500/30 rounded-lg text-[10px] font-bold text-white transition-all shadow-md shadow-indigo-500/10">
               <i class="fa-solid fa-right-to-bracket text-[8px]"></i> <span>ログイン</span>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- 2列目: はみ出さない横スクロール対応クイック遷移アクションバー -->
-      <div id="navigationBar" class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar pb-0.5 -mx-4 px-4 lg:mx-0 lg:px-0 lg:pb-0 scroll-smooth shrink-0">
+      <!-- 中段（スマホ時は2段目、PC時は中央寄せ横並び）：クイック画面遷移アクションバー -->
+      <div id="navigationBar" class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar pb-0.5 -mx-4 px-4 md:mx-0 md:px-0 md:pb-0 scroll-smooth shrink-0 md:flex-grow md:justify-center">
         <button id="btnBackToHome" onclick="goHome()" class="hidden flex items-center gap-1 px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-[11px] font-bold text-slate-300 transition-all shrink-0">
           <i class="fa-solid fa-house text-[10px]"></i> <span>ホーム</span>
         </button>
@@ -118,6 +117,26 @@
         <button id="btnSwitchNavi" onclick="switchToNaviView()" class="hidden flex items-center gap-1 px-2.5 py-1.5 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-900/30 rounded-lg text-[11px] font-bold text-emerald-400 transition-all shrink-0">
           <i class="fa-solid fa-location-crosshairs text-[10px]"></i> <span>ナビ画面</span>
         </button>
+      </div>
+
+      <!-- 右端：【PC・タブレット用】画面の一番右上に綺麗に揃えるログイン・ユーザーコンテナ -->
+      <div class="hidden md:flex items-center gap-1.5 shrink-0">
+        <!-- PC用ログイン済エリア -->
+        <div id="userInfoArea" class="hidden flex items-center gap-1.5 bg-slate-900/80 border border-slate-800 p-0.5 pr-2.5 rounded-full">
+          <div onclick="openProfileModal()" class="w-5.5 h-5.5 rounded-full bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-[10px] text-white border border-indigo-400/30 cursor-pointer transition-colors" title="プロフィール編集">
+            <i class="fa-solid fa-user text-[10px]"></i>
+          </div>
+          <span id="userName" onclick="openProfileModal()" class="text-[11px] font-bold text-slate-300 max-w-[120px] truncate cursor-pointer hover:text-indigo-400 transition-colors">...</span>
+          <button onclick="handleSignOut()" class="text-slate-500 hover:text-rose-400 text-xs pl-1" title="ログアウト">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+        <!-- PC用ゲストログインボタン -->
+        <div id="guestHeaderArea" class="flex items-center">
+          <button onclick="openAuthModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:brightness-110 border border-indigo-500/30 rounded-xl text-xs font-bold text-white transition-all shadow-md shadow-indigo-500/10">
+            <i class="fa-solid fa-right-to-bracket text-[10px]"></i> <span>ログイン</span>
+          </button>
+        </div>
       </div>
 
     </div>
@@ -191,6 +210,7 @@
           </div>
 
           <div class="space-y-3 pt-2">
+            <!-- お試し機能起動ボタン -->
             <button onclick="launchSandboxDemo()" class="w-full flex items-center justify-center gap-2.5 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-xs font-bold text-white rounded-xl transition-all shadow-md shadow-emerald-500/20 hover:scale-[1.01]">
               <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
               <span>ログインなしでお試し利用する</span>
@@ -202,6 +222,7 @@
               <div class="flex-grow border-t border-slate-800"></div>
             </div>
 
+            <!-- アカウントサインインへの引き込み -->
             <button onclick="openAuthModal()" class="w-full flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs font-bold text-slate-200 rounded-xl transition-all">
               <i class="fa-solid fa-right-to-bracket"></i>
               <span>サインイン / 新規登録する</span>
@@ -231,7 +252,7 @@
 
     <div class="glass-card rounded-2xl p-6 text-center relative overflow-hidden border border-indigo-500/20">
       <h2 class="text-sm md:text-base font-bold text-white mb-1">新しい旅の行程を計画する</h2>
-      <p class="text-xs text-slate-400 mb-5">スポットベース of タイムライン設計、乗換や経路・費用の自動集計エディタを起動します。</p>
+      <p class="text-xs text-slate-400 mb-5">スポットベースのタイムライン設計、乗換や経路・費用の自動集計エディタを起動します。</p>
       <button onclick="startNewTripCreation()" class="inline-flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-xs font-bold text-white rounded-xl transition-all shadow-lg shadow-indigo-500/20 hover:scale-[1.01]">
         <i class="fa-solid fa-file-circle-plus text-sm"></i>
         <span>新規の旅程を作成する</span>
@@ -278,16 +299,16 @@
         <div class="mt-3 pt-3 border-t border-slate-800/60 space-y-2.5">
           <div class="flex flex-col gap-2">
             <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-              <input type="radio" name="time-mode" value="real" checked onchange="setTimeMode(this.value)" class="w-4 h-4 text-indigo-600 bg-slate-800 border-slate-700">
+              <input type="radio" name="time-mode" value="real" checked class="w-4 h-4 text-indigo-600 bg-slate-800 border-slate-700">
               <span>リアルタイム自動追従</span>
             </label>
             <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-              <input type="radio" name="time-mode" value="custom" onchange="setTimeMode(this.value)" class="w-4 h-4 text-indigo-600 bg-slate-800 border-slate-700">
+              <input type="radio" name="time-mode" value="custom" class="w-4 h-4 text-indigo-600 bg-slate-800 border-slate-700">
               <span>カスタムシミュレート時間を使う</span>
             </label>
           </div>
           <div id="customTimeControls" class="flex flex-wrap items-center gap-2 bg-slate-900/50 p-2 rounded-lg border border-slate-800/80 opacity-50 pointer-events-none transition-opacity">
-            <input type="time" id="customTimeInput" value="12:00" oninput="updateCustomTimeInput(this.value)" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded-md text-xs font-bold text-white">
+            <input type="time" id="customTimeInput" value="12:00" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded-md text-xs font-bold text-white">
             <button onclick="adjustSimulatorTime(-30)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-300 shadow">-30分</button>
             <button onclick="adjustSimulatorTime(30)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-300 shadow">+30分</button>
             <span id="simulatorIndicator" class="text-[11px] font-bold text-amber-400 hidden animate-pulse"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>動作模擬中</span>
@@ -382,7 +403,7 @@
 
     <div class="glass-card rounded-2xl p-4">
       <h2 class="text-xs font-bold text-slate-300 mb-3 uppercase"><i class="fa-solid fa-route text-indigo-400 mr-1"></i>リアルタイム行程ルートプレビュー</h2>
-      <!-- エディタ行程プレビューコンテナ（駅・スポット基準） -->
+      <!-- 強化されたエディタ行程プレビューコンテナ（駅・スポット基準） -->
       <div id="editorTimelinePreview" class="relative py-2"></div>
     </div>
   </div>
@@ -652,9 +673,15 @@ window.handleUpdateProfileSubmit = async function() {
   }
 }
 
+// PC、スマホ(モバイル)両方のヘッダープロフィールエリアの表示を同期
 function syncUserInterfaceElements(user) {
   const nameToDisplay = user.displayName || (user.email ? user.email.split('@')[0] : 'ユーザー');
+  
+  // PC側
   document.getElementById('userName').textContent = nameToDisplay;
+  // スマホ側
+  document.getElementById('userNameMobile').textContent = nameToDisplay;
+  
   document.getElementById('welcomeUserName').textContent = nameToDisplay;
   document.getElementById('welcomeUserEmail').textContent = user.email || "";
 }
@@ -662,22 +689,36 @@ function syncUserInterfaceElements(user) {
 // 認証ステート監視
 onAuthStateChanged(auth, (user) => {
   const welcomeScreen = document.getElementById('screen-welcome');
+  
   const userInfoArea = document.getElementById('userInfoArea');
+  const userInfoAreaMobile = document.getElementById('userInfoAreaMobile');
+  
   const guestHeaderArea = document.getElementById('guestHeaderArea');
+  const guestHeaderAreaMobile = document.getElementById('guestHeaderAreaMobile');
   
   if (user) {
     currentUser = user;
     isSandboxMode = false;
     document.getElementById('sandboxBanner').classList.add('hidden');
     welcomeScreen.classList.add('screen-hidden');
+    
+    // PC & スマホ両方のUI状態をアクティブに切り替え
     userInfoArea.classList.remove('hidden');
+    userInfoAreaMobile.classList.remove('hidden');
+    
     guestHeaderArea.classList.add('hidden');
+    guestHeaderAreaMobile.classList.add('hidden');
+    
     syncUserInterfaceElements(user);
     showScreen('home'); 
   } else {
     currentUser = null;
+    
     userInfoArea.classList.add('hidden');
+    userInfoAreaMobile.classList.add('hidden');
+    
     guestHeaderArea.classList.remove('hidden');
+    guestHeaderAreaMobile.classList.remove('hidden');
     
     if (isSandboxMode) {
       document.getElementById('sandboxBanner').classList.remove('hidden');
@@ -891,7 +932,7 @@ function isMoveType(type) {
 }
 
 /* ==========================================
-   🌟 【バグ修正】ナビゲーション用の駅・接続点リスト作成ロジック
+   ナビゲーション用の駅・接続点リスト作成ロジック
 ========================================== */
 function buildNaviStations() {
   if (currentTripData.length === 0) return [];
@@ -1013,7 +1054,7 @@ function updateNaviView() {
 }
 
 /* ==========================================
-   🌟 【駅・スポット基準（スタフ型）】マージ処理エンジン
+   駅・スポット基準（スタフ型）共通マージエンジン
 ========================================== */
 function buildTimelineNodes(tripData) {
   if (!tripData || tripData.length === 0) return [];
@@ -1303,7 +1344,7 @@ window.updateRowField = function(index, field, value) { currentTripData[index][f
 window.sortEditorRowsByTime = function() { currentTripData.sort((a, b) => parseTimeStr(a.start) - parseTimeStr(b.start)); renderEditorRows(); }
 
 /* ==========================================
-   🌟 【駅・スポット基準（スタフ型）】エディタ内リアルタイムプレビュー
+   駅・スポット基準（スタフ型）エディタ内リアルタイムプレビュー
 ========================================== */
 function updateEditorCalculationsAndPreview() {
   let moveMinutes = 0, stayMinutes = 0, totalExpenses = 0;
