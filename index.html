@@ -645,7 +645,7 @@ let authMode = 'login';
 let currentNaviDay = 1;
 let currentEditorDayFilter = "all";
 
-// ユーザー拡張プロフィール設定 (ルート直下の `trips` コレクションの特定ドキュメント `profile_settings_{userId}` で一元管理)
+// ユーザー拡張プロフィール設定 (ルート直下の `trips` コレクションの一元管理)
 let userProfile = {
   avatarColor: 'indigo',
   avatarIcon: 'fa-user',
@@ -741,7 +741,6 @@ window.handleAuthSubmit = async function(event) {
       const userCredential = await createUserWithEmailAndPassword(auth, finalEmail, password);
       if (displayName) await updateProfile(userCredential.user, { displayName: displayName });
       
-      // tripsコレクションにアバター等の環境設定用ドキュメントを配置
       const defaultProfile = {
         profileUserId: userCredential.user.uid,
         avatarColor: 'indigo',
@@ -835,7 +834,6 @@ window.handleUpdateProfileSubmit = async function() {
         await updatePassword(currentUser, newPassword);
       }
       
-      // ルート直下 trips コレクションに設定を保存
       await setDoc(doc(db, 'trips', 'profile_settings_' + currentUser.uid), {
         profileUserId: currentUser.uid,
         avatarColor: userProfile.avatarColor,
@@ -921,7 +919,6 @@ onAuthStateChanged(auth, async (user) => {
     guestHeaderArea.classList.add('hidden');
     guestHeaderAreaMobile.classList.add('hidden');
     
-    // ルート直下 trips コレクションよりプロフィールを取得
     try {
       const pDoc = await getDoc(doc(db, 'trips', 'profile_settings_' + user.uid));
       if(pDoc.exists()) {
@@ -1066,7 +1063,6 @@ window.switchToTimelineView = function() { showScreen('timeline'); }
 window.switchToNaviView = function() { showScreen('navi'); }
 window.switchToEditView = function() { showScreen('edit'); }
 
-// 💡 既存のデータ復旧：元のルート直下 `trips` コレクションから直接データを抽出
 async function loadDashboardTrips() {
   if (!currentUser) return;
   const container = document.getElementById('dashboardTripList');
@@ -1075,12 +1071,10 @@ async function loadDashboardTrips() {
   try {
     allTripsCache = [];
     
-    // 復旧: 元のクエリ（ルート直下 trips からの直接読み込み）に戻しました
     const userQuery = query(collection(db, "trips"), where("userId", "==", currentUser.uid));
     const userSnapshot = await getDocs(userQuery);
     
     userSnapshot.forEach((docSnap) => {
-      // 旅程配列が存在するドキュメントのみを計画として追加 (プロフィール用ドキュメントをバイパス)
       if (docSnap.data().trip) {
         allTripsCache.push({ 
           id: docSnap.id, 
@@ -1174,7 +1168,6 @@ window.startNewTripCreation = function() {
 window.deleteTripClick = async function(id, title) {
   if (!await showConfirm("旅程の削除確認", `『${title}』をクラウドから完全に削除しますか？`)) return;
   try {
-    // 復旧: 元の直下 trips パスから削除
     await deleteDoc(doc(db, "trips", id)); 
     showToast("🗑️ 旅程を削除しました", "success"); 
     loadDashboardTrips();
@@ -1306,13 +1299,31 @@ function updateNaviView() {
       let lineBg = "bg-slate-200 dark:bg-slate-800"; let iconHtml = `<div class="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-700"></div>`; let isActiveLine = false;
       if (currentMove) {
         if (currentMove.from === stName && currentMove.to === stations[idx + 1]) {
-          lineBg = "bg-gradient-to-r from-indigo-500 to-emerald-500";
+          // 💡 ライト/ダークの両方で絶対に見やすいようにラインカラーを微調整
+          lineBg = "bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500 dark:from-indigo-400 dark:via-purple-500 dark:to-emerald-400";
+          
           let mIcon = currentMove.type==="bus"?"fa-bus":(currentMove.type==="walk"?"fa-person-walking":(currentMove.type==="car"?"fa-car":"fa-train"));
-          let mColor = currentMove.type==="car"?"text-purple-600 dark:text-purple-400":"text-emerald-600 dark:text-emerald-400";
-          iconHtml = `<i class="fa-solid ${mIcon} text-xs ${mColor} animate-bounce"></i>`; isActiveLine = true;
+          
+          // 💡 ライトモードでも埋もれないよう、電車のアイコン色を深いインディゴ・ブルー（あるいはダーク調の背景境界付き）へ最適化
+          let mColor = "text-indigo-600 dark:text-indigo-400 shadow-sm border-indigo-200 dark:border-indigo-800";
+          if (currentMove.type === "car") {
+            mColor = "text-purple-600 dark:text-purple-400";
+          } else if (currentMove.type === "walk") {
+            mColor = "text-teal-600 dark:text-teal-400";
+          } else if (currentMove.type === "bus") {
+            mColor = "text-orange-600 dark:text-orange-400";
+          }
+          
+          // アイコンの背景に丸い枠を付け、ライトモードでも非常にはっきりと浮かび上がるように調整しました
+          iconHtml = `
+            <div class="w-6 h-6 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md flex items-center justify-center animate-bounce">
+              <i class="fa-solid ${mIcon} text-[10px] ${mColor}"></i>
+            </div>
+          `;
+          isActiveLine = true;
         }
       }
-      html += `<div class="w-12 h-1 ${lineBg} mx-1 flex items-center justify-center shrink-0 relative" data-active-line="${isActiveLine}">${iconHtml}</div>`;
+      html += `<div class="w-12 h-1.5 ${lineBg} mx-1 flex items-center justify-center shrink-0 relative" data-active-line="${isActiveLine}">${iconHtml}</div>`;
     }
   });
   lineCont.innerHTML = html;
@@ -1491,7 +1502,7 @@ function renderTripTimelineView() {
       if (node.events && node.events.length > 0) {
         innerEventsHtml = `<div class="mt-2.5 ml-4 border-l-2 border-dashed border-slate-300 dark:border-slate-800 pl-4 space-y-2">`;
         node.events.forEach(ev => {
-          const costBadgeHtml = ev.cost ? `<span class="text-[10px] font-mono text-amber-500 bg-amber-400/5 px-1.5 py-0.2 rounded border border-amber-500/10">${parseInt(ev.cost).toLocaleString()}円</span>` : '';
+          const costBadgeHtml = ev.cost ? `<span class="text-[10px] font-mono text-amber-500 bg-amber-500/5 px-1.5 py-0.2 rounded border border-amber-500/10">${parseInt(ev.cost).toLocaleString()}円</span>` : '';
           if (ev.type === "eat") {
             innerEventsHtml += `
               <div class="glass-card p-2.5 rounded-xl border border-amber-500/20 border-l-4 border-l-amber-500 space-y-1 relative">
@@ -1564,6 +1575,7 @@ function renderEditorDayFilter() {
   const container = document.getElementById('editorDayFilterContainer');
   if (!container) return;
 
+  // 全ての日程一覧をソートして取得
   const days = Array.from(new Set(currentTripData.map(x => x.day || 1))).sort((a,b) => a - b);
   
   let html = "";
@@ -1577,7 +1589,23 @@ function renderEditorDayFilter() {
     const tabClass = isActive 
       ? "bg-indigo-600 border-indigo-400 text-white font-extrabold shadow shadow-indigo-500/25" 
       : "bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200";
-    html += `<button onclick="setEditorDayFilter(${d})" class="px-3 py-1.5 rounded-lg text-xs border ${tabClass} transition-all shrink-0 font-bold font-mono">Day ${d}</button>`;
+    
+    // 💡 Day 1以外の場合は、タブ内に削除ボタン(ゴミ箱)を追加
+    let deleteBtnHtml = "";
+    if (d > 1) {
+      deleteBtnHtml = `
+        <span onclick="event.stopPropagation(); deleteEntireDay(${d})" class="ml-1.5 px-1 py-0.5 rounded text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/60 hover:text-rose-600 transition-colors" title="Day ${d} を削除">
+          <i class="fa-solid fa-trash-can text-[10px]"></i>
+        </span>
+      `;
+    }
+
+    html += `
+      <div onclick="setEditorDayFilter(${d})" class="flex items-center cursor-pointer px-3 py-1.5 rounded-lg text-xs border ${tabClass} transition-all shrink-0 font-bold font-mono">
+        <span>Day ${d}</span>
+        ${deleteBtnHtml}
+      </div>
+    `;
   });
 
   const maxDay = days.length > 0 ? Math.max(...days) : 1;
@@ -1588,6 +1616,37 @@ function renderEditorDayFilter() {
   `;
 
   container.innerHTML = html;
+}
+
+// 💡 指定された特定の日(Day 1 以外)を丸ごと削除する
+window.deleteEntireDay = async function(dayNum) {
+  if (dayNum <= 1) return;
+  const ok = await showConfirm(
+    `Day ${dayNum} の削除`, 
+    `Day ${dayNum} に登録されているすべての行程・プランを削除し、以降の日付を1日ずつ繰り上げますか？`
+  );
+  if (!ok) return;
+
+  // 1. 該当日のデータを全消去
+  currentTripData = currentTripData.filter(x => (x.day || 1) !== dayNum);
+
+  // 2. 該当日の翌日以降のデータを1日ずつ繰り上げる
+  currentTripData.forEach(item => {
+    const currentDay = item.day || 1;
+    if (currentDay > dayNum) {
+      item.day = currentDay - 1;
+    }
+  });
+
+  // 表示フィルタが削除した日に設定されていた場合は「全日程」または「前の日」に戻す
+  if (currentEditorDayFilter === dayNum) {
+    currentEditorDayFilter = "all";
+  } else if (typeof currentEditorDayFilter === "number" && currentEditorDayFilter > dayNum) {
+    currentEditorDayFilter = currentEditorDayFilter - 1;
+  }
+
+  showToast(`📅 Day ${dayNum} のスケジュールと日程を削除しました`, "success");
+  renderEditorRows();
 }
 
 window.setEditorDayFilter = function(filter) {
@@ -1630,8 +1689,12 @@ function createEditorRowElement(item, index) {
   row.className = `glass-card rounded-xl p-4 space-y-3 relative transition-all theme-card-${item.type || 'train'}`;
   const isMove = isMoveType(item.type);
 
+  // 存在する日程のリストから選択肢を動的に構成 (最大10日まで、またはデータの最大Dayまで)
+  let maxDayInTrip = Math.max(1, ...currentTripData.map(x => x.day || 1));
+  let limit = Math.max(10, maxDayInTrip);
+  
   let daySelectHtml = `<select onchange="updateRowField(${index}, 'day', parseInt(this.value))" class="bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-bold focus:outline-none text-indigo-600 dark:text-indigo-400 cursor-pointer">`;
-  for (let d = 1; d <= 10; d++) {
+  for (let d = 1; d <= limit; d++) {
     daySelectHtml += `<option value="${d}" ${(item.day || 1) === d ? 'selected' : ''}>Day ${d}</option>`;
   }
   daySelectHtml += `</select>`;
@@ -1852,7 +1915,6 @@ window.saveCurrentTripToCloud = async function() {
   if (!title) { showToast("⚠️ 旅行タイトルを入力してください", "error"); return; }
   if (currentTripData.length === 0) { showToast("⚠️ 行動プランを追加してください", "error"); return; }
   try {
-    // 復旧: 元の直下 `trips` コレクションパスに保存
     const docRef = doc(db, "trips", currentTripId);
     await setDoc(docRef, { 
       userId: currentUser.uid, 
