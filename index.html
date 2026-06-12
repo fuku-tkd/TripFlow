@@ -766,7 +766,7 @@ window.handleAuthSubmit = async function(event) {
         emergencyMemo: '',
         updatedAt: Date.now()
       };
-      await setDoc(doc(db, 'artifacts', APP_ID, 'users', userCredential.user.uid, 'profile', 'settings'), defaultProfile);
+      await setDoc(doc(db, 'trips', APP_ID, 'users', userCredential.user.uid, 'profile', 'settings'), defaultProfile);
       showToast("🎉 アカウントを作成し、ログインしました！", "success");
     }
     document.getElementById('authForm').reset();
@@ -856,8 +856,8 @@ window.handleUpdateProfileSubmit = async function() {
       }
       
       // Firestoreへユーザープロフィール拡張設定を保存
-      // RULE 1: /artifacts/{appId}/users/{userId}/{collectionName}
-      await setDoc(doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'settings'), {
+      // RULE 1: /trips/{appId}/users/{userId}/{collectionName}
+      await setDoc(doc(db, 'trips', APP_ID, 'users', currentUser.uid, 'profile', 'settings'), {
         avatarColor: userProfile.avatarColor,
         avatarIcon: userProfile.avatarIcon,
         tripStyle: style,
@@ -956,7 +956,7 @@ onAuthStateChanged(auth, async (user) => {
     
     // Firestoreより拡張プロフィールを取得 (RULE 1 & 3遵守)
     try {
-      const pDoc = await getDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'settings'));
+      const pDoc = await getDoc(doc(db, 'trips', APP_ID, 'users', user.uid, 'profile', 'settings'));
       if(pDoc.exists()) {
         userProfile = { ...userProfile, ...pDoc.data() };
       }
@@ -1104,7 +1104,7 @@ window.switchToTimelineView = function() { showScreen('timeline'); }
 window.switchToNaviView = function() { showScreen('navi'); }
 window.switchToEditView = function() { showScreen('edit'); }
 
-// RULE 1: /artifacts/{appId}/public/data/{collectionName} を用いて旅程を全管理
+// RULE 1: /trips/{appId}/public/data/{collectionName} を用いて旅程を全管理
 async function loadDashboardTrips() {
   if (!currentUser) return;
   const container = document.getElementById('dashboardTripList');
@@ -1114,7 +1114,7 @@ async function loadDashboardTrips() {
     allTripsCache = [];
     
     // RULE 1 & RULE 2: 複合条件・並び替えを使用せず、単純なクエリで全データ取得
-    const tripsCollection = collection(db, 'artifacts', APP_ID, 'public', 'data', 'trips');
+    const tripsCollection = collection(db, 'trips', APP_ID, 'public', 'data', 'trips');
     const q = query(tripsCollection, where("userId", "==", currentUser.uid));
     const querySnapshot = await getDocs(q);
     
@@ -1198,8 +1198,8 @@ window.startNewTripCreation = function() {
 window.deleteTripClick = async function(id, title) {
   if (!await showConfirm("旅程の削除確認", `『${title}』をクラウドから完全に削除しますか？`)) return;
   try {
-    // RULE 1: /artifacts/{appId}/public/data/{collectionName}/{documentId}
-    await deleteDoc(doc(db, "artifacts", APP_ID, "public", "data", "trips", id)); 
+    // RULE 1: /trips/{appId}/public/data/{collectionName}/{documentId}
+    await deleteDoc(doc(db, "trips", APP_ID, "public", "data", "trips", id)); 
     showToast("🗑️ 旅程を削除しました", "success"); 
     loadDashboardTrips();
   } catch(e) { showToast("削除失敗: " + e.message, "error"); }
@@ -1878,8 +1878,8 @@ window.saveCurrentTripToCloud = async function() {
   if (!title) { showToast("⚠️ 旅行タイトルを入力してください", "error"); return; }
   if (currentTripData.length === 0) { showToast("⚠️ 行動プランを追加してください", "error"); return; }
   try {
-    // RULE 1 & 3: /artifacts/{appId}/public/data/{collectionName}/{documentId}
-    const docRef = doc(db, "artifacts", APP_ID, "public", "data", "trips", currentTripId);
+    // RULE 1 & 3: /trips/{appId}/public/data/{collectionName}/{documentId}
+    const docRef = doc(db, "trips", APP_ID, "public", "data", "trips", currentTripId);
     await setDoc(docRef, { 
       userId: currentUser.uid, 
       userEmail: currentUser.email, 
