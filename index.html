@@ -9,7 +9,7 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
 <script>
-  // Tailwindのダークモードを「class」または「media（自動）」で制御するために、メディアクエリを自動追従
+  // Tailwindのダークモードをシステム設定に同期
   tailwind.config = {
     darkMode: 'media',
     theme: {
@@ -37,7 +37,7 @@
     transition: background-color 0.3s, color 0.3s;
   }
 
-  /* 💡 自動テーマ判定CSS変数 & スタイル定義 */
+  /* 💡 自動テーマ判定CSS定義 */
   @media (prefers-color-scheme: dark) {
     body {
       background: radial-gradient(circle at top, #0f172a 0%, #020617 100%);
@@ -104,7 +104,6 @@
     .badge-sub { background: rgba(226, 232, 240, 0.8); border: 1px solid rgba(0,0,0,0.05); }
   }
 
-  /* 横スクロールエリアのスクロールバーを非表示 */
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -114,17 +113,16 @@
   }
 
   .neon-glow-indigo { box-shadow: 0 0 12px rgba(99, 102, 241, 0.6); }
-
   .screen-hidden { display: none !important; }
 </style>
 </head>
 <body class="pb-12 text-slate-800 dark:text-slate-100">
 
-  <!-- ヘッダーUI：スマホ/PCを問わず「右上が常にログイン・プロフィール」に固定 -->
+  <!-- ヘッダーUI -->
   <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-900 px-4 py-2.5 md:px-8">
     <div class="max-w-6xl mx-auto flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
       
-      <!-- 1行目：ロゴ ＆ 【スマホ用】右上端ログイン・ユーザープロフィール表示 -->
+      <!-- ロゴ＆スマホプロフィールエリア -->
       <div class="flex items-center justify-between w-full md:w-auto shrink-0">
         <div onclick="goHome()" class="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-all shrink-0">
           <div class="bg-gradient-to-tr from-indigo-500 to-indigo-600 p-1.5 rounded-lg shadow-lg shadow-indigo-500/20">
@@ -138,9 +136,8 @@
           </div>
         </div>
 
-        <!-- 【スマホのみ表示】最右上に常に配置されるログイン/ユーザーコンテナ -->
         <div class="flex md:hidden items-center gap-1.5 shrink-0">
-          <!-- スマホ用ログイン済エリア -->
+          <!-- スマホプロフィール -->
           <div id="userInfoAreaMobile" class="hidden flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-0.5 pr-2.5 rounded-full">
             <div onclick="openProfileModal()" id="avatarMobile" class="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] text-white cursor-pointer">
               <i class="fa-solid fa-user text-[9px]"></i>
@@ -150,7 +147,6 @@
               <i class="fa-solid fa-right-from-bracket"></i>
             </button>
           </div>
-          <!-- スマホ用ゲストログインボタン -->
           <div id="guestHeaderAreaMobile" class="flex items-center">
             <button onclick="openAuthModal()" class="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-indigo-600 to-indigo-700 border border-indigo-500/30 rounded-lg text-[10px] font-bold text-white transition-all shadow-md shadow-indigo-500/10">
               <i class="fa-solid fa-right-to-bracket text-[8px]"></i> <span>ログイン</span>
@@ -159,7 +155,7 @@
         </div>
       </div>
 
-      <!-- 中段：クイック画面遷移アクションバー -->
+      <!-- アクションナビゲーションバー -->
       <div id="navigationBar" class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar pb-0.5 -mx-4 px-4 md:mx-0 md:px-0 md:pb-0 scroll-smooth shrink-0 md:flex-grow md:justify-center">
         <button id="btnBackToHome" onclick="goHome()" class="hidden flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-300 transition-all shrink-0">
           <i class="fa-solid fa-house text-[10px]"></i> <span>ホーム</span>
@@ -178,11 +174,10 @@
         </button>
       </div>
 
-      <!-- 右端：【PC・タブレット用】ログイン・ユーザーコンテナ -->
+      <!-- PC用ログイン・ユーザーコンテナ -->
       <div class="hidden md:flex items-center gap-1.5 shrink-0">
-        <!-- PC用ログイン済エリア -->
         <div id="userInfoArea" class="hidden flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-0.5 pr-2.5 rounded-full">
-          <div onclick="openProfileModal()" id="avatarPc" class="w-6 h-6 rounded-full bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-[10px] text-white border border-indigo-400/30 cursor-pointer transition-colors" title="プロフィール・詳細設定">
+          <div onclick="openProfileModal()" id="avatarPc" class="w-6 h-6 rounded-full bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-[10px] text-white border border-indigo-400/30 cursor-pointer transition-colors" title="プロフィール設定">
             <i class="fa-solid fa-user text-[10px]"></i>
           </div>
           <span id="userName" onclick="openProfileModal()" class="text-[11px] font-bold text-slate-700 dark:text-slate-300 max-w-[120px] truncate cursor-pointer hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">...</span>
@@ -190,7 +185,6 @@
             <i class="fa-solid fa-right-from-bracket"></i>
           </button>
         </div>
-        <!-- PC用ゲストログインボタン -->
         <div id="guestHeaderArea" class="flex items-center">
           <button onclick="openAuthModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:brightness-110 border border-indigo-500/30 rounded-xl text-xs font-bold text-white transition-all shadow-md shadow-indigo-500/10">
             <i class="fa-solid fa-right-to-bracket text-[10px]"></i> <span>ログイン / 新規登録</span>
@@ -209,7 +203,7 @@
     </p>
   </div>
 
-  <!-- ウェルカム／ポータル画面 (未ログインランディングページ) -->
+  <!-- ランディング画面 -->
   <div id="screen-welcome" class="max-w-5xl mx-auto px-4 mt-6 md:mt-12">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
       <div class="lg:col-span-7 space-y-4 md:space-y-6 text-left">
@@ -269,7 +263,6 @@
           </div>
 
           <div class="space-y-3 pt-2">
-            <!-- お試し機能起動ボタン -->
             <button onclick="launchSandboxDemo()" class="w-full flex items-center justify-center gap-2.5 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-xs font-bold text-white rounded-xl transition-all shadow-md shadow-emerald-500/20 hover:scale-[1.01]">
               <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
               <span>ログインなしでお試し利用する</span>
@@ -281,7 +274,6 @@
               <div class="flex-grow border-t border-slate-300 dark:border-slate-800"></div>
             </div>
 
-            <!-- アカウントサインインへの引き込み -->
             <button onclick="openAuthModal()" class="w-full flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-200 dark:bg-slate-900/90 hover:bg-slate-300 dark:hover:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 rounded-xl transition-all">
               <i class="fa-solid fa-right-to-bracket"></i>
               <span>サインイン / 新規登録する</span>
@@ -292,7 +284,7 @@
     </div>
   </div>
 
-  <!-- ログイン専用ポータル・ホーム（マイデータ一覧）画面 -->
+  <!-- マイポータル・ホーム（マイデータ一覧）画面 -->
   <div id="screen-home" class="max-w-4xl mx-auto px-4 mt-6 space-y-6 screen-hidden">
     <!-- ユーザーウェルカムパネル -->
     <div class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -311,6 +303,7 @@
       </button>
     </div>
 
+    <!-- 新規作成プロンプト -->
     <div class="glass-card rounded-2xl p-6 text-center relative overflow-hidden border border-indigo-500/25">
       <h2 class="text-sm md:text-base font-bold text-slate-800 dark:text-white mb-1">新しい旅の行程を計画する</h2>
       <p class="text-xs text-muted mb-5">スポットベースのタイムライン設計、乗換や経路・費用の自動集計エディタを起動します。</p>
@@ -320,6 +313,7 @@
       </button>
     </div>
 
+    <!-- マイデータ一覧 -->
     <div class="space-y-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -329,14 +323,13 @@
         <span id="globalSyncStatus" class="text-[10px] text-slate-500 font-mono">同期確認中...</span>
       </div>
       <div id="dashboardTripList" class="space-y-3">
-        <div class="text-center p-8 text-xs text-slate-500">データを読み込んでいます...</div>
+        <div class="text-center p-8 text-xs text-slate-500 font-mono animate-pulse">データを読み込んでいます...</div>
       </div>
     </div>
   </div>
 
   <!-- ナビゲーション画面 -->
   <div id="screen-navi" class="max-w-4xl mx-auto px-3 mt-4 space-y-3 screen-hidden">
-    <!-- ナビのDay切り替えボタンエリア -->
     <div id="naviDaySelectorArea" class="flex flex-col gap-1.5">
       <div id="naviDaySelectorContainer" class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar shrink-0"></div>
     </div>
@@ -373,7 +366,6 @@
               <span>カスタムシミュレート時間を使う</span>
             </label>
           </div>
-          <!-- シミュレータ操作パネル -->
           <div id="customTimeControls" class="flex flex-wrap items-center gap-2 bg-slate-100 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-200 dark:border-slate-800/80 opacity-50 pointer-events-none transition-opacity">
             <input type="time" id="customTimeInput" value="12:00" class="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md text-xs font-bold text-slate-800 dark:text-white">
             <button id="btnAdjustTimeMinus" class="px-2 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded text-xs text-slate-700 dark:text-slate-300 shadow">-30分</button>
@@ -428,7 +420,6 @@
       <input type="text" id="tripTitle" class="w-full text-sm sm:text-base font-bold px-4 py-2.5 rounded-xl premium-input text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500" placeholder="例: 北海道グルメ＆絶景ドライブの旅">
     </div>
 
-    <!-- エディタ内の日にち選択クイックフィルターエリア -->
     <div class="glass-card rounded-2xl p-4 space-y-2">
       <div class="flex items-center gap-2">
         <span class="w-1.5 h-3.5 bg-pink-500 rounded-full"></span>
@@ -479,12 +470,11 @@
 
     <div class="glass-card rounded-2xl p-4">
       <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-3 uppercase"><i class="fa-solid fa-route text-indigo-500 mr-1"></i>リアルタイム行程ルートプレビュー</h2>
-      <!-- エディタ行程プレビューコンテナ（駅・スポット基準） -->
       <div id="editorTimelinePreview" class="relative py-2"></div>
     </div>
   </div>
 
-  <!-- 認証用モーダル (ログイン / アカウント作成) -->
+  <!-- 認証用モーダル -->
   <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
     <div class="glass-card rounded-2xl w-full max-w-sm p-6 border border-slate-200 dark:border-slate-800 space-y-4 text-left">
       <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-900 pb-2">
@@ -533,7 +523,7 @@
     </div>
   </div>
 
-  <!-- 👤 プロフィール＆多機能設定モーダル (大幅アップデート) -->
+  <!-- 👤 プロフィール＆多機能設定モーダル -->
   <div id="profileModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
     <div class="glass-card rounded-2xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-800 space-y-4 text-left max-h-[90vh] overflow-y-auto hide-scrollbar">
       <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-900 pb-2">
@@ -542,7 +532,6 @@
       </div>
 
       <div class="space-y-4">
-        <!-- アバターとテーマの選択 -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">アバターアイコン / カラー</label>
@@ -597,7 +586,7 @@
         <div class="bg-slate-100 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800/80">
           <p class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">💡 端末テーマ同期</p>
           <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-            TripFlowは端末（OS）の設定変更を感知して、自動でダーク/ライトの配色デザインに切り替わります。
+            TripFlowは端末の設定変更を感知して、自動でダーク/ライトの配色デザインに切り替わります。
           </p>
         </div>
       </div>
@@ -609,7 +598,7 @@
     </div>
   </div>
 
-  <!-- カスタム確認ダイアログ -->
+  <!-- 確認ダイアログ -->
   <div id="confirmDialog" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
     <div class="glass-card rounded-2xl w-full max-w-sm p-5 border border-slate-200 dark:border-slate-800">
       <h4 id="confirmTitle" class="text-sm font-bold text-slate-900 dark:text-white mb-1">確認</h4>
@@ -642,9 +631,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// グローバル定数・アプリアイデンティティ
-const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'trip-flow-app';
-
 let currentUser = null;      
 let allTripsCache = [];      
 let currentTripId = null;    
@@ -655,11 +641,11 @@ let editingTripIsSample = false;
 let isSandboxMode = false;
 let authMode = 'login';
 
-// 複数日ナビ用＆エディタ用ステート
+// 複数日ナビ＆エディタステート
 let currentNaviDay = 1;
 let currentEditorDayFilter = "all";
 
-// ユーザー拡張プロフィール設定用ステート（クラウドと双方向同期）
+// ユーザー拡張プロフィール設定 (ルート直下の `trips` コレクションの特定ドキュメント `profile_settings_{userId}` で一元管理)
 let userProfile = {
   avatarColor: 'indigo',
   avatarIcon: 'fa-user',
@@ -683,7 +669,7 @@ const sandboxSampleTrip = [
   { day: 2, type: "eat", place: "温泉旅館 of 朝食", memo: "美味しいハーフバイキング＆特製温泉粥の和朝食", start: "08:00", end: "09:00", cost: "0" },
   { day: 2, type: "car", from: "湯の川温泉", to: "函館山ロープウェイ山麓駅", line: "湯の川・元町ベイラインを海岸沿いドライブ", start: "09:30", end: "09:55", cost: "0" },
   { day: 2, type: "stay", place: "函館山ロープウェイ", memo: "ロープウェイで展望台へ。昼間のきらめく函館湾を一望！", start: "10:00", end: "11:15", cost: "1500" },
-  { day: 2, type: "walk", from: "ロープウェイ山麓駅", to: "元町ハリストス正教会", line: "美しい石畳のハチマン坂を経由", start: "11:15", end: "11:25", cost: "0" },
+  { day: 2, type: "walk", from: "ロープウェイ山麓駅", to: "元町ハリストス正教会", line: "美しい石畳 of ハチマン坂を経由", start: "11:15", end: "11:25", cost: "0" },
   { day: 2, type: "stay", place: "元町教会群エリア", memo: "大三坂や元町カトリック教会など異国情緒あふれる洋館街を撮影散策", start: "11:25", end: "12:30", cost: "200" },
   { day: 2, type: "eat", place: "元町レトロ茶房", memo: "大正レトロな館で味わう特製抹茶パフェとドリップ珈琲", start: "12:40", end: "13:40", cost: "1200" },
   { day: 2, type: "car", from: "元町エリア", to: "新函館北斗駅", line: "レンタカー返却後、北海道新幹線にて出発地へ", start: "13:50", end: "14:40", cost: "2000" }
@@ -694,7 +680,6 @@ function resolveEmailFormat(input) {
   return trimmed.includes('@') ? trimmed : `${trimmed.toLowerCase()}@internal.app`;
 }
 
-// 認証モーダル開閉
 window.openAuthModal = function() {
   authMode = 'login';
   syncAuthFormUI();
@@ -756,9 +741,9 @@ window.handleAuthSubmit = async function(event) {
       const userCredential = await createUserWithEmailAndPassword(auth, finalEmail, password);
       if (displayName) await updateProfile(userCredential.user, { displayName: displayName });
       
-      // 新規登録時の初期プロフィール作成
+      // tripsコレクションにアバター等の環境設定用ドキュメントを配置
       const defaultProfile = {
-        userId: userCredential.user.uid,
+        profileUserId: userCredential.user.uid,
         avatarColor: 'indigo',
         avatarIcon: 'fa-user',
         tripStyle: 'all',
@@ -766,7 +751,7 @@ window.handleAuthSubmit = async function(event) {
         emergencyMemo: '',
         updatedAt: Date.now()
       };
-      await setDoc(doc(db, 'trips', APP_ID, 'users', userCredential.user.uid, 'profile', 'settings'), defaultProfile);
+      await setDoc(doc(db, 'trips', 'profile_settings_' + userCredential.user.uid), defaultProfile);
       showToast("🎉 アカウントを作成し、ログインしました！", "success");
     }
     document.getElementById('authForm').reset();
@@ -795,7 +780,6 @@ window.handleSignOut = async function() {
   }
 }
 
-// 👤 アバター色切り替え管理
 window.selectProfileAvatar = function(color, icon) {
   userProfile.avatarColor = color;
   userProfile.avatarIcon = icon;
@@ -809,7 +793,6 @@ window.selectProfileAvatar = function(color, icon) {
   }
 }
 
-// 👤 プロフィールモーダルを開く
 window.openProfileModal = function() {
   document.getElementById('profileDisplayName').value = currentUser ? (currentUser.displayName || "") : "ゲストユーザー";
   document.getElementById('profileNewPassword').value = "";
@@ -818,7 +801,6 @@ window.openProfileModal = function() {
   document.getElementById('profileEmergencyMemo').value = userProfile.emergencyMemo || "";
   
   selectProfileAvatar(userProfile.avatarColor || 'indigo', userProfile.avatarIcon || 'fa-user');
-  
   document.getElementById('profileModal').classList.remove('opacity-0', 'pointer-events-none');
 }
 
@@ -826,7 +808,6 @@ window.closeProfileModal = function() {
   document.getElementById('profileModal').classList.add('opacity-0', 'pointer-events-none');
 }
 
-// 👤 プロフィール更新処理 (双方向＆Firestore保存)
 window.handleUpdateProfileSubmit = async function() {
   const newName = document.getElementById('profileDisplayName').value.trim();
   const newPassword = document.getElementById('profileNewPassword').value;
@@ -839,7 +820,6 @@ window.handleUpdateProfileSubmit = async function() {
     return;
   }
 
-  // ローカルステートに反映
   userProfile.tripStyle = style;
   userProfile.defaultTransport = defTransport;
   userProfile.emergencyMemo = emergency;
@@ -855,9 +835,9 @@ window.handleUpdateProfileSubmit = async function() {
         await updatePassword(currentUser, newPassword);
       }
       
-      // Firestoreへユーザープロフィール拡張設定を保存
-      // RULE 1: /trips/{appId}/users/{userId}/{collectionName}
-      await setDoc(doc(db, 'trips', APP_ID, 'users', currentUser.uid, 'profile', 'settings'), {
+      // ルート直下 trips コレクションに設定を保存
+      await setDoc(doc(db, 'trips', 'profile_settings_' + currentUser.uid), {
+        profileUserId: currentUser.uid,
         avatarColor: userProfile.avatarColor,
         avatarIcon: userProfile.avatarIcon,
         tripStyle: style,
@@ -877,14 +857,12 @@ window.handleUpdateProfileSubmit = async function() {
       }
     }
   } else {
-    // サンドボックス・お試しモード用一時保存
     showToast("👤 プロフィール設定を一時保存しました！(お試し中)", "success");
     syncUserInterfaceElements(null);
     closeProfileModal();
   }
 }
 
-// プロフィールのビジュアルと配色をシステム・アバター設定に適用
 function applyAvatarVisual(elementId, color, icon) {
   const target = document.getElementById(elementId);
   if (!target) return;
@@ -900,22 +878,16 @@ function applyAvatarVisual(elementId, color, icon) {
   target.innerHTML = `<i class="fa-solid ${icon || 'fa-user'}"></i>`;
 }
 
-// PC、スマホ(モバイル)両方のヘッダープロフィールエリアの表示を同期
 function syncUserInterfaceElements(user) {
   const nameToDisplay = user ? (user.displayName || (user.email ? user.email.split('@')[0] : 'ユーザー')) : 'ゲスト';
   
-  // アバタービジュアル適用
   applyAvatarVisual('avatarPc', userProfile.avatarColor, userProfile.avatarIcon);
   applyAvatarVisual('avatarMobile', userProfile.avatarColor, userProfile.avatarIcon);
 
-  // PC側
   document.getElementById('userName').textContent = nameToDisplay;
-  // スマホ側
   document.getElementById('userNameMobile').textContent = nameToDisplay;
-  
   document.getElementById('welcomeUserName').textContent = nameToDisplay;
   
-  // 旅の好みバッジ
   const styleLabels = {
     'all': '✨ 何でも楽しむ派',
     'gourmet': '🍔 グルメ中心派',
@@ -931,13 +903,10 @@ function syncUserInterfaceElements(user) {
   }
 }
 
-// 認証ステート監視 ＆ プロフィール読み込み
 onAuthStateChanged(auth, async (user) => {
   const welcomeScreen = document.getElementById('screen-welcome');
-  
   const userInfoArea = document.getElementById('userInfoArea');
   const userInfoAreaMobile = document.getElementById('userInfoAreaMobile');
-  
   const guestHeaderArea = document.getElementById('guestHeaderArea');
   const guestHeaderAreaMobile = document.getElementById('guestHeaderAreaMobile');
   
@@ -947,16 +916,14 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById('sandboxBanner').classList.add('hidden');
     welcomeScreen.classList.add('screen-hidden');
     
-    // PC & スマホ両方のUI状態をアクティブに切り替え
     userInfoArea.classList.remove('hidden');
     userInfoAreaMobile.classList.remove('hidden');
-    
     guestHeaderArea.classList.add('hidden');
     guestHeaderAreaMobile.classList.add('hidden');
     
-    // Firestoreより拡張プロフィールを取得 (RULE 1 & 3遵守)
+    // ルート直下 trips コレクションよりプロフィールを取得
     try {
-      const pDoc = await getDoc(doc(db, 'trips', APP_ID, 'users', user.uid, 'profile', 'settings'));
+      const pDoc = await getDoc(doc(db, 'trips', 'profile_settings_' + user.uid));
       if(pDoc.exists()) {
         userProfile = { ...userProfile, ...pDoc.data() };
       }
@@ -968,10 +935,8 @@ onAuthStateChanged(auth, async (user) => {
     showScreen('home'); 
   } else {
     currentUser = null;
-    
     userInfoArea.classList.add('hidden');
     userInfoAreaMobile.classList.add('hidden');
-    
     guestHeaderArea.classList.remove('hidden');
     guestHeaderAreaMobile.classList.remove('hidden');
     
@@ -987,7 +952,6 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// お試し（Sandbox）デモモード起動
 window.launchSandboxDemo = function() {
   isSandboxMode = true;
   document.getElementById('sandboxBanner').classList.remove('hidden');
@@ -997,7 +961,6 @@ window.launchSandboxDemo = function() {
   currentTripData = JSON.parse(JSON.stringify(sandboxSampleTrip));
   editingTripIsSample = true;
   
-  // デモ用の初期プロフィール
   userProfile = {
     avatarColor: 'emerald',
     avatarIcon: 'fa-compass',
@@ -1064,7 +1027,6 @@ window.showScreen = function(screenName) {
   } else {
     document.getElementById('btnBackToHome').classList.remove('hidden');
     
-    // アクションメニュー群の出し分け
     if (currentTripData && currentTripData.length > 0) {
       if (screenName === 'navi') {
         document.getElementById('btnSwitchTimeline').classList.remove('hidden');
@@ -1104,7 +1066,7 @@ window.switchToTimelineView = function() { showScreen('timeline'); }
 window.switchToNaviView = function() { showScreen('navi'); }
 window.switchToEditView = function() { showScreen('edit'); }
 
-// RULE 1: /trips/{appId}/public/data/{collectionName} を用いて旅程を全管理
+// 💡 既存のデータ復旧：元のルート直下 `trips` コレクションから直接データを抽出
 async function loadDashboardTrips() {
   if (!currentUser) return;
   const container = document.getElementById('dashboardTripList');
@@ -1113,22 +1075,36 @@ async function loadDashboardTrips() {
   try {
     allTripsCache = [];
     
-    // RULE 1 & RULE 2: 複合条件・並び替えを使用せず、単純なクエリで全データ取得
-    const tripsCollection = collection(db, 'trips', APP_ID, 'public', 'data', 'trips');
-    const q = query(tripsCollection, where("userId", "==", currentUser.uid));
-    const querySnapshot = await getDocs(q);
+    // 復旧: 元のクエリ（ルート直下 trips からの直接読み込み）に戻しました
+    const userQuery = query(collection(db, "trips"), where("userId", "==", currentUser.uid));
+    const userSnapshot = await getDocs(userQuery);
     
-    querySnapshot.forEach((docSnap) => {
-      allTripsCache.push({ 
-        id: docSnap.id, 
-        title: docSnap.data().title || docSnap.id, 
-        trip: docSnap.data().trip || [], 
-        isSample: docSnap.data().isSample || false 
-      });
+    userSnapshot.forEach((docSnap) => {
+      // 旅程配列が存在するドキュメントのみを計画として追加 (プロフィール用ドキュメントをバイパス)
+      if (docSnap.data().trip) {
+        allTripsCache.push({ 
+          id: docSnap.id, 
+          title: docSnap.data().title || docSnap.id, 
+          trip: docSnap.data().trip || [], 
+          isSample: false 
+        });
+      }
     });
 
-    // メモリ内でソート処理 (RULE 2 遵守)
-    allTripsCache.sort((a, b) => b.isSample - a.isSample);
+    const sampleQuery = query(collection(db, "trips"), where("userId", "==", "sample"));
+    const sampleSnapshot = await getDocs(sampleQuery);
+    sampleSnapshot.forEach((docSnap) => {
+      if (docSnap.data().trip) {
+        allTripsCache.push({ 
+          id: docSnap.id, 
+          title: docSnap.data().title || docSnap.id, 
+          trip: docSnap.data().trip || [], 
+          isSample: true 
+        });
+      }
+    });
+
+    allTripsCache.sort((a, b) => (b.isSample ? 1 : 0) - (a.isSample ? 1 : 0));
     
     container.innerHTML = "";
     if (allTripsCache.length === 0) {
@@ -1198,8 +1174,8 @@ window.startNewTripCreation = function() {
 window.deleteTripClick = async function(id, title) {
   if (!await showConfirm("旅程の削除確認", `『${title}』をクラウドから完全に削除しますか？`)) return;
   try {
-    // RULE 1: /trips/{appId}/public/data/{collectionName}/{documentId}
-    await deleteDoc(doc(db, "trips", APP_ID, "public", "data", "trips", id)); 
+    // 復旧: 元の直下 trips パスから削除
+    await deleteDoc(doc(db, "trips", id)); 
     showToast("🗑️ 旅程を削除しました", "success"); 
     loadDashboardTrips();
   } catch(e) { showToast("削除失敗: " + e.message, "error"); }
@@ -1515,7 +1491,7 @@ function renderTripTimelineView() {
       if (node.events && node.events.length > 0) {
         innerEventsHtml = `<div class="mt-2.5 ml-4 border-l-2 border-dashed border-slate-300 dark:border-slate-800 pl-4 space-y-2">`;
         node.events.forEach(ev => {
-          const costBadgeHtml = ev.cost ? `<span class="text-[10px] font-mono text-amber-500 bg-amber-500/5 px-1.5 py-0.2 rounded border border-amber-500/10">${parseInt(ev.cost).toLocaleString()}円</span>` : '';
+          const costBadgeHtml = ev.cost ? `<span class="text-[10px] font-mono text-amber-500 bg-amber-400/5 px-1.5 py-0.2 rounded border border-amber-500/10">${parseInt(ev.cost).toLocaleString()}円</span>` : '';
           if (ev.type === "eat") {
             innerEventsHtml += `
               <div class="glass-card p-2.5 rounded-xl border border-amber-500/20 border-l-4 border-l-amber-500 space-y-1 relative">
@@ -1529,7 +1505,7 @@ function renderTripTimelineView() {
             innerEventsHtml += `
               <div class="glass-card p-2.5 rounded-xl border border-emerald-500/20 border-l-4 border-l-emerald-500 space-y-1 relative">
                 <div class="flex items-center justify-between gap-1">
-                  <div class="flex items-center gap-1.5"><span class="text-[10px] font-extrabold px-1.5 py-0.5 bg-emerald-500/10 text-emerald-500 rounded"><i class="fa-solid fa-hotel mr-1"></i>🏨 観光・滞在</span><span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">${ev.start}〜${ev.end}</span></div>
+                  <div class="flex items-center gap-1.5"><span class="text-[10px] font-extrabold px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded"><i class="fa-solid fa-hotel mr-1"></i>🏨 観光・滞在</span><span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">${ev.start}〜${ev.end}</span></div>
                   ${costBadgeHtml}
                 </div>
                 <p class="text-xs font-bold text-slate-800 dark:text-white">${ev.memo || '周辺を観光'}</p>
@@ -1591,11 +1567,10 @@ function renderEditorDayFilter() {
   const days = Array.from(new Set(currentTripData.map(x => x.day || 1))).sort((a,b) => a - b);
   
   let html = "";
-  // 「すべて」フィルター
   const activeAll = (currentEditorDayFilter === "all") 
     ? "bg-indigo-600 border-indigo-400 text-white font-extrabold shadow shadow-indigo-500/25" 
     : "bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200";
-  html += `<button onclick="setEditorDayFilter('all')" class="px-3 py-1.5 rounded-lg text-xs border ${activeAll} transition-all shrink-0 font-bold">全日程</button>`;
+  html += `<button onclick="setEditorDayFilter('all')" class="px-3 py-1.5 rounded-lg text-xs border ${activeAll} transition-all shrink-0 font-bold font-mono">全日程</button>`;
 
   days.forEach(d => {
     const isActive = (currentEditorDayFilter === d);
@@ -1622,7 +1597,6 @@ window.setEditorDayFilter = function(filter) {
 }
 
 window.addNewDayRow = function(nextDayNum) {
-  // デフォルト優先移動手段に基づき新規行程を追加
   const defaultType = userProfile.defaultTransport || 'train';
   currentTripData.push({ day: nextDayNum, type: defaultType, from: "出発地点", to: "目的スポット", line: "新規ルート", start: "09:00", end: "10:00", cost: "" });
   currentEditorDayFilter = nextDayNum;
@@ -1788,7 +1762,7 @@ function updateEditorCalculationsAndPreview() {
       html += `
         <div class="relative my-5 -ml-[33px] flex items-center gap-2">
           <div class="w-4 h-4 rounded-full bg-white dark:bg-slate-950 border-4 border-pink-500 shrink-0"></div>
-          <span class="text-[10px] font-black uppercase tracking-wider text-pink-600 dark:text-pink-400 bg-pink-500/10 border border-pink-500/20 px-2 py-0.5 rounded-full shadow">Day ${node.day}</span>
+          <span class="text-[10px] font-black uppercase tracking-wider text-pink-600 dark:text-pink-400 bg-pink-500/10 border border-pink-500/20 px-2 py-0.5 rounded-full shadow font-mono">Day ${node.day}</span>
           <div class="h-px bg-slate-200 dark:bg-slate-800 flex-grow"></div>
         </div>
       `;
@@ -1810,7 +1784,7 @@ function updateEditorCalculationsAndPreview() {
             ? `<span class="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-1.5 py-0.2 rounded text-[9px] font-bold">🍽️ 食事</span>`
             : `<span class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.2 rounded text-[9px] font-bold">🏨 観光・滞在</span>`;
           
-          let evCost = ev.cost ? `<span class="text-[10px] font-mono text-amber-500 bg-amber-400/5 px-1 py-0.2 rounded border border-amber-500/10 ml-auto">${parseInt(ev.cost).toLocaleString()}円</span>` : '';
+          let evCost = ev.cost ? `<span class="text-[10px] font-mono text-amber-400 bg-amber-400/5 px-1 py-0.2 rounded border border-amber-500/10 ml-auto">${parseInt(ev.cost).toLocaleString()}円</span>` : '';
           
           innerEvents += `
             <div class="flex items-center justify-between text-xs py-1.5 px-2 bg-slate-100 dark:bg-slate-900/40 rounded-lg border border-slate-200 dark:border-slate-800/40 gap-2">
@@ -1878,8 +1852,8 @@ window.saveCurrentTripToCloud = async function() {
   if (!title) { showToast("⚠️ 旅行タイトルを入力してください", "error"); return; }
   if (currentTripData.length === 0) { showToast("⚠️ 行動プランを追加してください", "error"); return; }
   try {
-    // RULE 1 & 3: /trips/{appId}/public/data/{collectionName}/{documentId}
-    const docRef = doc(db, "trips", APP_ID, "public", "data", "trips", currentTripId);
+    // 復旧: 元の直下 `trips` コレクションパスに保存
+    const docRef = doc(db, "trips", currentTripId);
     await setDoc(docRef, { 
       userId: currentUser.uid, 
       userEmail: currentUser.email, 
@@ -1888,7 +1862,7 @@ window.saveCurrentTripToCloud = async function() {
       isSample: false,
       updatedAt: Date.now() 
     });
-    showToast("💾 クラウドマイデータに保存・上書きしました！", "success");
+    showToast("💾 クラウドに保存・上書きしました！", "success");
     showScreen('home'); 
   } catch (e) { showToast("保存失敗: " + e.message, "error"); }
 }
@@ -1973,7 +1947,6 @@ function initSimulator() {
 document.addEventListener('DOMContentLoaded', initSimulator);
 initSimulator();
 
-// OSのライト/ダークモード設定変更をリアルタイム検知して画面表示に即時反映
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   updateNaviView();
   if (currentTripData.length > 0) {
