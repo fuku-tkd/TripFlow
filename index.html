@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>旅行マネージャー - スマート行程表＆タイムライン</title>
+<title>TripFlow - 旅行マネージャー</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -73,9 +73,9 @@
           </div>
           <div>
             <h1 class="font-extrabold text-sm md:text-base tracking-wider bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">
-              旅行マネージャー
+             TripFlow
             </h1>
-            <p id="subHeaderTitle" class="text-[8px] text-slate-400 font-medium tracking-widest uppercase">TRIP MANAGER HOME</p>
+            <p id="subHeaderTitle" class="text-[8px] text-slate-400 font-medium tracking-widest uppercase">HOME</p>
           </div>
         </div>
 
@@ -823,7 +823,7 @@ window.showScreen = function(screenName) {
       return;
     }
     document.getElementById('screen-home').classList.remove('screen-hidden');
-    subHeader.textContent = "TRIP MANAGER HOME";
+    subHeader.textContent = "HOME";
     loadDashboardTrips(); 
   } else {
     document.getElementById('btnBackToHome').classList.remove('hidden');
