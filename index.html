@@ -61,7 +61,7 @@
 </head>
 <body class="pb-12">
 
-  <!-- ヘッダーUIを徹底刷新。スマホ/PCを問わず「右上が常にログイン・プロフィール」になるように固定 -->
+  <!-- ヘッダーUI：スマホ/PCを問わず「右上が常にログイン・プロフィール」に固定 -->
   <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-900 px-4 py-2.5 md:px-8">
     <div class="max-w-6xl mx-auto flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
       
@@ -275,6 +275,11 @@
 
   <!-- ナビゲーション画面 -->
   <div id="screen-navi" class="max-w-4xl mx-auto px-3 mt-4 space-y-3 screen-hidden">
+    <!-- ナビのDay切り替えボタンエリア -->
+    <div id="naviDaySelectorArea" class="flex flex-col gap-1.5">
+      <div id="naviDaySelectorContainer" class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar shrink-0"></div>
+    </div>
+
     <div class="glass-card rounded-xl p-3 md:p-4 shadow-lg relative overflow-hidden">
       <div class="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-800/60">
         <h2 id="naviDisplayTitle" class="text-sm md:text-base font-bold text-white truncate max-w-[70%]">未選択</h2>
@@ -307,10 +312,11 @@
               <span>カスタムシミュレート時間を使う</span>
             </label>
           </div>
+          <!-- シミュレータ操作パネル -->
           <div id="customTimeControls" class="flex flex-wrap items-center gap-2 bg-slate-900/50 p-2 rounded-lg border border-slate-800/80 opacity-50 pointer-events-none transition-opacity">
             <input type="time" id="customTimeInput" value="12:00" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded-md text-xs font-bold text-white">
-            <button onclick="adjustSimulatorTime(-30)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-300 shadow">-30分</button>
-            <button onclick="adjustSimulatorTime(30)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-300 shadow">+30分</button>
+            <button id="btnAdjustTimeMinus" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-300 shadow">-30分</button>
+            <button id="btnAdjustTimePlus" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-300 shadow">+30分</button>
             <span id="simulatorIndicator" class="text-[11px] font-bold text-amber-400 hidden animate-pulse"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>動作模擬中</span>
           </div>
         </div>
@@ -361,6 +367,15 @@
       <input type="text" id="tripTitle" class="w-full text-sm sm:text-base font-bold px-4 py-2.5 rounded-xl premium-input text-white placeholder-slate-500" placeholder="例: 北海道グルメ＆絶景ドライブの旅">
     </div>
 
+    <!-- エディタ内の日にち選択クイックフィルターエリア -->
+    <div class="glass-card rounded-2xl p-4 space-y-2">
+      <div class="flex items-center gap-2">
+        <span class="w-1.5 h-3.5 bg-pink-500 rounded-full"></span>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">表示・編集する日程</h2>
+      </div>
+      <div id="editorDayFilterContainer" class="flex flex-wrap items-center gap-1.5 pt-1"></div>
+    </div>
+
     <div class="glass-card rounded-2xl p-4 md:p-6 space-y-4">
       <div class="flex items-center justify-between pb-2 border-b border-slate-800/80">
         <div class="flex items-center gap-2">
@@ -370,10 +385,10 @@
       </div>
       <div id="editorRowsContainer" class="space-y-4"></div>
       <div class="flex flex-wrap items-center gap-3 pt-2">
-        <button onclick="addNewEditorRow()" class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-200 transition-all">
+        <button onclick="addNewEditorRow()" class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-200 transition-all shadow">
           <i class="fa-solid fa-plus text-indigo-400"></i> <span>行動を追加</span>
         </button>
-        <button onclick="sortEditorRowsByTime()" class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-xl text-xs font-bold text-indigo-300 transition-all">
+        <button onclick="sortEditorRowsByTime()" class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-xl text-xs font-bold text-indigo-300 transition-all shadow">
           <i class="fa-solid fa-arrow-down-1-9"></i> <span>🕒 自動整列</span>
         </button>
       </div>
@@ -403,7 +418,7 @@
 
     <div class="glass-card rounded-2xl p-4">
       <h2 class="text-xs font-bold text-slate-300 mb-3 uppercase"><i class="fa-solid fa-route text-indigo-400 mr-1"></i>リアルタイム行程ルートプレビュー</h2>
-      <!-- 強化されたエディタ行程プレビューコンテナ（駅・スポット基準） -->
+      <!-- エディタ行程プレビューコンテナ（駅・スポット基準） -->
       <div id="editorTimelinePreview" class="relative py-2"></div>
     </div>
   </div>
@@ -527,15 +542,29 @@ let editingTripIsSample = false;
 let isSandboxMode = false;
 let authMode = 'login';
 
-// サンドボックス(お試し用)北海道観光サンプルデータ
+// 複数日ナビ用＆エディタ用ステート
+let currentNaviDay = 1;
+let currentEditorDayFilter = "all"; // "all" または 日にち数値 (1, 2, 3...)
+
+// サンドボックス(お試し用)北海道観光サンプルデータ（1泊2日・計14ステップ構成）
 const sandboxSampleTrip = [
-  { type: "train", from: "新函館北斗駅", to: "函館駅", line: "JR快速はこだてライナー", start: "10:00", end: "10:20", cost: "440" },
-  { type: "eat", place: "函館朝市どんぶり横丁", memo: "ウニ・いくらなど贅沢海鮮丼のランチ", start: "10:30", end: "11:30", cost: "2800" },
-  { type: "stay", place: "函館金森赤レンガ倉庫", memo: "ベイエリアを潮風を感じながら散策。お土産購入", start: "11:40", end: "12:50", cost: "0" },
-  { type: "car", from: "函館駅前レンタカー店", to: "五稜郭公園", line: "函館市内ドライブルート", start: "13:00", end: "13:20", cost: "1500" },
-  { type: "stay", place: "五稜郭タワー", memo: "星型城郭を展望台から見下ろす。歴史解説展示の見学", start: "13:20", end: "14:40", cost: "1000" },
-  { type: "bus", from: "五稜郭タワー前", to: "湯の川温泉", line: "函館バス 系統6系統", start: "15:00", end: "15:30", cost: "300" },
-  { type: "stay", place: "湯の川温泉（老舗旅館）", memo: "チェックイン。露天風呂にて名湯を堪能、会席料理の夕食", start: "16:00", end: "21:00", cost: "18000" }
+  // Day 1
+  { day: 1, type: "train", from: "新函館北斗駅", to: "函館駅", line: "JR快速はこだてライナー", start: "10:00", end: "10:20", cost: "440" },
+  { day: 1, type: "eat", place: "函館朝市どんぶり横丁", memo: "ウニ・いくらなど贅沢海鮮丼のランチ", start: "10:30", end: "11:30", cost: "2800" },
+  { day: 1, type: "stay", place: "函館金森赤レンガ倉庫", memo: "ベイエリアを潮風を感じながら散策。お土産購入", start: "11:40", end: "12:50", cost: "0" },
+  { day: 1, type: "car", from: "函館駅前レンタカー店", to: "五稜郭公園", line: "函館市内ドライブルート", start: "13:00", end: "13:20", cost: "1500" },
+  { day: 1, type: "stay", place: "五稜郭タワー", memo: "星型城郭を展望台から見下ろす。歴史解説展示の見学", start: "13:20", end: "14:40", cost: "1000" },
+  { day: 1, type: "bus", from: "五稜郭タワー前", to: "湯の川温泉", line: "函館バス 系統6系統", start: "15:00", end: "15:30", cost: "300" },
+  { day: 1, type: "stay", place: "湯の川温泉（老舗旅館）", memo: "チェックイン。露天風呂にて名湯を堪能、会席料理の夕食", start: "16:00", end: "21:00", cost: "18000" },
+  
+  // Day 2
+  { day: 2, type: "eat", place: "温泉旅館の朝食", memo: "美味しいハーフバイキング＆特製温泉粥の和朝食", start: "08:00", end: "09:00", cost: "0" },
+  { day: 2, type: "car", from: "湯の川温泉", to: "函館山ロープウェイ山麓駅", line: "湯の川・元町ベイラインを海岸沿いドライブ", start: "09:30", end: "09:55", cost: "0" },
+  { day: 2, type: "stay", place: "函館山ロープウェイ", memo: "ロープウェイで展望台へ。昼間のきらめく函館湾を一望！", start: "10:00", end: "11:15", cost: "1500" },
+  { day: 2, type: "walk", from: "ロープウェイ山麓駅", to: "元町ハリストス正教会", line: "美しい石畳のハチマン坂を経由", start: "11:15", end: "11:25", cost: "0" },
+  { day: 2, type: "stay", place: "元町教会群エリア", memo: "大三坂や元町カトリック教会など異国情緒あふれる洋館街を撮影散策", start: "11:25", end: "12:30", cost: "200" },
+  { day: 2, type: "eat", place: "元町レトロ茶房", memo: "大正レトロな館で味わう特製抹茶パフェとドリップ珈琲", start: "12:40", end: "13:40", cost: "1200" },
+  { day: 2, type: "car", from: "元町エリア", to: "新函館北斗駅", line: "レンタカー返却後、北海道新幹線にて出発地へ", start: "13:50", end: "14:40", cost: "2000" }
 ];
 
 function resolveEmailFormat(input) {
@@ -744,7 +773,7 @@ window.launchSandboxDemo = function() {
   
   showToast("🚀 お試しモードを起動しました！", "success");
   
-  document.getElementById('tripTitle').value = "【お試し】函館・湯の川温泉満喫プラン";
+  document.getElementById('tripTitle').value = "【お試し】函館・湯の川温泉満喫プラン（1泊2日）";
   document.getElementById('editorStatusText').textContent = "お試し（Sandbox）デモモード";
   showScreen('edit');
 }
@@ -816,6 +845,12 @@ window.showScreen = function(screenName) {
     if (screenName === 'navi') {
       document.getElementById('screen-navi').classList.remove('screen-hidden');
       subHeader.textContent = "LIVE NAVIGATION";
+      
+      const dayList = Array.from(new Set(currentTripData.map(x => x.day || 1)));
+      if (!dayList.includes(currentNaviDay)) {
+        currentNaviDay = dayList.length > 0 ? Math.min(...dayList) : 1;
+      }
+      renderNaviDaySelector();
       updateNaviView();
     } else if (screenName === 'timeline') {
       document.getElementById('screen-timeline').classList.remove('screen-hidden');
@@ -887,6 +922,7 @@ async function loadDashboardTrips() {
 window.launchNavi = function(id) {
   const found = allTripsCache.find(x => x.id === id); if (!found) return;
   currentTripId = id; currentTripData = JSON.parse(JSON.stringify(found.trip));
+  currentNaviDay = 1; // ナビ開始時はまずDay1
   document.getElementById('naviDisplayTitle').textContent = found.title;
   showScreen('navi');
 }
@@ -924,20 +960,32 @@ window.deleteTripClick = async function(id, title) {
 function parseTimeStr(v) { if(!v) return 0; const [h,m] = v.split(":").map(Number); return h * 60 + m; }
 function formatMinutesStr(min) { const h = Math.floor(min / 60) % 24; const m = min % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; }
 function getNaviNow() { return isCustomTimeMode ? customTimeMinutes : (new Date().getHours() * 60 + new Date().getMinutes()); }
-function getTripStartTime() { return currentTripData.length ? Math.min(...currentTripData.map(x => parseTimeStr(x.start))) : 0; }
-function getTripEndTime() { return currentTripData.length ? Math.max(...currentTripData.map(x => parseTimeStr(x.end))) : 0; }
+
+// 指定されたDayの開始時間、終了時間、データを取得
+function getFilteredNaviTripData() {
+  return currentTripData.filter(x => (x.day || 1) === currentNaviDay);
+}
+function getTripStartTime() {
+  const data = getFilteredNaviTripData();
+  return data.length ? Math.min(...data.map(x => parseTimeStr(x.start))) : 0;
+}
+function getTripEndTime() {
+  const data = getFilteredNaviTripData();
+  return data.length ? Math.max(...data.map(x => parseTimeStr(x.end))) : 0;
+}
 
 function isMoveType(type) {
   return type === "train" || type === "bus" || type === "car" || type === "walk";
 }
 
 /* ==========================================
-   ナビゲーション用の駅・接続点リスト作成ロジック
+   🌟 【バグ修正＆Day対応】ナビゲーション用の駅・接続点リスト作成ロジック
 ========================================== */
 function buildNaviStations() {
-  if (currentTripData.length === 0) return [];
+  const dayTrip = getFilteredNaviTripData();
+  if (dayTrip.length === 0) return [];
   
-  const sortedSteps = [...currentTripData].sort((a, b) => parseTimeStr(a.start) - parseTimeStr(b.start));
+  const sortedSteps = [...dayTrip].sort((a, b) => parseTimeStr(a.start) - parseTimeStr(b.start));
   const st = [];
   
   sortedSteps.forEach((x) => {
@@ -964,17 +1012,51 @@ function buildNaviStations() {
   return st.filter(Boolean);
 }
 
+// ナビ用日程セレクタ（タブ）の描画
+function renderNaviDaySelector() {
+  const days = Array.from(new Set(currentTripData.map(x => x.day || 1))).sort((a,b) => a - b);
+  const container = document.getElementById('naviDaySelectorContainer');
+  if (!container) return;
+
+  if (days.length <= 1) {
+    container.innerHTML = "";
+    document.getElementById('naviDaySelectorArea').classList.add('hidden');
+    return;
+  }
+
+  document.getElementById('naviDaySelectorArea').classList.remove('hidden');
+
+  let html = "";
+  days.forEach(d => {
+    const isActive = (d === currentNaviDay);
+    const tabClass = isActive 
+      ? "bg-indigo-600 border-indigo-400 text-white font-extrabold shadow-lg shadow-indigo-500/20" 
+      : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200";
+    html += `<button onclick="switchNaviDay(${d})" class="px-3.5 py-1.5 rounded-lg text-xs border ${tabClass} transition-all shrink-0 font-bold">Day ${d}</button>`;
+  });
+  container.innerHTML = html;
+}
+
+window.switchNaviDay = function(day) {
+  currentNaviDay = day;
+  renderNaviDaySelector();
+  updateNaviView();
+  showToast(`📅 Day ${day} の表示に切り替えました`, "success");
+}
+
 function getMoveEvent(n) {
-  return currentTripData.find(x => isMoveType(x.type) && n >= parseTimeStr(x.start) && n < parseTimeStr(x.end)) || null;
+  const dayTrip = getFilteredNaviTripData();
+  return dayTrip.find(x => isMoveType(x.type) && n >= parseTimeStr(x.start) && n < parseTimeStr(x.end)) || null;
 }
 
 function getActiveStationOrPlace(n) {
-  if (currentTripData.length === 0) return null;
+  const dayTrip = getFilteredNaviTripData();
+  if (dayTrip.length === 0) return null;
   if (getMoveEvent(n)) return null; 
-  const stayOrEat = currentTripData.find(x => (x.type==="stay"||x.type==="eat") && n >= parseTimeStr(x.start) && n < parseTimeStr(x.end));
+  const stayOrEat = dayTrip.find(x => (x.type==="stay"||x.type==="eat") && n >= parseTimeStr(x.start) && n < parseTimeStr(x.end));
   if (stayOrEat) return stayOrEat.place;
   let prevMove = null, nextMove = null;
-  for (const x of currentTripData) {
+  for (const x of dayTrip) {
     if (isMoveType(x.type)) {
       if (parseTimeStr(x.end) <= n) { if(!prevMove || parseTimeStr(x.end) > parseTimeStr(prevMove.end)) prevMove = x; }
       if (parseTimeStr(x.start) > n) { if(!nextMove || parseTimeStr(x.start) < parseTimeStr(nextMove.start)) nextMove = x; }
@@ -989,9 +1071,12 @@ function updateNaviView() {
   document.getElementById('currentTimeBadge').textContent = formatMinutesStr(n);
   const lineCont = document.getElementById('line');
   const statusCont = document.getElementById('status');
-  if (currentTripData.length === 0) {
-    lineCont.innerHTML = `<span class="text-xs text-slate-500">行程データが空です。</span>`; statusCont.innerHTML = ""; return;
+  
+  const dayTrip = getFilteredNaviTripData();
+  if (dayTrip.length === 0) {
+    lineCont.innerHTML = `<span class="text-xs text-slate-500">Day ${currentNaviDay} の行程データは空です。</span>`; statusCont.innerHTML = ""; return;
   }
+  
   const stations = buildNaviStations(); const activePlace = getActiveStationOrPlace(n); const currentMove = getMoveEvent(n);
   let html = "";
   stations.forEach((stName, idx) => {
@@ -1019,9 +1104,9 @@ function updateNaviView() {
 
   let statusHtml = "";
   if (n < getTripStartTime()) {
-    statusHtml = `<div class="glass-card rounded-xl p-4 border border-indigo-500/20 text-center"><span class="text-[10px] uppercase font-bold tracking-widest text-indigo-400 block mb-1">📋 出発準備中</span><h3 class="text-sm font-bold text-white">旅程の開始前です</h3><p class="text-xs text-slate-400 mt-1">最初の行動は ${currentTripData[0].start} から始まります。</p></div>`;
+    statusHtml = `<div class="glass-card rounded-xl p-4 border border-indigo-500/20 text-center"><span class="text-[10px] uppercase font-bold tracking-widest text-indigo-400 block mb-1">📋 Day ${currentNaviDay} 出発準備中</span><h3 class="text-sm font-bold text-white">本日の旅程の開始前です</h3><p class="text-xs text-slate-400 mt-1">最初の行動は ${dayTrip[0].start} から始まります。</p></div>`;
   } else if (n >= getTripEndTime()) {
-    statusHtml = `<div class="glass-card rounded-xl p-4 border border-slate-800 text-center"><span class="text-[10px] uppercase font-bold tracking-widest text-slate-500 block mb-1">🏁 ARCHIVED</span><h3 class="text-sm font-bold text-slate-300">全ての行程が終了しました</h3></div>`;
+    statusHtml = `<div class="glass-card rounded-xl p-4 border border-slate-800 text-center"><span class="text-[10px] uppercase font-bold tracking-widest text-slate-500 block mb-1">🏁 Day ${currentNaviDay} 終了</span><h3 class="text-sm font-bold text-slate-300">本日の全行程が完了しました</h3></div>`;
   } else if (currentMove) {
     const remain = parseTimeStr(currentMove.end) - n;
     let icon = currentMove.type==="bus"?"fa-bus":(currentMove.type==="walk"?"fa-person-walking":(currentMove.type==="car"?"fa-car":"fa-train"));
@@ -1039,14 +1124,14 @@ function updateNaviView() {
         </div>
       </div>`;
   } else {
-    const currentEat = currentTripData.find(x => x.type === "eat" && n >= parseTimeStr(x.start) && n < parseTimeStr(x.end));
-    const currentStay = currentTripData.find(x => x.type === "stay" && n >= parseTimeStr(x.start) && n < parseTimeStr(x.end));
+    const currentEat = dayTrip.find(x => x.type === "eat" && n >= parseTimeStr(x.start) && n < parseTimeStr(x.end));
+    const currentStay = dayTrip.find(x => x.type === "stay" && n >= parseTimeStr(x.start) && n < parseTimeStr(x.end));
     if (currentEat) {
       statusHtml = `<div class="glass-card rounded-xl p-4 border border-amber-500/20 space-y-2"><div class="flex justify-between"><div><span class="px-2 py-0.5 bg-amber-500/10 border border-amber-500/30 rounded text-[10px] text-amber-400 font-bold uppercase"><i class="fa-solid fa-utensils mr-1"></i>🍽️ 食事中</span><h3 class="text-base font-extrabold text-white mt-1.5">${currentEat.place}</h3><p class="text-xs text-amber-300/80 mt-1">${currentEat.memo || "美味しいご当地グルメを堪能中"}</p></div><div class="text-right"><span class="text-[10px] text-slate-400 block">終了まで</span><span class="text-lg font-black text-amber-400 font-mono">${parseTimeStr(currentEat.end) - n}<span class="text-xs font-normal text-slate-300">分</span></span></div></div></div>`;
     } else if (currentStay) {
       statusHtml = `<div class="glass-card rounded-xl p-4 border border-emerald-500/20 space-y-2"><div class="flex justify-between"><div><span class="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded text-[10px] text-emerald-400 font-bold uppercase"><i class="fa-solid fa-hotel mr-1"></i>🏨 観光・滞在中</span><h3 class="text-base font-extrabold text-white mt-1.5">${currentStay.place}</h3><p class="text-xs text-emerald-300/80 mt-1">${currentStay.memo || "周辺を観光・滞在中"}</p></div><div class="text-right"><span class="text-[10px] text-slate-400 block">終了まで</span><span class="text-lg font-black text-emerald-400 font-mono">${parseTimeStr(currentStay.end) - n}<span class="text-xs font-normal text-slate-300">分</span></span></div></div></div>`;
     } else {
-      let nextEv = currentTripData.find(x => parseTimeStr(x.start) > n);
+      let nextEv = dayTrip.find(x => parseTimeStr(x.start) > n);
       statusHtml = `<div class="glass-card rounded-xl p-4 border border-indigo-500/20 text-center space-y-1"><span class="text-[10px] uppercase font-bold tracking-widest text-indigo-400 block"><i class="fa-solid fa-arrow-left-right text-[9px] mr-1"></i>次の行動まで待機</span><h3 class="text-sm font-bold text-white">現在 ${activePlace || "スポット"} に滞在中</h3><p class="text-xs text-slate-400">次の出発まであと <span class="font-bold text-amber-400 font-mono text-sm">${nextEv ? (parseTimeStr(nextEv.start) - n) : 0}</span> 分です。</p></div>`;
     }
   }
@@ -1054,31 +1139,44 @@ function updateNaviView() {
 }
 
 /* ==========================================
-   駅・スポット基準（スタフ型）共通マージエンジン
+   🌟 複数日対応：スタフ型 共通マージエンジン
 ========================================== */
-function buildTimelineNodes(tripData) {
+function buildMultiDayTimelineNodes(tripData) {
   if (!tripData || tripData.length === 0) return [];
-  const sortedSteps = [...tripData].sort((a, b) => parseTimeStr(a.start) - parseTimeStr(b.start));
+  
+  const sortedSteps = [...tripData].sort((a, b) => {
+    const dayA = a.day || 1;
+    const dayB = b.day || 1;
+    if (dayA !== dayB) return dayA - dayB;
+    return parseTimeStr(a.start) - parseTimeStr(b.start);
+  });
   
   const nodes = [];
+  let lastDay = null;
   
   sortedSteps.forEach((item) => {
+    const currentItemDay = item.day || 1;
+    
+    if (lastDay !== currentItemDay) {
+      nodes.push({ type: "day_divider", day: currentItemDay });
+      lastDay = currentItemDay;
+    }
+
     if (isMoveType(item.type)) {
-      // 1. 出発駅ノード
       let fromNode = null;
-      if (nodes.length > 0 && nodes[nodes.length - 1].type === "station" && nodes[nodes.length - 1].name === item.from) {
+      if (nodes.length > 0 && nodes[nodes.length - 1].type === "station" && nodes[nodes.length - 1].name === item.from && nodes[nodes.length - 1].day === currentItemDay) {
         fromNode = nodes[nodes.length - 1];
       } else {
-        fromNode = { type: "station", name: item.from, arrival: "", departure: "", events: [] };
+        fromNode = { type: "station", name: item.from, day: currentItemDay, arrival: "", departure: "", events: [] };
         nodes.push(fromNode);
       }
       if (!fromNode.departure || parseTimeStr(item.start) < parseTimeStr(fromNode.departure)) {
         fromNode.departure = item.start;
       }
 
-      // 2. 移動区間（ライン）
       nodes.push({
         type: "line",
+        day: currentItemDay,
         moveType: item.type,
         start: item.start,
         end: item.end,
@@ -1088,19 +1186,17 @@ function buildTimelineNodes(tripData) {
         cost: item.cost
       });
 
-      // 3. 到着駅ノード
-      let toNode = { type: "station", name: item.to, arrival: item.end, departure: "", events: [] };
+      let toNode = { type: "station", name: item.to, day: currentItemDay, arrival: item.end, departure: "", events: [] };
       nodes.push(toNode);
       
     } else {
-      // 滞在スポットノード
       let placeName = item.place || "周辺エリア";
       let targetNode = null;
       
-      if (nodes.length > 0 && nodes[nodes.length - 1].type === "station" && nodes[nodes.length - 1].name === placeName) {
+      if (nodes.length > 0 && nodes[nodes.length - 1].type === "station" && nodes[nodes.length - 1].name === placeName && nodes[nodes.length - 1].day === currentItemDay) {
         targetNode = nodes[nodes.length - 1];
       } else {
-        targetNode = { type: "station", name: placeName, arrival: "", departure: "", events: [] };
+        targetNode = { type: "station", name: placeName, day: currentItemDay, arrival: "", departure: "", events: [] };
         nodes.push(targetNode);
       }
       
@@ -1114,11 +1210,10 @@ function buildTimelineNodes(tripData) {
     }
   });
 
-  // 連続して隣り合う、同一名のスポットを統合
   const merged = [];
   nodes.forEach((node) => {
     if (node.type === "station") {
-      if (merged.length > 0 && merged[merged.length - 1].type === "station" && merged[merged.length - 1].name === node.name) {
+      if (merged.length > 0 && merged[merged.length - 1].type === "station" && merged[merged.length - 1].name === node.name && merged[merged.length - 1].day === node.day) {
         let prev = merged[merged.length - 1];
         if (node.arrival && (!prev.arrival || parseTimeStr(node.arrival) < parseTimeStr(prev.arrival))) {
           prev.arrival = node.arrival;
@@ -1141,7 +1236,7 @@ function buildTimelineNodes(tripData) {
 }
 
 /* ==========================================
-   行程表タイムライン表示
+   行程表タイムライン表示 (全日を綺麗に繋げて表示)
 ========================================== */
 function renderTripTimelineView() {
   const container = document.getElementById('timelineContainer');
@@ -1152,13 +1247,24 @@ function renderTripTimelineView() {
     costBadge.textContent = "0円"; return;
   }
 
-  const renderedElements = buildTimelineNodes(currentTripData);
+  const renderedElements = buildMultiDayTimelineNodes(currentTripData);
   let totalExpenses = currentTripData.reduce((sum, item) => sum + (parseInt(item.cost) || 0), 0);
 
   renderedElements.forEach((node) => {
     const wrapper = document.createElement('div');
     
-    if (node.type === "station") {
+    if (node.type === "day_divider") {
+      wrapper.className = "relative my-8 first:mt-2";
+      wrapper.innerHTML = `
+        <div class="flex items-center gap-3">
+          <div class="h-px bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent flex-grow"></div>
+          <div class="px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-700 text-white text-[11px] font-black tracking-widest uppercase shadow shadow-indigo-500/10">
+            ☀️ Day ${node.day}
+          </div>
+          <div class="h-px bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent flex-grow"></div>
+        </div>
+      `;
+    } else if (node.type === "station") {
       let timeStampHtml = "";
       if (node.arrival && node.departure) {
         timeStampHtml = `<div class="font-mono text-[11px] font-bold bg-slate-900 border border-slate-800 text-slate-300 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-inner"><span>着</span><span class="text-rose-400 font-extrabold">${node.arrival}</span><span class="text-slate-600">|</span><span>発</span><span class="text-emerald-400 font-extrabold">${node.departure}</span></div>`;
@@ -1242,38 +1348,73 @@ function renderTripTimelineView() {
 }
 
 /* ==========================================
-   シミュレーターヘルパー
+   行程編集エディタ内の日別表示フィルター
 ========================================== */
-window.setTimeMode = function(mode) {
-  isCustomTimeMode = (mode === 'custom');
-  const controls = document.getElementById('customTimeControls');
-  const indicator = document.getElementById('simulatorIndicator');
-  if (isCustomTimeMode) {
-    controls.classList.remove('opacity-50', 'pointer-events-none');
-    indicator.classList.remove('hidden');
-    customTimeMinutes = parseTimeStr(document.getElementById('customTimeInput').value);
-  } else {
-    controls.classList.add('opacity-50', 'pointer-events-none');
-    indicator.classList.add('hidden');
-  }
-  updateNaviView();
+function renderEditorDayFilter() {
+  const container = document.getElementById('editorDayFilterContainer');
+  if (!container) return;
+
+  const days = Array.from(new Set(currentTripData.map(x => x.day || 1))).sort((a,b) => a - b);
+  
+  let html = "";
+  // 「すべて」フィルター
+  const activeAll = (currentEditorDayFilter === "all") 
+    ? "bg-indigo-600 border-indigo-400 text-white font-extrabold shadow shadow-indigo-500/25" 
+    : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200";
+  html += `<button onclick="setEditorDayFilter('all')" class="px-3 py-1.5 rounded-lg text-xs border ${activeAll} transition-all shrink-0">全日程</button>`;
+
+  days.forEach(d => {
+    const isActive = (currentEditorDayFilter === d);
+    const tabClass = isActive 
+      ? "bg-indigo-600 border-indigo-400 text-white font-extrabold shadow shadow-indigo-500/25" 
+      : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200";
+    html += `<button onclick="setEditorDayFilter(${d})" class="px-3 py-1.5 rounded-lg text-xs border ${tabClass} transition-all shrink-0">Day ${d}</button>`;
+  });
+
+  const maxDay = days.length > 0 ? Math.max(...days) : 1;
+  html += `
+    <button onclick="addNewDayRow(${maxDay + 1})" class="px-2.5 py-1.5 rounded-lg text-xs border border-dashed border-slate-700 hover:border-slate-500 text-slate-400 hover:text-slate-200 transition-all shrink-0">
+      <i class="fa-solid fa-plus text-[10px] text-pink-400"></i> 日程を追加
+    </button>
+  `;
+
+  container.innerHTML = html;
 }
 
-window.updateCustomTimeInput = function(value) {
-  if (isCustomTimeMode) {
-    customTimeMinutes = parseTimeStr(value);
-    updateNaviView();
-  }
+window.setEditorDayFilter = function(filter) {
+  currentEditorDayFilter = filter;
+  renderEditorDayFilter();
+  renderEditorRows();
+}
+
+window.addNewDayRow = function(nextDayNum) {
+  currentTripData.push({ day: nextDayNum, type: "stay", place: `観光スポット(Day ${nextDayNum})`, memo: "新規の滞在計画", start: "09:00", end: "10:00", cost: "" });
+  currentEditorDayFilter = nextDayNum;
+  renderEditorDayFilter();
+  renderEditorRows();
+  showToast(`📅 Day ${nextDayNum} のスケジュールブロックを追加しました！`, "success");
 }
 
 /* ==========================================
-   EDITOR (行程編集画面) ロジック群
+   エディタの入力項目のレンダリング
 ========================================== */
 function renderEditorRows() {
   const container = document.getElementById('editorRowsContainer');
   container.innerHTML = "";
+  
   if (currentTripData.length === 0) { addNewEditorRow(); return; }
-  currentTripData.forEach((item, index) => { container.appendChild(createEditorRowElement(item, index)); });
+
+  let displayData = currentTripData;
+  if (currentEditorDayFilter !== "all") {
+    displayData = currentTripData.filter(x => (x.day || 1) === currentEditorDayFilter);
+  }
+
+  displayData.forEach((item) => {
+    const index = currentTripData.indexOf(item);
+    container.appendChild(createEditorRowElement(item, index));
+  });
+
+  renderEditorDayFilter();
   updateEditorCalculationsAndPreview();
 }
 
@@ -1282,10 +1423,17 @@ function createEditorRowElement(item, index) {
   row.className = `glass-card rounded-xl p-4 space-y-3 relative transition-all theme-card-${item.type || 'train'}`;
   const isMove = isMoveType(item.type);
 
+  let daySelectHtml = `<select onchange="updateRowField(${index}, 'day', parseInt(this.value))" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs font-bold focus:outline-none text-indigo-400 cursor-pointer">`;
+  for (let d = 1; d <= 10; d++) {
+    daySelectHtml += `<option value="${d}" ${(item.day || 1) === d ? 'selected' : ''}>Day ${d}</option>`;
+  }
+  daySelectHtml += `</select>`;
+
   row.innerHTML = `
     <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-900/60">
       <div class="flex items-center gap-2">
         <span class="text-xs font-bold text-slate-400 font-mono">#${index + 1}</span>
+        ${daySelectHtml}
         <select onchange="updateRowType(${index}, this.value)" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs font-bold focus:outline-none cursor-pointer">
           <option value="train" ${item.type==='train'?'selected':''}>🚇 列車・新幹線</option>
           <option value="car" ${item.type==='car'?'selected':''}>🚗 自家用車・レンタカー</option>
@@ -1327,10 +1475,16 @@ function createEditorRowElement(item, index) {
 }
 
 window.addNewEditorRow = function() {
-  currentTripData.push({ type: "train", start: "09:00", end: "10:00", from: "", to: "", line: "", cost: "" });
+  const defaultDay = (currentEditorDayFilter === "all") ? 1 : currentEditorDayFilter;
+  currentTripData.push({ day: defaultDay, type: "train", start: "09:00", end: "10:00", from: "", to: "", line: "", cost: "" });
   renderEditorRows();
 }
-window.deleteEditorRow = function(index) { currentTripData.splice(index, 1); renderEditorRows(); }
+
+window.deleteEditorRow = function(index) { 
+  currentTripData.splice(index, 1); 
+  renderEditorRows(); 
+}
+
 window.updateRowType = function(index, newType) {
   const item = currentTripData[index]; item.type = newType;
   if (isMoveType(newType)) {
@@ -1340,11 +1494,26 @@ window.updateRowType = function(index, newType) {
   }
   renderEditorRows();
 }
-window.updateRowField = function(index, field, value) { currentTripData[index][field] = value; updateEditorCalculationsAndPreview(); }
-window.sortEditorRowsByTime = function() { currentTripData.sort((a, b) => parseTimeStr(a.start) - parseTimeStr(b.start)); renderEditorRows(); }
+
+window.updateRowField = function(index, field, value) { 
+  currentTripData[index][field] = value; 
+  updateEditorCalculationsAndPreview(); 
+}
+
+// 🕒 自動整列（マルチデイ対応：日程 ➔ 開始時刻の2段階ソート）
+window.sortEditorRowsByTime = function() { 
+  currentTripData.sort((a, b) => {
+    const dayA = a.day || 1;
+    const dayB = b.day || 1;
+    if (dayA !== dayB) return dayA - dayB;
+    return parseTimeStr(a.start) - parseTimeStr(b.start);
+  });
+  renderEditorRows(); 
+  showToast("🕒 時系列順に自動並び替えしました！", "success");
+}
 
 /* ==========================================
-   駅・スポット基準（スタフ型）エディタ内リアルタイムプレビュー
+   🌟 【駅・スポット基準（スタフ型）】エディタ内リアルタイムプレビュー
 ========================================== */
 function updateEditorCalculationsAndPreview() {
   let moveMinutes = 0, stayMinutes = 0, totalExpenses = 0;
@@ -1352,13 +1521,21 @@ function updateEditorCalculationsAndPreview() {
     const duration = parseTimeStr(x.end) - parseTimeStr(x.start); totalExpenses += (parseInt(x.cost) || 0);
     if (isMoveType(x.type)) { moveMinutes += duration; } else { stayMinutes += duration; }
   });
-  const totalMin = getTripEndTime() - getTripStartTime();
+
+  let minStart = 1440, maxEnd = 0;
+  currentTripData.forEach(x => {
+    const s = parseTimeStr(x.start); const e = parseTimeStr(x.end);
+    if(s < minStart) minStart = s;
+    if(e > maxEnd) maxEnd = e;
+  });
+  const totalMin = maxEnd > minStart ? maxEnd - minStart : 0;
+  
   document.getElementById('totalDuration').textContent = totalMin > 0 ? `${Math.floor(totalMin/60)}時間 ${totalMin%60}分` : '-';
   document.getElementById('moveTime').textContent = `${moveMinutes}分`;
   document.getElementById('stayTime').textContent = `${stayMinutes}分`;
   document.getElementById('transferTime').textContent = `${Math.max(0, totalMin - (moveMinutes + stayMinutes))}分`;
 
-  // クイック切り替えバーの制御
+  // クイック切り替えバーの表示制御
   const hasData = currentTripData.length > 0;
   if (!document.getElementById('screen-edit').classList.contains('screen-hidden')) {
     document.getElementById('btnSwitchTimeline').classList.toggle('hidden', !hasData);
@@ -1374,11 +1551,19 @@ function updateEditorCalculationsAndPreview() {
     return;
   }
 
-  const nodes = buildTimelineNodes(currentTripData);
+  const nodes = buildMultiDayTimelineNodes(currentTripData);
 
   let html = `<div class="relative pl-6 border-l-2 border-indigo-500/30 space-y-4">`;
   nodes.forEach((node) => {
-    if (node.type === "station") {
+    if (node.type === "day_divider") {
+      html += `
+        <div class="relative my-5 -ml-[33px] flex items-center gap-2">
+          <div class="w-4 h-4 rounded-full bg-slate-950 border-4 border-pink-500 shrink-0"></div>
+          <span class="text-[10px] font-black uppercase tracking-wider text-pink-400 bg-pink-500/10 border border-pink-500/20 px-2 py-0.5 rounded-full shadow">Day ${node.day}</span>
+          <div class="h-px bg-slate-800 flex-grow"></div>
+        </div>
+      `;
+    } else if (node.type === "station") {
       let timeBadge = "";
       if (node.arrival && node.departure) {
         timeBadge = `<span class="font-mono text-[10px] text-slate-400 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">着 ${node.arrival} | 発 ${node.departure}</span>`;
@@ -1493,6 +1678,68 @@ window.showConfirm = function(title, desc) {
     document.getElementById('btnConfirmCancel').onclick = () => cleanUp(false);
   });
 }
+
+/* ==========================================
+   シミュレーター・インプット連携の初期化エンジン（確実なバインディング）
+========================================== */
+function initSimulator() {
+  const realRadio = document.querySelector('input[name="time-mode"][value="real"]');
+  const customRadio = document.querySelector('input[name="time-mode"][value="custom"]');
+  const timeInput = document.getElementById('customTimeInput');
+  const btnMinus = document.getElementById('btnAdjustTimeMinus');
+  const btnPlus = document.getElementById('btnAdjustTimePlus');
+
+  if (realRadio && customRadio) {
+    const handleModeChange = () => {
+      isCustomTimeMode = customRadio.checked;
+      const controls = document.getElementById('customTimeControls');
+      const indicator = document.getElementById('simulatorIndicator');
+      if (isCustomTimeMode) {
+        controls.classList.remove('opacity-50', 'pointer-events-none');
+        indicator.classList.remove('hidden');
+        customTimeMinutes = parseTimeStr(timeInput.value);
+      } else {
+        controls.classList.add('opacity-50', 'pointer-events-none');
+        indicator.classList.add('hidden');
+      }
+      updateNaviView();
+    };
+
+    realRadio.addEventListener('change', handleModeChange);
+    customRadio.addEventListener('change', handleModeChange);
+  }
+
+  if (timeInput) {
+    timeInput.addEventListener('input', (e) => {
+      if (isCustomTimeMode) {
+        customTimeMinutes = parseTimeStr(e.target.value);
+        updateNaviView();
+      }
+    });
+  }
+
+  // 30分増減ボタンのバインディング
+  if (btnMinus) {
+    btnMinus.addEventListener('click', () => {
+      if (!isCustomTimeMode) return;
+      customTimeMinutes = (customTimeMinutes - 30 + 1440) % 1440;
+      timeInput.value = formatMinutesStr(customTimeMinutes);
+      updateNaviView();
+    });
+  }
+  if (btnPlus) {
+    btnPlus.addEventListener('click', () => {
+      if (!isCustomTimeMode) return;
+      customTimeMinutes = (customTimeMinutes + 30) % 1440;
+      timeInput.value = formatMinutesStr(customTimeMinutes);
+      updateNaviView();
+    });
+  }
+}
+
+// DOMContentLoaded またはスクリプトロード時にシミュレータ初期化を徹底実行
+document.addEventListener('DOMContentLoaded', initSimulator);
+initSimulator();
 
 setInterval(() => {
   if (!isCustomTimeMode && !document.getElementById('screen-navi').classList.contains('screen-hidden')) { updateNaviView(); }
