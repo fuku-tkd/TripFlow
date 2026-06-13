@@ -1017,12 +1017,53 @@ function hideAllScreens() {
   document.getElementById('btnSwitchEdit').classList.add('hidden');
 }
 
+// 編集離脱時の3択ダイアログを表示する関数
+window.showSaveCheckModal = function() {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('save-check-modal');
+    const content = document.getElementById('save-check-modal-content');
+    const btnSave = document.getElementById('save-check-btn-save');
+    const btnDiscard = document.getElementById('save-check-btn-discard');
+    const btnCancel = document.getElementById('save-check-btn-cancel');
+
+    if (!modal || !content) return resolve('discard');
+
+    // モーダルを開くアニメーション
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+      modal.classList.remove('opacity-0');
+      content.classList.remove('scale-95');
+    }, 10);
+
+    // 閉じる処理の共通化
+    const closeModal = (result) => {
+      modal.classList.add('opacity-0');
+      content.classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        resolve(result);
+      }, 200);
+      
+      // イベントリスナーのクリーンアップ（二重登録防止）
+      btnSave.replaceWith(btnSave.cloneNode(true));
+      btnDiscard.replaceWith(btnDiscard.cloneNode(true));
+      btnCancel.replaceWith(btnCancel.cloneNode(true));
+    };
+
+    // 各ボタンのクリックイベント
+    document.getElementById('save-check-btn-save').addEventListener('click', () => closeModal('save'));
+    document.getElementById('save-check-btn-discard').addEventListener('click', () => closeModal('discard'));
+    document.getElementById('save-check-btn-cancel').addEventListener('click', () => closeModal('cancel'));
+  });
+};
+
 // ホーム画面へ戻る（未保存チェックの3択付き）
 window.goHome = async function() {
   const editScreen = document.getElementById('screen-edit');
   
   // 1. 編集画面が表示されている場合だけ3択チェックを挟む
   if (editScreen && !editScreen.classList.contains('screen-hidden')) {
+    // 【重要】ここでshowConfirmを呼ばず、最初から3択モーダルだけを呼び出します
     const action = await showSaveCheckModal();
     
     if (action === 'save') {
@@ -1031,7 +1072,7 @@ window.goHome = async function() {
       if (saveBtn) {
         saveBtn.click(); 
       }
-      // 保存処理が走った後、ホーム画面に切り替える
+      // 保存処理の後にホーム画面へ切り替え
       showScreen('home');
       currentTimelineTripId = null;
     } else if (action === 'discard') {
@@ -1049,7 +1090,7 @@ window.goHome = async function() {
   }
 };
 
-// ロゴクリック時も個別の2択は出さず、共通の goHome() を呼び出すだけに修正
+// ロゴクリック時も共通の goHome() を呼び出すだけに統一
 window.handleLogoClick = function() {
   goHome();
 };
