@@ -1074,10 +1074,12 @@ window.handleLogoClick = function() {
 };
 
 // 画面切り替え関数（編集画面からの離脱ガード付き）
+// 画面切り替え関数（編集画面からの離脱ガード付き）
 window.showScreen = async function(screenName) {
   const editScreen = document.getElementById('screen-edit');
   
-  // 移動元が「編集画面」かつ、新しく移動する先が「編集画面(edit)以外」の場合だけチェック
+  // 移動元が「編集画面」かつ、それが実際に表示されている状態(screen-hiddenを持っていない)で、
+  // かつ新しく移動する先が「編集画面(edit)以外」の場合だけ3択チェックを挟む
   if (editScreen && !editScreen.classList.contains('screen-hidden') && screenName !== 'edit') {
     const action = await showSaveCheckModal();
     
@@ -1087,17 +1089,16 @@ window.showScreen = async function(screenName) {
       if (saveBtn) {
         saveBtn.click(); 
       }
-      // 保存処理の後に、画面切り替えへ進む（下の処理へ継続）
     } else if (action === 'discard') {
-      // 「保存せずに移動」の場合：何もせずそのまま画面切り替えへ進む
+      // 「保存せずに移動」の場合：何もせずそのまま画面切り替えへ
     } else {
       // 「キャンセル」の場合：処理を完全に中断して編集画面にとどまる
       return;
     }
   }
 
-  // --- ここから下は元々の showScreen の処理（変数名を screenName に合わせています） ---
-  const screens = ['home', 'timeline', 'navi', 'edit'];
+  // --- 画面切り替えの本体処理 ---
+  const screens = ['welcome', 'home', 'timeline', 'navi', 'edit'];
   screens.forEach(id => {
     const el = document.getElementById(`screen-${id}`);
     if (el) el.classList.add('screen-hidden');
