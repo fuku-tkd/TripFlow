@@ -1094,25 +1094,6 @@ window.goHome = async function() {
 window.handleLogoClick = function() {
   goHome();
 };
-// ロゴクリック時の離脱防止チェック
-window.handleLogoClick = async function() {
-  const editScreen = document.getElementById('screen-edit');
-  
-  // 編集画面が表示されている（クラスに screen-hidden が含まれていない）場合
-  if (editScreen && !editScreen.classList.contains('screen-hidden')) {
-    // アプリ内蔵の確認ダイアログを表示
-    const confirmed = await showConfirm(
-      "ホームへ戻りますか？", 
-      "編集中の旅程は保存されません。よろしいですか？"
-    );
-    if (!confirmed) {
-      return; // キャンセルされたら何もしない
-    }
-  }
-  
-  // 編集画面ではない、または「実行する」が押された場合はホームへ
-  goHome();
-}
 
 window.showScreen = function(screenName) {
   if (!currentUser && !isSandboxMode && screenName !== 'home') {
