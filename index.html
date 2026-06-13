@@ -124,7 +124,7 @@
       
       <!-- ロゴ＆スマホプロフィールエリア -->
       <div class="flex items-center justify-between w-full md:w-auto shrink-0">
-        <div onclick="goHome()" class="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-all shrink-0">
+        <div onclick="handleLogoClick()" class="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-all shrink-0">
           <div class="bg-gradient-to-tr from-indigo-500 to-indigo-600 p-1.5 rounded-lg shadow-lg shadow-indigo-500/20">
             <i class="fa-solid fa-map-location-dot text-white text-sm"></i>
           </div>
@@ -1009,6 +1009,26 @@ window.goHome = function() {
     hideAllScreens();
     document.getElementById('screen-welcome').classList.remove('screen-hidden');
   }
+}
+
+// ロゴクリック時の離脱防止チェック
+window.handleLogoClick = async function() {
+  const editScreen = document.getElementById('screen-edit');
+  
+  // 編集画面が表示されている（クラスに screen-hidden が含まれていない）場合
+  if (editScreen && !editScreen.classList.contains('screen-hidden')) {
+    // アプリ内蔵の確認ダイアログを表示
+    const confirmed = await showConfirm(
+      "ホームへ戻りますか？", 
+      "編集中の旅程は保存されません。よろしいですか？"
+    );
+    if (!confirmed) {
+      return; // キャンセルされたら何もしない
+    }
+  }
+  
+  // 編集画面ではない、または「実行する」が押された場合はホームへ
+  goHome();
 }
 
 window.showScreen = function(screenName) {
