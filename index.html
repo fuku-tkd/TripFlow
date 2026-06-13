@@ -1057,15 +1057,37 @@ window.showSaveCheckModal = function() {
   });
 };
 
-// ホーム画面へ戻る
-window.goHome = function() {
-  showScreen('home');
-  currentTimelineTripId = null;
-};
-
-// ロゴクリック時
-window.handleLogoClick = function() {
-  goHome();
+// ホーム画面へ戻る（未保存チェックの3択付き）
+window.goHome = async function() {
+  const editScreen = document.getElementById('screen-edit');
+  
+  // 1. 編集画面が表示されている場合だけ3択チェックを挟む
+  if (editScreen && !editScreen.classList.contains('screen-hidden')) {
+    // 【重要】ここでshowConfirmを呼ばず、最初から3択モーダルだけを呼び出します
+    const action = await showSaveCheckModal();
+    
+    if (action === 'save') {
+      // 「保存して移動」の場合：実際のクラウド保存ボタンをクリック
+      const saveBtn = document.getElementById('btnSaveCloud');
+      if (saveBtn) {
+        saveBtn.click(); 
+      }
+      // 保存処理の後にホーム画面へ切り替え
+      showScreen('home');
+      currentTimelineTripId = null;
+    } else if (action === 'discard') {
+      // 「保存せずに移動」の場合：そのままホーム画面へ切り替える
+      showScreen('home');
+      currentTimelineTripId = null;
+    } else {
+      // 「キャンセル」の場合：処理を完全に中断して画面にとどまる
+      return;
+    }
+  } else {
+    // 編集画面以外からホームに戻る場合は、通常の切り替え処理
+    showScreen('home');
+    currentTimelineTripId = null;
+  }
 };
 
 // ロゴクリック時も共通の goHome() を呼び出すだけに統一
@@ -1073,64 +1095,60 @@ window.handleLogoClick = function() {
   goHome();
 };
 
-// 画面切り替え関数（編集画面からの離脱ガード付き）
-// 画面切り替え関数（編集画面からの離脱ガード付き）
-window.showScreen = async function(screenName) {
-  const editScreen = document.getElementById('screen-edit');
-  
-  // 移動元が「編集画面」かつ、それが実際に表示されている状態(screen-hiddenを持っていない)で、
-  // かつ新しく移動する先が「編集画面(edit)以外」の場合だけ3択チェックを挟む
-  if (editScreen && !editScreen.classList.contains('screen-hidden') && screenName !== 'edit') {
-    const action = await showSaveCheckModal();
-    
-    if (action === 'save') {
-      // 「保存して移動」の場合：クラウド保存ボタンを擬似クリック
-      const saveBtn = document.getElementById('btnSaveCloud');
-      if (saveBtn) {
-        saveBtn.click(); 
-      }
-    } else if (action === 'discard') {
-      // 「保存せずに移動」の場合：何もせずそのまま画面切り替えへ
-    } else {
-      // 「キャンセル」の場合：処理を完全に中断して編集画面にとどまる
+window.showScreen = function(screenName) {
+  if (!currentUser && !isSandboxMode && screenName !== 'home') {
+    goHome();
+    return;
+  }
+
+  hideAllScreens();
+  const subHeader = document.getElementById('subHeaderTitle');
+
+  if (screenName === 'home') {
+    if (!currentUser) {
+      goHome();
       return;
     }
-  }
-
-  // --- 画面切り替えの本体処理 ---
-  const screens = ['welcome', 'home', 'timeline', 'navi', 'edit'];
-  screens.forEach(id => {
-    const el = document.getElementById(`screen-${id}`);
-    if (el) el.classList.add('screen-hidden');
-  });
-
-  const target = document.getElementById(`screen-${screenName}`);
-  if (target) {
-    target.classList.remove('screen-hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  // ナビゲーションバーのアクティブ状態更新
-  const navButtons = document.querySelectorAll('nav button');
-  navButtons.forEach(btn => {
-    const icon = btn.querySelector('i');
-    if (!icon) return;
+    document.getElementById('screen-home').classList.remove('screen-hidden');
+    subHeader.textContent = "HOME";
+    loadDashboardTrips(); 
+  } else {
+    document.getElementById('btnBackToHome').classList.remove('hidden');
     
-    let isCurrent = false;
-    if (screenName === 'home' && icon.classList.contains('fa-house')) isCurrent = true;
-    if (screenName === 'timeline' && icon.classList.contains('fa-calendar-days')) isCurrent = true;
-    if (screenName === 'navi' && icon.classList.contains('fa-compass')) isCurrent = true;
-    if (screenName === 'edit' && icon.classList.contains('fa-pen-to-square')) isCurrent = true;
-
-    if (isCurrent) {
-      btn.classList.remove('text-gray-400', 'dark:text-gray-500');
-      btn.classList.add('text-brand-600', 'dark:text-brand-400', 'font-semibold');
-    } else {
-      btn.classList.remove('text-brand-600', 'dark:text-brand-400', 'font-semibold');
-      btn.classList.add('text-gray-400', 'dark:text-gray-500');
+    if (currentTripData && currentTripData.length > 0) {
+      if (screenName === 'navi') {
+        document.getElementById('btnSwitchTimeline').classList.remove('hidden');
+        document.getElementById('btnSwitchEdit').classList.remove('hidden');
+      } else if (screenName === 'timeline') {
+        document.getElementById('btnSwitchNavi').classList.remove('hidden');
+        document.getElementById('btnSwitchEdit').classList.remove('hidden');
+      } else if (screenName === 'edit') {
+        document.getElementById('btnSwitchTimeline').classList.remove('hidden');
+        document.getElementById('btnSwitchNavi').classList.remove('hidden');
+      }
     }
-  });
-};
+    
+    if (screenName === 'navi') {
+      document.getElementById('screen-navi').classList.remove('screen-hidden');
+      subHeader.textContent = "LIVE NAVIGATION";
+      
+      const dayList = Array.from(new Set(currentTripData.map(x => x.day || 1)));
+      if (!dayList.includes(currentNaviDay)) {
+        currentNaviDay = dayList.length > 0 ? Math.min(...dayList) : 1;
+      }
+      renderNaviDaySelector();
+      updateNaviView();
+    } else if (screenName === 'timeline') {
+      document.getElementById('screen-timeline').classList.remove('screen-hidden');
+      subHeader.textContent = "TRIP TIMELINE BROWSER";
+      renderTripTimelineView();
+    } else if (screenName === 'edit') {
+      document.getElementById('screen-edit').classList.remove('screen-hidden');
+      subHeader.textContent = "TRIP TIMELINE EDITOR";
+      renderEditorRows();
+    }
+  }
+}
 
 window.switchToTimelineView = function() { showScreen('timeline'); }
 window.switchToNaviView = function() { showScreen('navi'); }
