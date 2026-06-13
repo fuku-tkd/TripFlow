@@ -306,7 +306,7 @@
     <!-- 新規作成プロンプト -->
     <div class="glass-card rounded-2xl p-6 text-center relative overflow-hidden border border-indigo-500/25">
       <h2 class="text-sm md:text-base font-bold text-slate-800 dark:text-white mb-1">新しい旅の行程を計画する</h2>
-      <p class="text-xs text-muted mb-5">スポットベースのタイムライン設計、乗換や経路・費用の自動集計エディタを起動します。</p>
+      <p class="text-xs text-muted mb-5">スポットベース of タイムライン設計、乗換や経路・費用の自動集計エディタを起動します。</p>
       <button onclick="startNewTripCreation()" class="inline-flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-xs font-bold text-white rounded-xl transition-all shadow-lg shadow-indigo-500/20 hover:scale-[1.01]">
         <i class="fa-solid fa-file-circle-plus text-sm"></i>
         <span>新規の旅程を作成する</span>
@@ -381,7 +381,7 @@
   <div id="screen-timeline" class="max-w-2xl mx-auto px-4 mt-6 space-y-6 screen-hidden">
     <div class="glass-card rounded-2xl p-4 flex justify-between items-center">
       <div class="min-w-0 pr-2">
-        <h2 id="timelineDisplayTitle" class="text-sm md:text-base font-extrabold text-slate-900 dark:text-white truncate">旅の行程表</h2>
+        <h2 id="timelineDisplayTitle" class="text-sm md:text-base font-extrabold text-slate-900 dark:text-white">旅の行程表</h2>
         <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">全体の行動プランを一覧で俯瞰します。</p>
       </div>
       <div class="text-right shrink-0">
@@ -610,6 +610,7 @@
     </div>
   </div>
 
+  <!-- 3択チェックモーダル -->
   <div id="save-check-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
     <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full mx-4 p-6 shadow-2xl border border-gray-100 dark:border-gray-700 transform scale-95 transition-transform duration-200" id="save-check-modal-content">
       <div class="flex items-center gap-3 text-amber-500 mb-3">
@@ -622,7 +623,7 @@
         編集中の内容があります。移動する前にこれまでの変更を保存しますか？
       </p>
       <div class="flex flex-col gap-2">
-        <button id="save-check-btn-save" class="w-full py-3 px-4 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-500/20 transition-all text-sm">
+        <button id="save-check-btn-save" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/20 transition-all text-sm">
           保存する
         </button>
         <button id="save-check-btn-discard" class="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all text-sm">
@@ -688,7 +689,7 @@ const sandboxSampleTrip = [
   { day: 1, type: "car", from: "函館駅前レンタカー店", to: "五稜郭公園", line: "函館市内ドライブルート", start: "13:00", end: "13:20", cost: "1500" },
   { day: 1, type: "stay", place: "五稜郭タワー", memo: "星型城郭を展望台から見下ろす", detail: "歴史解説展示の見学", start: "13:20", end: "14:40", cost: "1000" },
   { day: 1, type: "bus", from: "五稜郭タワー前", to: "湯の川温泉", line: "函館バス 系統6系統", start: "15:00", end: "15:30", cost: "300" },
-  { day: 1, type: "stay", place: "湯の川温泉（老舗旅館）", memo: "チェックイン・夕食", detail: "露天風呂にて名湯を堪能、会席料理の夕食", start: "16:00", end: "21:00", cost: "18000" },
+  { day: 1, type: "stay", place: "湯の川温泉（老舗旅館）", memo: "チェックイン・夕食", detail: "露天風呂にて名湯を堪能、会席料理 of 夕食", start: "16:00", end: "21:00", cost: "18000" },
   
   // Day 2
   { day: 2, type: "eat", place: "温泉旅館 of 朝食", memo: "和食バイキング朝食", detail: "ハーフバイキング＆特製温泉粥", start: "08:00", end: "09:00", cost: "0" },
@@ -1018,6 +1019,7 @@ function hideAllScreens() {
 }
 
 // 編集離脱時の3択ダイアログを表示する関数
+// 戻り値: 'save' (保存して移動), 'discard' (保存せず移動), 'cancel' (キャンセル)
 window.showSaveCheckModal = function() {
   return new Promise((resolve) => {
     const modal = document.getElementById('save-check-modal');
@@ -1057,44 +1059,48 @@ window.showSaveCheckModal = function() {
   });
 };
 
-// ホーム画面へ戻る（未保存チェックの3択付き）
-window.goHome = async function() {
+// 【超重要】ボタンクリックなどから安全に画面遷移をガードするラッパー関数
+window.safeNavigate = async function(targetScreenName) {
   const editScreen = document.getElementById('screen-edit');
   
-  // 1. 編集画面が表示されている場合だけ3択チェックを挟む
-  if (editScreen && !editScreen.classList.contains('screen-hidden')) {
-    // 【重要】ここでshowConfirmを呼ばず、最初から3択モーダルだけを呼び出します
+  // 編集画面が表示されている時かつ、他の画面へ移ろうとしている場合だけ3択を出す
+  if (editScreen && !editScreen.classList.contains('screen-hidden') && targetScreenName !== 'edit') {
     const action = await showSaveCheckModal();
     
     if (action === 'save') {
-      // 「保存して移動」の場合：実際のクラウド保存ボタンをクリック
+      // 「保存して移動」の場合：クラウド保存処理を実行
       const saveBtn = document.getElementById('btnSaveCloud');
       if (saveBtn) {
+        // 保存を実行（保存完了後に自動で画面移動してくれます）
         saveBtn.click(); 
+      } else {
+        showScreen(targetScreenName);
       }
-      // 保存処理の後にホーム画面へ切り替え
-      showScreen('home');
-      currentTimelineTripId = null;
     } else if (action === 'discard') {
-      // 「保存せずに移動」の場合：そのままホーム画面へ切り替える
-      showScreen('home');
-      currentTimelineTripId = null;
+      // 「保存せずに移動」の場合：そのまま移動
+      showScreen(targetScreenName);
+      if (targetScreenName === 'home') currentTripId = null;
     } else {
-      // 「キャンセル」の場合：処理を完全に中断して画面にとどまる
+      // 「キャンセル」の場合：何もしないでとどまる
       return;
     }
   } else {
-    // 編集画面以外からホームに戻る場合は、通常の切り替え処理
-    showScreen('home');
-    currentTimelineTripId = null;
+    // 編集画面以外からの移動は通常通り即時遷移
+    showScreen(targetScreenName);
+    if (targetScreenName === 'home') currentTripId = null;
   }
 };
 
-// ロゴクリック時も共通の goHome() を呼び出すだけに統一
-window.handleLogoClick = function() {
-  goHome();
+// 共通導線の定義（すべて上記の安全ナビゲートを通す）
+window.goHome = function() {
+  safeNavigate('home');
 };
 
+window.handleLogoClick = function() {
+  safeNavigate('home');
+};
+
+// 画面切り替え本体（フリーズを防ぐため通常の同期関数に固定）
 window.showScreen = function(screenName) {
   if (!currentUser && !isSandboxMode && screenName !== 'home') {
     goHome();
@@ -1150,9 +1156,9 @@ window.showScreen = function(screenName) {
   }
 }
 
-window.switchToTimelineView = function() { showScreen('timeline'); }
-window.switchToNaviView = function() { showScreen('navi'); }
-window.switchToEditView = function() { showScreen('edit'); }
+window.switchToTimelineView = function() { safeNavigate('timeline'); }
+window.switchToNaviView = function() { safeNavigate('navi'); }
+window.switchToEditView = function() { safeNavigate('edit'); }
 
 async function loadDashboardTrips() {
   if (!currentUser) return;
@@ -2048,47 +2054,6 @@ window.showConfirm = function(title, desc) {
     document.getElementById('btnConfirmCancel').onclick = () => cleanUp(false);
   });
 }
-
-// 編集離脱時の3択ダイアログを表示する関数
-// 戻り値: 'save' (保存して移動), 'discard' (保存せず移動), 'cancel' (キャンセル)
-window.showSaveCheckModal = function() {
-  return new Promise((resolve) => {
-    const modal = document.getElementById('save-check-modal');
-    const content = document.getElementById('save-check-modal-content');
-    const btnSave = document.getElementById('save-check-btn-save');
-    const btnDiscard = document.getElementById('save-check-btn-discard');
-    const btnCancel = document.getElementById('save-check-btn-cancel');
-
-    if (!modal || !content) return resolve('discard');
-
-    // モーダルを開くアニメーション
-    modal.classList.remove('hidden');
-    setTimeout(() => {
-      modal.classList.remove('opacity-0');
-      content.classList.remove('scale-95');
-    }, 10);
-
-    // 閉じる処理の共通化
-    const closeModal = (result) => {
-      modal.classList.add('opacity-0');
-      content.classList.add('scale-95');
-      setTimeout(() => {
-        modal.classList.add('hidden');
-        resolve(result);
-      }, 200);
-      
-      // イベントリスナーのクリーンアップ（二重登録防止）
-      btnSave.replaceWith(btnSave.cloneNode(true));
-      btnDiscard.replaceWith(btnDiscard.cloneNode(true));
-      btnCancel.replaceWith(btnCancel.cloneNode(true));
-    };
-
-    // 各ボタンのクリックイベント
-    document.getElementById('save-check-btn-save').addEventListener('click', () => closeModal('save'));
-    document.getElementById('save-check-btn-discard').addEventListener('click', () => closeModal('discard'));
-    document.getElementById('save-check-btn-cancel').addEventListener('click', () => closeModal('cancel'));
-  });
-};
 
 function initSimulator() {
   const realRadio = document.querySelector('input[name="time-mode"][value="real"]');
