@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>TripFlow.Beta - 旅行マネージャー</title>
+<title>TripFlow - 旅行マネージャー</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -95,10 +95,10 @@
     }
     input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(0); cursor: pointer; }
     .theme-card-train { border-left: 4px solid #2563eb; background: linear-gradient(90deg, rgba(37, 99, 235, 0.05) 0%, rgba(255, 255, 255, 0.6) 100%); }
-    .theme-card-bus { border-left: 4px solid #ea580c; background: linear-gradient(90deg, rgba(234, 88, 12) 0.05%, rgba(255, 255, 255, 0.6) 100%); }
+    .theme-card-bus { border-left: 4px solid #ea580c; background: linear-gradient(90deg, rgba(234, 88, 12, 0.05) 0%, rgba(255, 255, 255, 0.6) 100%); }
     .theme-card-car { border-left: 4px solid #9333ea; background: linear-gradient(90deg, rgba(147, 51, 234, 0.05) 0%, rgba(255, 255, 255, 0.6) 100%); }
     .theme-card-walk { border-left: 4px solid #0d9488; background: linear-gradient(90deg, rgba(13, 148, 136, 0.05) 0%, rgba(255, 255, 255, 0.6) 100%); }
-    .theme-card-eat { border-left: 4px solid #d97706; background: linear-gradient(90deg, rgba(217, 119, 6) 0.05%, rgba(255, 255, 255, 0.6) 100%); }
+    .theme-card-eat { border-left: 4px solid #d97706; background: linear-gradient(90deg, rgba(217, 119, 6, 0.05) 0%, rgba(255, 255, 255, 0.6) 100%); }
     .theme-card-stay { border-left: 4px solid #059669; background: linear-gradient(90deg, rgba(5, 150, 105, 0.05) 0%, rgba(255, 255, 255, 0.6) 100%); }
     .text-muted { color: #475569; }
     .badge-sub { background: rgba(226, 232, 240, 0.8); border: 1px solid rgba(0,0,0,0.05); }
@@ -130,7 +130,7 @@
           </div>
           <div>
             <h1 class="font-extrabold text-sm md:text-base tracking-wider text-slate-900 dark:text-transparent dark:bg-gradient-to-r dark:from-white dark:via-indigo-100 dark:to-indigo-300 dark:bg-clip-text">
-             TripFlow.Beta
+             TripFlow
             </h1>
             <p id="subHeaderTitle" class="text-[8px] text-slate-500 dark:text-slate-400 font-medium tracking-widest uppercase">HOME</p>
           </div>
@@ -286,7 +286,7 @@
 
   <!-- マイポータル・ホーム（マイデータ一覧）画面 -->
   <div id="screen-home" class="max-w-4xl mx-auto px-4 mt-6 space-y-6 screen-hidden">
-    <!-- ユーザーウェルカムパネル -->
+    <!-- ユーザーウェルカムパネル (💡 名前の左側。ウェルカムアバター部を設定中のアイコンに同期) -->
     <div class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
       <div class="flex items-center gap-3 text-left w-full sm:w-auto">
         <div id="welcomeAvatar" class="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-900 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-slate-300 dark:border-slate-800 shrink-0">
@@ -658,20 +658,20 @@ let userProfile = {
 const sandboxSampleTrip = [
   // Day 1
   { day: 1, type: "train", from: "新函館北斗駅", to: "函館駅", line: "JR快速はこだてライナー", start: "10:00", end: "10:20", cost: "440" },
-  { day: 1, type: "eat", place: "函館朝市どんぶり横丁", memo: "ウニ・いくらなど贅沢海鮮丼のランチ", start: "10:30", end: "11:30", cost: "2800" },
-  { day: 1, type: "stay", place: "函館金森赤レンガ倉庫", memo: "ベイエリアを潮風を感じながら散策。お土産購入", start: "11:40", end: "12:50", cost: "0" },
+  { day: 1, type: "eat", place: "函館朝市どんぶり横丁", memo: "ウニ・いくらなど贅沢海鮮丼のランチ", detail: "絶品三色丼を注文予定", start: "10:30", end: "11:30", cost: "2800" },
+  { day: 1, type: "stay", place: "函館金森赤レンガ倉庫", memo: "ベイエリアを散策", detail: "お土産購入＆オルゴール館立ち寄り", start: "11:40", end: "12:50", cost: "0" },
   { day: 1, type: "car", from: "函館駅前レンタカー店", to: "五稜郭公園", line: "函館市内ドライブルート", start: "13:00", end: "13:20", cost: "1500" },
-  { day: 1, type: "stay", place: "五稜郭タワー", memo: "星型城郭を展望台から見下ろす。歴史解説展示の見学", start: "13:20", end: "14:40", cost: "1000" },
+  { day: 1, type: "stay", place: "五稜郭タワー", memo: "星型城郭を展望台から見下ろす", detail: "歴史解説展示の見学", start: "13:20", end: "14:40", cost: "1000" },
   { day: 1, type: "bus", from: "五稜郭タワー前", to: "湯の川温泉", line: "函館バス 系統6系統", start: "15:00", end: "15:30", cost: "300" },
-  { day: 1, type: "stay", place: "湯の川温泉（老舗旅館）", memo: "チェックイン。露天風呂にて名湯を堪能、会席料理の夕食", start: "16:00", end: "21:00", cost: "18000" },
+  { day: 1, type: "stay", place: "湯の川温泉（老舗旅館）", memo: "チェックイン・夕食", detail: "露天風呂にて名湯を堪能、会席料理の夕食", start: "16:00", end: "21:00", cost: "18000" },
   
   // Day 2
-  { day: 2, type: "eat", place: "温泉旅館 of 朝食", memo: "美味しいハーフバイキング＆特製温泉粥の和朝食", start: "08:00", end: "09:00", cost: "0" },
+  { day: 2, type: "eat", place: "温泉旅館 of 朝食", memo: "和食バイキング朝食", detail: "ハーフバイキング＆特製温泉粥", start: "08:00", end: "09:00", cost: "0" },
   { day: 2, type: "car", from: "湯の川温泉", to: "函館山ロープウェイ山麓駅", line: "湯の川・元町ベイラインを海岸沿いドライブ", start: "09:30", end: "09:55", cost: "0" },
-  { day: 2, type: "stay", place: "函館山ロープウェイ", memo: "ロープウェイで展望台へ。昼間のきらめく函館湾を一望！", start: "10:00", end: "11:15", cost: "1500" },
+  { day: 2, type: "stay", place: "函館山ロープウェイ", memo: "ロープウェイで展望台へ", detail: "昼間のきらめく函館湾を一望！", start: "10:00", end: "11:15", cost: "1500" },
   { day: 2, type: "walk", from: "ロープウェイ山麓駅", to: "元町ハリストス正教会", line: "美しい石畳 of ハチマン坂を経由", start: "11:15", end: "11:25", cost: "0" },
-  { day: 2, type: "stay", place: "元町教会群エリア", memo: "大三坂や元町カトリック教会など異国情緒あふれる洋館街を撮影散策", start: "11:25", end: "12:30", cost: "200" },
-  { day: 2, type: "eat", place: "元町レトロ茶房", memo: "大正レトロな館で味わう特製抹茶パフェとドリップ珈琲", start: "12:40", end: "13:40", cost: "1200" },
+  { day: 2, type: "stay", place: "元町教会群エリア", memo: "異国情緒あふれる洋館街を撮影", detail: "大三坂や元町カトリック教会散策", start: "11:25", end: "12:30", cost: "200" },
+  { day: 2, type: "eat", place: "元町レトロ茶房", memo: "大正レトロな館でお茶", detail: "特製抹茶パフェとドリップ珈琲", start: "12:40", end: "13:40", cost: "1200" },
   { day: 2, type: "car", from: "元町エリア", to: "新函館北斗駅", line: "レンタカー返却後、北海道新幹線にて出発地へ", start: "13:50", end: "14:40", cost: "2000" }
 ];
 
@@ -861,11 +861,15 @@ window.handleUpdateProfileSubmit = async function() {
   }
 }
 
-function applyAvatarVisual(elementId, color, icon) {
+// 💡 アバター表示適用関数 (サイズ切替サポート追加)
+function applyAvatarVisual(elementId, color, icon, isLarge = false) {
   const target = document.getElementById(elementId);
   if (!target) return;
   
-  target.className = `w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white cursor-pointer transition-transform hover:scale-105`;
+  const sizeClass = isLarge ? 'w-10 h-10 rounded-xl shadow-md border border-slate-300 dark:border-slate-800' : 'w-6 h-6 rounded-full';
+  const textClass = isLarge ? 'text-base' : 'text-[10px]';
+  
+  target.className = `${sizeClass} flex items-center justify-center ${textClass} text-white cursor-pointer transition-transform hover:scale-105 shrink-0`;
   
   if (color === 'emerald') target.classList.add('bg-emerald-600');
   else if (color === 'rose') target.classList.add('bg-rose-600');
@@ -879,8 +883,11 @@ function applyAvatarVisual(elementId, color, icon) {
 function syncUserInterfaceElements(user) {
   const nameToDisplay = user ? (user.displayName || (user.email ? user.email.split('@')[0] : 'ユーザー')) : 'ゲスト';
   
+  // 各所のアバタービジュアルを同期
   applyAvatarVisual('avatarPc', userProfile.avatarColor, userProfile.avatarIcon);
   applyAvatarVisual('avatarMobile', userProfile.avatarColor, userProfile.avatarIcon);
+  // 💡 お帰りなさいウェルカムエリアのアバターも設定中のものに同期適用
+  applyAvatarVisual('welcomeAvatar', userProfile.avatarColor, userProfile.avatarIcon, true);
 
   document.getElementById('userName').textContent = nameToDisplay;
   document.getElementById('userNameMobile').textContent = nameToDisplay;
@@ -1299,12 +1306,10 @@ function updateNaviView() {
       let lineBg = "bg-slate-200 dark:bg-slate-800"; let iconHtml = `<div class="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-700"></div>`; let isActiveLine = false;
       if (currentMove) {
         if (currentMove.from === stName && currentMove.to === stations[idx + 1]) {
-          // 💡 ライト/ダークの両方で絶対に見やすいようにラインカラーを微調整
           lineBg = "bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500 dark:from-indigo-400 dark:via-purple-500 dark:to-emerald-400";
           
           let mIcon = currentMove.type==="bus"?"fa-bus":(currentMove.type==="walk"?"fa-person-walking":(currentMove.type==="car"?"fa-car":"fa-train"));
           
-          // 💡 ライトモードでも埋もれないよう、電車のアイコン色を深いインディゴ・ブルー（あるいはダーク調の背景境界付き）へ最適化
           let mColor = "text-indigo-600 dark:text-indigo-400 shadow-sm border-indigo-200 dark:border-indigo-800";
           if (currentMove.type === "car") {
             mColor = "text-purple-600 dark:text-purple-400";
@@ -1314,7 +1319,6 @@ function updateNaviView() {
             mColor = "text-orange-600 dark:text-orange-400";
           }
           
-          // アイコンの背景に丸い枠を付け、ライトモードでも非常にはっきりと浮かび上がるように調整しました
           iconHtml = `
             <div class="w-6 h-6 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md flex items-center justify-center animate-bounce">
               <i class="fa-solid ${mIcon} text-[10px] ${mColor}"></i>
@@ -1502,7 +1506,11 @@ function renderTripTimelineView() {
       if (node.events && node.events.length > 0) {
         innerEventsHtml = `<div class="mt-2.5 ml-4 border-l-2 border-dashed border-slate-300 dark:border-slate-800 pl-4 space-y-2">`;
         node.events.forEach(ev => {
-          const costBadgeHtml = ev.cost ? `<span class="text-[10px] font-mono text-amber-500 bg-amber-500/5 px-1.5 py-0.2 rounded border border-amber-500/10">${parseInt(ev.cost).toLocaleString()}円</span>` : '';
+          const costBadgeHtml = ev.cost ? `<span class="text-[10px] font-mono text-amber-500 bg-amber-400/5 px-1.5 py-0.2 rounded border border-amber-500/10">${parseInt(ev.cost).toLocaleString()}円</span>` : '';
+          
+          // 詳細メモ表示の最適化
+          const detailHtml = ev.detail ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 border-t border-slate-100 dark:border-slate-800/80 pt-1 font-medium">${ev.detail}</p>` : '';
+          
           if (ev.type === "eat") {
             innerEventsHtml += `
               <div class="glass-card p-2.5 rounded-xl border border-amber-500/20 border-l-4 border-l-amber-500 space-y-1 relative">
@@ -1511,6 +1519,7 @@ function renderTripTimelineView() {
                   ${costBadgeHtml}
                 </div>
                 <p class="text-xs font-bold text-slate-800 dark:text-white">${ev.memo || '美味しいグルメを堪能'}</p>
+                ${detailHtml}
               </div>`;
           } else if (ev.type === "stay") {
             innerEventsHtml += `
@@ -1520,6 +1529,7 @@ function renderTripTimelineView() {
                   ${costBadgeHtml}
                 </div>
                 <p class="text-xs font-bold text-slate-800 dark:text-white">${ev.memo || '周辺を観光'}</p>
+                ${detailHtml}
               </div>`;
           }
         });
@@ -1575,7 +1585,6 @@ function renderEditorDayFilter() {
   const container = document.getElementById('editorDayFilterContainer');
   if (!container) return;
 
-  // 全ての日程一覧をソートして取得
   const days = Array.from(new Set(currentTripData.map(x => x.day || 1))).sort((a,b) => a - b);
   
   let html = "";
@@ -1590,7 +1599,6 @@ function renderEditorDayFilter() {
       ? "bg-indigo-600 border-indigo-400 text-white font-extrabold shadow shadow-indigo-500/25" 
       : "bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200";
     
-    // 💡 Day 1以外の場合は、タブ内に削除ボタン(ゴミ箱)を追加
     let deleteBtnHtml = "";
     if (d > 1) {
       deleteBtnHtml = `
@@ -1618,7 +1626,6 @@ function renderEditorDayFilter() {
   container.innerHTML = html;
 }
 
-// 💡 指定された特定の日(Day 1 以外)を丸ごと削除する
 window.deleteEntireDay = async function(dayNum) {
   if (dayNum <= 1) return;
   const ok = await showConfirm(
@@ -1627,10 +1634,8 @@ window.deleteEntireDay = async function(dayNum) {
   );
   if (!ok) return;
 
-  // 1. 該当日のデータを全消去
   currentTripData = currentTripData.filter(x => (x.day || 1) !== dayNum);
 
-  // 2. 該当日の翌日以降のデータを1日ずつ繰り上げる
   currentTripData.forEach(item => {
     const currentDay = item.day || 1;
     if (currentDay > dayNum) {
@@ -1638,7 +1643,6 @@ window.deleteEntireDay = async function(dayNum) {
     }
   });
 
-  // 表示フィルタが削除した日に設定されていた場合は「全日程」または「前の日」に戻す
   if (currentEditorDayFilter === dayNum) {
     currentEditorDayFilter = "all";
   } else if (typeof currentEditorDayFilter === "number" && currentEditorDayFilter > dayNum) {
@@ -1684,12 +1688,12 @@ function renderEditorRows() {
   updateEditorCalculationsAndPreview();
 }
 
+// 💡 編集画面フォーム生成関数（カラム数とプレースホルダーカラーを完全に統一）
 function createEditorRowElement(item, index) {
   const row = document.createElement('div');
   row.className = `glass-card rounded-xl p-4 space-y-3 relative transition-all theme-card-${item.type || 'train'}`;
   const isMove = isMoveType(item.type);
 
-  // 存在する日程のリストから選択肢を動的に構成 (最大10日まで、またはデータの最大Dayまで)
   let maxDayInTrip = Math.max(1, ...currentTripData.map(x => x.day || 1));
   let limit = Math.max(10, maxDayInTrip);
   
@@ -1717,19 +1721,22 @@ function createEditorRowElement(item, index) {
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-12 gap-3 text-xs">
+      <!-- 1列目 (時間設定：すべてのタイプで共通) -->
       <div class="md:col-span-3 flex items-center gap-1">
         <input type="time" value="${item.start || ''}" onchange="updateRowField(${index}, 'start', this.value)" class="w-full px-2 py-1.5 rounded-lg premium-input text-slate-900 dark:text-white font-mono text-center">
         <span class="text-slate-400 dark:text-slate-500 font-bold">➔</span>
         <input type="time" value="${item.end || ''}" onchange="updateRowField(${index}, 'end', this.value)" class="w-full px-2 py-1.5 rounded-lg premium-input text-slate-900 dark:text-white font-mono text-center">
       </div>
 
+      <!-- 💡 2〜4列目：等幅の3-3-3カラムをすべてのタイプで統一。縦の境界線がピッタリと揃います -->
       ${isMove ? `
         <div class="md:col-span-3"><input type="text" value="${item.from || ''}" oninput="updateRowField(${index}, 'from', this.value)" class="w-full px-3 py-1.5 rounded-lg premium-input font-bold placeholder-indigo-400/60" placeholder="📍 出発地/出発駅"></div>
         <div class="md:col-span-3"><input type="text" value="${item.to || ''}" oninput="updateRowField(${index}, 'to', this.value)" class="w-full px-3 py-1.5 rounded-lg premium-input font-bold placeholder-emerald-400/60" placeholder="🏁 到着地/到着駅"></div>
         <div class="md:col-span-3"><input type="text" value="${item.line || ''}" oninput="updateRowField(${index}, 'line', this.value)" class="w-full px-3 py-1.5 rounded-lg premium-input placeholder-slate-400 dark:placeholder-slate-500" placeholder="✍️ 路線・道路・便名など"></div>
       ` : `
-        <div class="md:col-span-4"><input type="text" value="${item.place || ''}" oninput="updateRowField(${index}, 'place', this.value)" class="w-full px-3 py-1.5 rounded-lg premium-input font-bold placeholder-amber-500/65" placeholder="📍 スポット名・都市名"></div>
-        <div class="md:col-span-5"><input type="text" value="${item.memo || ''}" oninput="updateRowField(${index}, 'memo', this.value)" class="w-full px-3 py-1.5 rounded-lg premium-input placeholder-slate-400 dark:placeholder-slate-500" placeholder="✍️ メモ・予定内容"></div>
+        <div class="md:col-span-3"><input type="text" value="${item.place || ''}" oninput="updateRowField(${index}, 'place', this.value)" class="w-full px-3 py-1.5 rounded-lg premium-input font-bold placeholder-indigo-400/60" placeholder="📍 スポット名・店舗名"></div>
+        <div class="md:col-span-3"><input type="text" value="${item.memo || ''}" oninput="updateRowField(${index}, 'memo', this.value)" class="w-full px-3 py-1.5 rounded-lg premium-input font-bold placeholder-emerald-400/60" placeholder="📝 目的・予定・見どころ"></div>
+        <div class="md:col-span-3"><input type="text" value="${item.detail || ''}" oninput="updateRowField(${index}, 'detail', this.value)" class="w-full px-3 py-1.5 rounded-lg premium-input placeholder-slate-400 dark:placeholder-slate-500" placeholder="✍️ 詳細メモ・予備情報など"></div>
       `}
     </div>
 
@@ -1747,7 +1754,7 @@ function createEditorRowElement(item, index) {
 window.addNewEditorRow = function() {
   const defaultDay = (currentEditorDayFilter === "all") ? 1 : currentEditorDayFilter;
   const defaultType = userProfile.defaultTransport || 'train';
-  currentTripData.push({ day: defaultDay, type: defaultType, start: "09:00", end: "10:00", from: "", to: "", line: "", cost: "" });
+  currentTripData.push({ day: defaultDay, type: defaultType, start: "09:00", end: "10:00", from: "", to: "", line: "", cost: "", detail: "" });
   renderEditorRows();
 }
 
@@ -1762,6 +1769,7 @@ window.updateRowType = function(index, newType) {
     item.from = item.from || item.place || ""; item.to = item.to || ""; item.line = item.line || item.memo || "";
   } else {
     item.place = item.place || item.from || ""; item.memo = item.memo || item.line || "";
+    item.detail = item.detail || "";
   }
   renderEditorRows();
 }
@@ -1849,14 +1857,19 @@ function updateEditorCalculationsAndPreview() {
           
           let evCost = ev.cost ? `<span class="text-[10px] font-mono text-amber-400 bg-amber-400/5 px-1 py-0.2 rounded border border-amber-500/10 ml-auto">${parseInt(ev.cost).toLocaleString()}円</span>` : '';
           
+          const detailPreview = ev.detail ? `<p class="text-[10px] text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-900/60 pt-0.5 mt-0.5">${ev.detail}</p>` : '';
+
           innerEvents += `
-            <div class="flex items-center justify-between text-xs py-1.5 px-2 bg-slate-100 dark:bg-slate-900/40 rounded-lg border border-slate-200 dark:border-slate-800/40 gap-2">
-              <div class="flex items-center gap-1.5 min-w-0">
-                <span class="font-mono text-[10px] text-indigo-500 dark:text-indigo-300 font-bold shrink-0">${ev.start}〜${ev.end}</span>
-                ${badge}
-                <span class="text-slate-700 dark:text-slate-200 font-medium truncate">${ev.memo || (ev.type === 'eat' ? 'お食事' : '観光')}</span>
+            <div class="flex flex-col text-xs py-1.5 px-2 bg-slate-100 dark:bg-slate-900/40 rounded-lg border border-slate-200 dark:border-slate-800/40 gap-1">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="font-mono text-[10px] text-indigo-500 dark:text-indigo-300 font-bold shrink-0">${ev.start}〜${ev.end}</span>
+                  ${badge}
+                  <span class="text-slate-700 dark:text-slate-200 font-medium truncate">${ev.memo || (ev.type === 'eat' ? 'お食事' : '観光')}</span>
+                </div>
+                ${evCost}
               </div>
-              ${evCost}
+              ${detailPreview}
             </div>
           `;
         });
