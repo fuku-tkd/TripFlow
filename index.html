@@ -638,6 +638,65 @@
 
   <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
 
+<div id="modal-auth" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm screen-hidden">
+  <div class="glass-card w-full max-w-sm p-6 rounded-2xl mx-4 space-y-4">
+    <div class="flex justify-between items-center">
+      <h3 id="authModalTitle" class="text-base font-bold">サインイン</h3>
+      <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div class="flex border-b border-slate-200 dark:border-slate-800 text-xs">
+      <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 pb-2 border-b-2 border-indigo-500 font-bold text-indigo-500">ログイン</button>
+      <button id="tab-register" onclick="switchAuthTab('register')" class="flex-1 pb-2 font-bold text-slate-400">新規登録</button>
+    </div>
+
+    <div class="space-y-3 pt-2 text-xs">
+      <div id="authNameField" class="space-y-1 screen-hidden">
+        <label class="block font-medium text-muted">ユーザー名</label>
+        <input type="text" id="authNameInput" class="w-full p-2.5 rounded-xl premium-input" placeholder="旅人太郎">
+      </div>
+      <div class="space-y-1">
+        <label class="block font-medium text-muted">メールアドレス</label>
+        <input type="email" id="authEmailInput" class="w-full p-2.5 rounded-xl premium-input" placeholder="example@tripflow.com">
+      </div>
+      <div class="space-y-1">
+        <label class="block font-medium text-muted">パスワード</label>
+        <input type="password" id="authPasswordInput" class="w-full p-2.5 rounded-xl premium-input" placeholder="••••••••">
+      </div>
+      <button onclick="submitAuthForm()" class="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white font-bold rounded-xl mt-4">
+        確認する
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-profile" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm screen-hidden">
+  <div class="glass-card w-full max-w-sm p-6 rounded-2xl mx-4 space-y-4">
+    <div class="flex justify-between items-center">
+      <h3 class="text-base font-bold">プロフィール・各種設定</h3>
+      <button onclick="closeProfileModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="space-y-3 text-xs">
+      <div class="space-y-1">
+        <label class="block font-medium text-muted">表示名</label>
+        <input type="text" id="profileNameInput" class="w-full p-2.5 rounded-xl premium-input">
+      </div>
+      <div class="space-y-1">
+        <label class="block font-medium text-muted">旅のスタイル</label>
+        <select id="profileStyleInput" class="w-full p-2.5 rounded-xl premium-input bg-transparent">
+          <option value="じっくり観光">じっくり観光型</option>
+          <option value="効率重視・弾丸">効率重視・弾丸型</option>
+          <option value="グルメ＆カフェ">グルメ＆カフェ巡り</option>
+          <option value="のんびりリラクゼーション">のんびり・温泉型</option>
+        </select>
+      </div>
+      <button onclick="saveProfile()" class="w-full py-2.5 bg-indigo-600 text-white font-bold rounded-xl mt-4">
+        設定を保存
+      </button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -996,16 +1055,20 @@ window.launchSandboxDemo = function() {
     avatarIcon: 'fa-compass',
     tripStyle: 'drive',
     defaultTransport: 'car',
-    emergencyMemo: 'お試しデモ中'
-  };
-
+    emergencyMemo: 'お試しデモwindow.launchSandboxDemo = function() {
+  currentUser = null; // 明示的にゲスト
+  updateUserUI();
+  
+  // welcome画面を隠して、メインポータル（またはエディタ）を表示
+  document.getElementById('screen-welcome').classList.add('screen-hidden');
+  document.getElementById('screen-home').classList.remove('screen-hidden');
+  
+  // バナーを表示してお試し中であることをアピール
+  const banner = document.getElementById('sandboxBanner');
+  if (banner) banner.classList.remove('screen-hidden');
   showToast("🚀 お試しモードを起動しました！", "success");
   syncUserInterfaceElements(null);
-
-  document.getElementById('tripTitle').value = "【お試し】函館・湯の川温泉満喫プラン（1泊2日）";
-  document.getElementById('editorStatusText').textContent = "お試し（Sandbox）デモモード";
-  showScreen('edit');
-}
+};
 
 function hideAllScreens() {
   document.getElementById('screen-home').classList.add('screen-hidden');
@@ -2121,7 +2184,137 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 
 setInterval(() => {
   if (!isCustomTimeMode && !document.getElementById('screen-navi').classList.contains('screen-hidden')) { updateNaviView(); }
-}, 15000);
+}, 15000);  // ユーザー管理用の状態定義
+let currentUser = null; // ログインしていない時は null（ゲスト状態）
+let authMode = 'login'; // 'login' または 'register'
+
+// --- モーダル開閉制御 ---
+window.openAuthModal = function() {
+  authMode = 'login';
+  switchAuthTab('login');
+  document.getElementById('modal-auth').classList.remove('screen-hidden');
+};
+
+window.closeAuthModal = function() {
+  document.getElementById('modal-auth').classList.add('screen-hidden');
+};
+
+window.openProfileModal = function() {
+  if (!currentUser) return;
+  document.getElementById('profileNameInput').value = currentUser.name || '';
+  document.getElementById('profileStyleInput').value = currentUser.style || 'じっくり観光';
+  document.getElementById('modal-profile').classList.remove('screen-hidden');
+};
+
+window.closeProfileModal = function() {
+  document.getElementById('modal-profile').classList.add('screen-hidden');
+};
+
+// --- タブ切り替え（ログイン / 新規登録） ---
+window.switchAuthTab = function(mode) {
+  authMode = mode;
+  const tabLogin = document.getElementById('tab-login');
+  const tabRegister = document.getElementById('tab-register');
+  const nameField = document.getElementById('authNameField');
+  const title = document.getElementById('authModalTitle');
+
+  if (mode === 'login') {
+    title.innerText = 'サインイン';
+    tabLogin.className = "flex-1 pb-2 border-b-2 border-indigo-500 font-bold text-indigo-500";
+    tabRegister.className = "flex-1 pb-2 font-bold text-slate-400";
+    nameField.classList.add('screen-hidden');
+  } else {
+    title.innerText = 'アカウント新規登録';
+    tabRegister.className = "flex-1 pb-2 border-b-2 border-indigo-500 font-bold text-indigo-500";
+    tabLogin.className = "flex-1 pb-2 font-bold text-slate-400";
+    nameField.classList.remove('screen-hidden');
+  }
+};
+
+// --- 認証送信処理 ---
+window.submitAuthForm = function() {
+  const email = document.getElementById('authEmailInput').value;
+  const password = document.getElementById('authPasswordInput').value;
+  const name = document.getElementById('authNameInput').value;
+
+  if (!email || !password) {
+    alert('メールアドレスとパスワードを入力してください。');
+    return;
+  }
+
+  // 本来はここでバックエンドAPIやFirebase Auth等にリクエストを送信
+  // 今回はフロント模擬のため、ローカルオブジェクトを作成してログイン成功とします
+  if (authMode === 'register') {
+    if (!name) { alert('ユーザー名を入力してください。'); return; }
+    currentUser = { name: name, email: email, style: 'じっくり観光' };
+    alert('アカウント登録が完了しました！');
+  } else {
+    currentUser = { name: '旅人マスター', email: email, style: '効率重視・弾丸' };
+    alert('ログインしました！');
+  }
+
+  closeAuthModal();
+  updateUserUI();
+};
+
+// --- プロフィール保存 ---
+window.saveProfile = function() {
+  if (!currentUser) return;
+  currentUser.name = document.getElementById('profileNameInput').value;
+  currentUser.style = document.getElementById('profileStyleInput').value;
+  
+  alert('プロフィールを更新しました。');
+  closeProfileModal();
+  updateUserUI();
+};
+
+// --- サインアウト ---
+window.handleSignOut = function() {
+  if (confirm('ログアウトしますか？')) {
+    currentUser = null;
+    alert('ログアウトしました。');
+    updateUserUI();
+    // ログアウト時は初期ランディング（welcome）画面に戻す
+    goHome(); 
+  }
+};
+
+// --- ログイン状態に応じたUIの切り替えマッピング ---
+function updateUserUI() {
+  const guestHeaderPc = document.getElementById('guestHeaderArea');
+  const guestHeaderMobile = document.getElementById('guestHeaderAreaMobile');
+  const userHeaderPc = document.getElementById('userInfoArea');
+  const userHeaderMobile = document.getElementById('userInfoAreaMobile');
+  
+  const welcomeName = document.getElementById('welcomeUserName');
+  const welcomeBadge = document.getElementById('welcomeUserStyleBadge');
+
+  if (currentUser) {
+    // ログイン状態
+    if (guestHeaderPc) guestHeaderPc.classList.add('screen-hidden');
+    if (guestHeaderMobile) guestHeaderMobile.classList.add('screen-hidden');
+    if (userHeaderPc) userHeaderPc.classList.remove('screen-hidden');
+    if (userHeaderMobile) userHeaderMobile.classList.remove('screen-hidden');
+
+    // ヘッダーやダッシュボードに反映
+    document.getElementById('userName').innerText = currentUser.name;
+    document.getElementById('userNameMobile').innerText = currentUser.name;
+    if (welcomeName) welcomeName.innerText = currentUser.name;
+    if (welcomeBadge) welcomeBadge.innerText = currentUser.style;
+  } else {
+    // ゲスト（未ログイン）状態
+    if (guestHeaderPc) guestHeaderPc.classList.remove('screen-hidden');
+    if (guestHeaderMobile) guestHeaderMobile.classList.remove('screen-hidden');
+    if (userHeaderPc) userHeaderPc.classList.add('screen-hidden');
+    if (userHeaderMobile) userHeaderMobile.classList.add('screen-hidden');
+  }
+}
+
+// 起動時にUIを初期化
+document.addEventListener('DOMContentLoaded', () => {
+  updateUserUI();
+});
+
 </script>
 </body>
 </html>
