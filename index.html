@@ -1017,35 +1017,31 @@ function hideAllScreens() {
   document.getElementById('btnSwitchEdit').classList.add('hidden');
 }
 
-// 既存の goHome を書き換える
+// ホーム画面へ戻る（離脱ガード付き）
 window.goHome = async function() {
   const editScreen = document.getElementById('screen-edit');
   
-  // 1. 編集画面が表示されている（＝編集中の）場合だけ3択チェックを挟む
+  // 1. 編集画面が表示されている場合だけ3択チェックを挟む
   if (editScreen && !editScreen.classList.contains('screen-hidden')) {
     const action = await showSaveCheckModal();
     
     if (action === 'save') {
-      // 「保存して移動」の場合：保存処理を走らせる
-      // ※既存の保存ボタンの click イベントなどを発火、または保存関数を呼び出す
-      const saveBtn = document.getElementById('edit-save-btn'); // 実際の保存ボタンのIDに合わせてください
+      // 「保存して移動」の場合：既存の保存ボタンをクリックして保存を実行
+      const saveBtn = document.getElementById('edit-save-btn');
       if (saveBtn) {
         saveBtn.click(); 
       }
-      // 保存処理の完了を待ってから画面遷移させたい場合は、ここに少し猶予を入れるか、
-      // 既存の保存処理（saveTripなど）の関数を直接呼ぶと確実です。
     } else if (action === 'discard') {
-      // 「保存せずに移動」の場合：何もしないで下の画面切り替え処理へ進む
+      // 「保存せずに移動」の場合：何もせず次の画面切り替えへ
     } else {
       // 「キャンセル」の場合：処理を中断して画面にとどまる
       return;
     }
   }
 
-  // 2. 通常のホーム画面への切り替え処理（元々の goHome の中身）
+  // 2. 本来のホーム遷移処理（無限ループしないよう直接 showScreen を呼ぶ）
   showScreen('screen-home');
   currentTimelineTripId = null;
-  // （※もし元々の goHome 内に他の処理があれば、ここにそのまま残してください）
 };
 
 // ロゴクリック時の離脱防止チェック
