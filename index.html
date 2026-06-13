@@ -1017,7 +1017,7 @@ function hideAllScreens() {
   document.getElementById('btnSwitchEdit').classList.add('hidden');
 }
 
-// ホーム画面へ戻る（離脱ガード付き）
+// ホーム画面へ戻る（未保存チェックの3択付き）
 window.goHome = async function() {
   const editScreen = document.getElementById('screen-edit');
   
@@ -1026,24 +1026,33 @@ window.goHome = async function() {
     const action = await showSaveCheckModal();
     
     if (action === 'save') {
-      // 「保存して移動」の場合：既存の保存ボタンをクリックして保存を実行
-      const saveBtn = document.getElementById('edit-save-btn');
+      // 「保存して移動」の場合：実際のクラウド保存ボタンをクリック
+      const saveBtn = document.getElementById('btnSaveCloud');
       if (saveBtn) {
         saveBtn.click(); 
       }
+      // 保存処理が走った後、ホーム画面に切り替える
+      showScreen('home');
+      currentTimelineTripId = null;
     } else if (action === 'discard') {
-      // 「保存せずに移動」の場合：何もせず次の画面切り替えへ
+      // 「保存せずに移動」の場合：そのままホーム画面へ切り替える
+      showScreen('home');
+      currentTimelineTripId = null;
     } else {
-      // 「キャンセル」の場合：処理を中断して画面にとどまる
+      // 「キャンセル」の場合：処理を完全に中断して画面にとどまる
       return;
     }
+  } else {
+    // 編集画面以外からホームに戻る場合は、通常の切り替え処理
+    showScreen('home');
+    currentTimelineTripId = null;
   }
-
-  // 2. 本来のホーム遷移処理（無限ループしないよう直接 showScreen を呼ぶ）
-  showScreen('screen-home');
-  currentTimelineTripId = null;
 };
 
+// ロゴクリック時も個別の2択は出さず、共通の goHome() を呼び出すだけに修正
+window.handleLogoClick = function() {
+  goHome();
+};
 // ロゴクリック時の離脱防止チェック
 window.handleLogoClick = async function() {
   const editScreen = document.getElementById('screen-edit');
