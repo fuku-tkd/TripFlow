@@ -119,9 +119,10 @@
 <body class="pb-12 text-slate-800 dark:text-slate-100">
 
   <!-- ヘッダーUI -->
-<header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-900 px-4 py-2.5 md:px-8">
+  <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-900 px-4 py-2.5 md:px-8">
     <div class="max-w-6xl mx-auto flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
       
+      <!-- ロゴ＆スマホプロフィールエリア -->
       <div class="flex items-center justify-between w-full md:w-auto shrink-0">
         <div onclick="handleLogoClick()" class="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-all shrink-0">
           <div class="bg-gradient-to-tr from-indigo-500 to-indigo-600 p-1.5 rounded-lg shadow-lg shadow-indigo-500/20">
@@ -129,17 +130,14 @@
           </div>
           <div>
             <h1 class="font-extrabold text-sm md:text-base tracking-wider text-slate-900 dark:text-transparent dark:bg-gradient-to-r dark:from-white dark:via-indigo-100 dark:to-indigo-300 dark:bg-clip-text">
-              TripFlow
+             TripFlow
             </h1>
             <p id="subHeaderTitle" class="text-[8px] text-slate-500 dark:text-slate-400 font-medium tracking-widest uppercase">HOME</p>
           </div>
         </div>
 
-        <div class="flex md:hidden items-center gap-2 shrink-0">
-          <button id="btnDiscoverMobile" onclick="goToDiscoverScreen()" class="hidden p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-900/60 transition-colors" title="みんなのプラン">
-            <i class="fa-solid fa-compass text-base text-indigo-500"></i>
-          </button>
-
+        <div class="flex md:hidden items-center gap-1.5 shrink-0">
+          <!-- スマホプロフィール -->
           <div id="userInfoAreaMobile" class="hidden flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-0.5 pr-2.5 rounded-full">
             <div onclick="openProfileModal()" id="avatarMobile" class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white cursor-pointer overflow-hidden">
               <i class="fa-solid fa-user text-[9px]"></i>
@@ -149,7 +147,6 @@
               <i class="fa-solid fa-right-from-bracket"></i>
             </button>
           </div>
-
           <div id="guestHeaderAreaMobile" class="flex items-center">
             <button onclick="openAuthModal()" class="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-indigo-600 to-indigo-700 border border-indigo-500/30 rounded-lg text-[10px] font-bold text-white transition-all shadow-md shadow-indigo-500/10">
               <i class="fa-solid fa-right-to-bracket text-[8px]"></i> <span>ログイン</span>
@@ -158,6 +155,7 @@
         </div>
       </div>
 
+      <!-- アクションナビゲーションバー -->
       <div id="navigationBar" class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar pb-0.5 -mx-4 px-4 md:mx-0 md:px-0 md:pb-0 scroll-smooth shrink-0 md:flex-grow md:justify-center">
         <button id="btnBackToHome" onclick="goHome()" class="hidden flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-300 transition-all shrink-0">
           <i class="fa-solid fa-house text-[10px]"></i> <span>ホーム</span>
@@ -176,11 +174,8 @@
         </button>
       </div>
 
-      <div class="hidden md:flex items-center gap-3 shrink-0">
-        <button id="btnDiscoverPc" onclick="goToDiscoverScreen()" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-900/60 transition" title="みんなのプランを見る">
-          <i class="fa-solid fa-compass text-sm text-indigo-500"></i> <span>みんなのプラン</span>
-        </button>
-
+      <!-- PC用ログイン・ユーザーコンテナ -->
+      <div class="hidden md:flex items-center gap-1.5 shrink-0">
         <div id="userInfoArea" class="hidden flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-0.5 pr-2.5 rounded-full">
           <div onclick="openProfileModal()" id="avatarPc" class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white border border-indigo-400/30 cursor-pointer transition-colors overflow-hidden" title="プロフィール設定">
             <i class="fa-solid fa-user text-[10px]"></i>
@@ -190,7 +185,6 @@
             <i class="fa-solid fa-right-from-bracket"></i>
           </button>
         </div>
-
         <div id="guestHeaderArea" class="flex items-center">
           <button onclick="openAuthModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:brightness-110 border border-indigo-500/30 rounded-xl text-xs font-bold text-white transition-all shadow-md shadow-indigo-500/10">
             <i class="fa-solid fa-right-to-bracket text-[10px]"></i> <span>ログイン / 新規登録</span>
@@ -1195,52 +1189,62 @@ onAuthStateChanged(auth, async (user) => {
   const guestHeaderArea = document.getElementById('guestHeaderArea');
   const guestHeaderAreaMobile = document.getElementById('guestHeaderAreaMobile');
   
-  // 💡 ここに対象ボタンのDOM要素取得を追加しておくとスムーズです
-  const btnDiscoverPc = document.getElementById('btnDiscoverPc');
-  const btnDiscoverMobile = document.getElementById('btnDiscoverMobile');
-
   if (user) {
     currentUser = user;
     isSandboxMode = false;
     document.getElementById('sandboxBanner').classList.add('hidden');
-    welcomeScreen.classList.add('screen-hidden');
-    if (typeof showScreen === 'function') showScreen('home');
-    if (typeof fetchTripsFromCloud === 'function') fetchTripsFromCloud();
+    
+    welcomeScreen.classList.add('screen-hidden'); 
+    if (typeof showScreen === 'function') {
+      showScreen('home'); 
+    }
 
-    // 👤 既存の表示処理
+    if (typeof fetchTripsFromCloud === 'function') {
+      fetchTripsFromCloud(); 
+    }
+    
     userInfoArea.classList.remove('hidden');
     userInfoAreaMobile.classList.remove('hidden');
     guestHeaderArea.classList.add('hidden');
     guestHeaderAreaMobile.classList.add('hidden');
-
-    // 🧭 追加：ログインした時に「みんなのプラン」専用ボタンを表示する
-    if (btnDiscoverPc) {
-      btnDiscoverPc.classList.remove('hidden');
-      btnDiscoverPc.classList.add('flex');
+    
+    try {
+      const pDoc = await getDoc(doc(db, 'trips', 'profile_settings_' + user.uid));
+      if(pDoc.exists()) {
+        const migrated = migrateUserProfile(pDoc.data());
+        userProfile = { ...userProfile, ...migrated };
+      }
+    } catch(e) {
+      console.log("プロフィール取得スキップ:", e);
     }
-    if (btnDiscoverMobile) {
-      btnDiscoverMobile.classList.remove('hidden');
-      btnDiscoverMobile.classList.add('flex');
-    }
 
+    syncUserInterfaceElements(user);
+    showScreen('home'); 
   } else {
     currentUser = null;
-    welcomeScreen.classList.remove('screen-hidden');
-    
-    // 👤 既存の非表示処理
     userInfoArea.classList.add('hidden');
     userInfoAreaMobile.classList.add('hidden');
     guestHeaderArea.classList.remove('hidden');
     guestHeaderAreaMobile.classList.remove('hidden');
-
-    // 🧭 追加：ログアウト時はボタンを非表示にする
-    if (btnDiscoverPc) {
-      btnDiscoverPc.classList.add('hidden');
-      btnDiscoverPc.classList.remove('flex');
+    
+    // 未ログイン時のプロフィール取得（ローカルマイグレーション適用）
+    const localProfile = localStorage.getItem('tripflow_local_profile');
+    if (localProfile) {
+      try {
+        userProfile = { ...userProfile, ...migrateUserProfile(JSON.parse(localProfile)) };
+      } catch (e) {
+        console.error("ローカルプロフィール読み込みエラー:", e);
+      }
     }
-    if (btnDiscoverMobile) {
-      btnDiscoverMobile.classList.add('hidden');
-      btnDiscoverMobile.classList.remove('flex');
+
+    if (isSandboxMode) {
+      document.getElementById('sandboxBanner').classList.remove('hidden');
+      welcomeScreen.classList.add('screen-hidden');
+    } else {
+      document.getElementById('sandboxBanner').classList.add('hidden');
+      hideAllScreens();
+      welcomeScreen.classList.remove('screen-hidden');
+      document.getElementById('subHeaderTitle').textContent = "HOME";
     }
   }
 });
