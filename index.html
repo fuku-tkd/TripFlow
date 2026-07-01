@@ -1193,9 +1193,14 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     isSandboxMode = false;
     document.getElementById('sandboxBanner').classList.add('hidden');
-    welcomeScreen.classList.add('screen-hidden');
+    
+    welcomeScreen.classList.add('screen-hidden'); 
     if (typeof showScreen === 'function') {
-      showScreen('home');
+      showScreen('home'); 
+    }
+
+    if (typeof fetchTripsFromCloud === 'function') {
+      fetchTripsFromCloud(); 
     }
     
     userInfoArea.classList.remove('hidden');
