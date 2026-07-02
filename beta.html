@@ -945,6 +945,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getFirestore, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, updatePassword, updateEmail, verifyBeforeUpdateEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
+// Firebase 初期化
 const firebaseConfig = {
     apiKey: "AIzaSyDxL4FFosUkypjh3_c3NdordYG4RJekIgc",
     authDomain: "noritetsu-navi.firebaseapp.com",
@@ -959,6 +960,23 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// ==========================================
+// 認証システムのインポート（新規追加）
+// ==========================================
+import {
+  initializeAuth as initAuth,
+  handleAuthSubmit,
+  handleSignOut,
+  toggleAuthMode,
+  openAuthModal,
+  closeAuthModal,
+  handleDrawerAuthAction,
+  getCurrentUser
+} from './auth.js';
+
+// ==========================================
+// グローバル変数
+// ==========================================
 let currentUser = null;      
 let allTripsCache = [];      
 let currentTripId = null;    
@@ -995,6 +1013,26 @@ let userProfile = {
   bio: '',
   snsLink: ''
 };
+
+// ==========================================
+// 認証初期化
+// ==========================================
+initAuth();
+
+// グローバルスコープに公開（HTMLのonclick属性から呼び出し可能に）
+window.handleAuthSubmit = handleAuthSubmit;
+window.handleSignOut = handleSignOut;
+window.toggleAuthMode = toggleAuthMode;
+window.openAuthModal = openAuthModal;
+window.closeAuthModal = closeAuthModal;
+window.handleDrawerAuthAction = handleDrawerAuthAction;
+window.getCurrentUser = getCurrentUser;
+
+// ==========================================
+// 既存の他の関数群（以下省略）
+// ==========================================
+// 注：既存のすべての関数（goHome, goToMyPlansScreen など）は
+// そのままこの後に続ける必要があります
 
 // サンドボックス用北海道観光サンプルデータ（1泊2日・計14ステップ構成）
 const sandboxSampleTrip = [
