@@ -59,7 +59,9 @@ export async function handleAuthSubmit(event) {
   try {
     if (authMode === 'login') {
       // ログイン処理
-      await signInWithEmailAndPassword(auth, emailOrUser, password);
+      // メールアドレスまたはユーザーIDの統一化
+      const email = emailOrUser.includes('@') ? emailOrUser : `${emailOrUser}@tripflow.local`;
+      await signInWithEmailAndPassword(auth, email, password);
       showToast('ログインしました！', 'success');
     } else {
       // サインアップ処理
