@@ -872,7 +872,7 @@
         </div>
 
         <div>
-          <label id="authEmailLabel" class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">独自ID または メール</label>
+          <label id="authEmailLabel" class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">独自ID</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-envelope text-xs"></i></span>
             <input type="text" id="authEmailOrUser" required class="w-full pl-9 pr-4 py-2 rounded-xl premium-input text-xs placeholder-slate-400 dark:placeholder-slate-600 font-medium">
@@ -1156,12 +1156,12 @@ function syncAuthFormUI() {
   
   if (authMode === 'signup') {
     title.textContent = "新規アカウントを作成";
-    desc.textContent = "独自IDまたはメール、表示名、パスワードを設定して登録してください。";
+    desc.textContent = "ユーザーID、表示名、パスワードを設定して登録してください。";
     submitBtn.innerHTML = `<span>新規登録する</span> <i class="fa-solid fa-user-plus text-xs"></i>`;
     toggleBtn.textContent = "既にアカウントをお持ちの方（サインイン）";
     nameField.classList.remove('hidden');
     document.getElementById('authDisplayName').required = true;
-    emailLabel.textContent = "メールアドレス または 登録用独自ID";
+    emailLabel.textContent = "ユーザーID";
   } else {
     title.textContent = "アカウントにサインイン";
     desc.textContent = "旅程をクラウド保存・同期するために認証を行ってください。";
@@ -1169,7 +1169,7 @@ function syncAuthFormUI() {
     toggleBtn.textContent = "新規アカウントを作成する（サインアップ）";
     nameField.classList.add('hidden');
     document.getElementById('authDisplayName').required = false;
-    emailLabel.textContent = "メールアドレス または 独自ID";
+    emailLabel.textContent = "ユーザーID";
   }
 }
 
@@ -1177,15 +1177,30 @@ window.handleAuthSubmit = async function(event) {
   event.preventDefault();
   if (isProcessing) return;
 
-  const emailOrUser = document.getElementById('authEmailOrUser').value;
-  const password = document.getElementById('authPassword').value;
+  const userId = document.getElementById('authEmail').value.trim(); // 入力されたID
+  const password = document.getElementById('authPassword').value.trim();
   const displayName = document.getElementById('authDisplayName').value.trim();
-  
-  if (password.length < 6) {
-    showToast("⚠️ パスワードは6文字以上で入力してください", "error");
+
+  if (!userId || !password) {
+    alert('ユーザーIDとパスワードを入力してください。');
     return;
   }
-  const finalEmail = resolveEmailFormat(emailOrUser);
+
+  // 1. 本物のメールアドレスを入力しようとした場合は弾く
+  if (userId.includes('@')) {
+    alert('メールアドレスはご利用いただけません。ユーザーIDを入力してください。');
+    return;
+  }
+
+  // 2. ユーザーID用のバリデーション（半角英数字、ハイフン、アンダースコア）
+  const idRegex = /^[a-zA-Z0-9_-]+$/;
+  if (userId.length < 4 || !idRegex.test(userId)) {
+    alert('ユーザーIDは4文字以上の半角英数字（または _ , -）で入力してください。');
+    return;
+  }
+
+  // 3. 一律でダミーメールアドレスを生成
+  const finalEmail = `${userId.toLowerCase()}@tripflow.internal`;
   
   setProcessing(true, 'btnAuthSubmit', '認証中...');
 
