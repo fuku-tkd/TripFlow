@@ -6,16 +6,32 @@
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-const auth = getAuth();
-const db = getFirestore();
+// auth と db はファイルの外から受け取る
+let auth = null;
+let db = null;
 
 let currentUser = null;
 let authMode = 'login'; // 'login' or 'signup'
 
 /**
+ * auth と db インスタンスを初期化
+ */
+export function setAuthInstances(authInstance, dbInstance) {
+  auth = authInstance;
+  db = dbInstance;
+  console.log('✅ auth と db インスタンスを初期化しました');
+  initializeAuthState();
+}
+
+/**
  * 認証状態の監視・初期化
  */
-export function initializeAuth() {
+function initializeAuthState() {
+  if (!auth) {
+    console.error('❌ auth インスタンスが初期化されていません');
+    return;
+  }
+
   onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     if (user) {
@@ -60,8 +76,10 @@ export async function handleAuthSubmit(event) {
     if (authMode === 'login') {
       // ログイン処理
       // メールアドレスまたはユーザーIDの統一化
-      const email = emailOrUser.includes('@') ? emailOrUser : `${emailOrUser}@internal.app`;
+      const email = emailOrUser.includes('@') ? emailOrUser : `${emailOrUser}@tripflow.local`;
+      console.log('🔐 ログイン試行:', email);
       await signInWithEmailAndPassword(auth, email, password);
+      console.log('✅ ログイン成功');
       showToast('ログインしました！', 'success');
     } else {
       // サインアップ処理
@@ -73,8 +91,9 @@ export async function handleAuthSubmit(event) {
 
       // メールアドレスまたはユーザーIDでサインアップ
       // Firebase Authではメールアドレスが必須なので、簡易的に処理
-      const email = emailOrUser.includes('@') ? emailOrUser : `${emailOrUser}@internal.app`;
+      const email = emailOrUser.includes('@') ? emailOrUser : `${emailOrUser}@tripflow.local`;
       
+      console.log('📝 アカウント作成試行:', email);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
       // プロフィール設定
@@ -93,6 +112,7 @@ export async function handleAuthSubmit(event) {
         defaultTransport: 'train'
       });
 
+      console.log('✅ アカウント作成成功');
       showToast('アカウントを作成しました！', 'success');
     }
 
@@ -137,6 +157,7 @@ function getJapaneseErrorMessage(errorCode) {
 export async function handleSignOut() {
   try {
     await signOut(auth);
+    console.log('✅ ログアウト成功');
     showToast('ログアウトしました', 'success');
     goHome();
   } catch (error) {
@@ -272,6 +293,8 @@ async function loadUserProfile(uid) {
  */
 function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');
+  if (!container) return;
+  
   const toast = document.createElement('div');
   
   const bgColor = type === 'error' ? 'bg-red-500' : 
