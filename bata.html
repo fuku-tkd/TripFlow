@@ -1313,34 +1313,20 @@ window.handleUpdateProfileSubmit = async function() {
     userProfile.snsLink = sns;
 
     if (currentUser) {
-      // ログイン用のメアド、IDが変更されている場合、Firebase Authを更新
+      // メールアドレス(ID)の変更処理
       if (newEmailOrUser) {
         const targetEmail = resolveEmailFormat(newEmailOrUser);
         if (targetEmail !== currentUser.email) {
-          try {
-            // Firebase Authの新しい仕様に対応：まずは検証リンクを送信
-            await verifyBeforeUpdateEmail(currentUser, targetEmail);
-            showToast("📧 送信完了！新しいメールアドレス宛に届いた確認リンクをクリックして変更を承認してください。", "success");
-          } catch (emailErr) {
-            console.error("verifyBeforeUpdateEmail エラー。フォールバックします:", emailErr);
-            if (emailErr.code === 'auth/operation-not-allowed') {
-              // verifyBeforeUpdateEmail が禁止されている、または独自IDの場合の直接更新フォールバック
-              try {
-                await updateEmail(currentUser, targetEmail);
-                showToast("📧 ログイン用のID・メールを直接更新しました", "success");
-              } catch (fallbackErr) {
-                console.error("updateEmail フォールバックエラー:", fallbackErr);
-                throw new Error("メール変更機能がFirebase側で許可されていません。Firebase設定をご確認ください。");
-              }
-            } else {
-              throw emailErr;
-            }
-          }
+          // 確認メール送信（verifyBeforeUpdateEmail）を廃止し、直接更新を実行
+          await updateEmail(currentUser, targetEmail);
+          showToast("👤 ログインID(メール)を更新しました", "success");
         }
       }
 
+      // プロフィール表示名の更新
       await updateProfile(currentUser, { displayName: newName });
       
+      // パスワードの更新
       if(newPassword) {
         if(newPassword.length < 6) {
           showToast("⚠️ 新しいパスワードは6文字以上必要です", "error");
@@ -1350,6 +1336,7 @@ window.handleUpdateProfileSubmit = async function() {
         await updatePassword(currentUser, newPassword);
       }
       
+      // Firestoreへの保存
       await setDoc(doc(db, 'trips', 'profile_settings_' + currentUser.uid), {
         profileUserId: currentUser.uid,
         avatarColor: userProfile.avatarColor,
@@ -1373,8 +1360,9 @@ window.handleUpdateProfileSubmit = async function() {
     }
   } catch (e) {
     if(e.code === "auth/requires-recent-login") {
-      showToast("⚠️ セキュリティ保護のため、一度ログアウトしてから再ログインして再度変更してください。", "error");
+      showToast("⚠️ 安全のため、一度ログアウトしてから再ログインして変更してください。", "error");
     } else {
+      console.error(e);
       showToast("更新失敗: " + e.message, "error");
     }
   } finally {
