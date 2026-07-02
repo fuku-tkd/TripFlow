@@ -32,7 +32,7 @@
   @import url('https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=Inter:wght@300;400;600;800&display=swap');
   
   body {
-    font-family: 'Inter', 'BIZ UDGothic', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Inter', 'BIZ BIZ UDGothic', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     min-height: 100vh;
     transition: background-color 0.3s, color 0.3s;
   }
@@ -135,7 +135,7 @@
         </div>
       </div>
 
-      <!-- アクションナビゲーションバー (インライン中段、スマホ時スクロール可) -->
+      <!-- アクションナビゲーションバー -->
       <div id="navigationBar" class="hidden md:flex items-center gap-1.5 overflow-x-auto hide-scrollbar scroll-smooth shrink-0 flex-grow justify-center">
         <button id="btnBackToHome" onclick="goHome()" class="hidden flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-300 transition-all shrink-0">
           <i class="fa-solid fa-house text-[10px]"></i> <span>ホーム</span>
@@ -156,24 +156,25 @@
 
       <!-- 右側コントロール (プロフィール・ログイン・メニュー) -->
       <div class="flex items-center gap-2 shrink-0">
-        <!-- PC用ユーザーコンテナ -->
+        <!-- PC用ユーザーコンテナ (ログイン時のみ表示) -->
         <div id="userInfoArea" class="hidden md:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-0.5 pr-2.5 rounded-full">
-          <div onclick="openProfileModal()" id="avatarPc" class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white border border-indigo-400/30 cursor-pointer transition-colors overflow-hidden" title="プロフィール設定">
+          <div onclick="goToProfileScreen()" id="avatarPc" class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white border border-indigo-400/30 cursor-pointer transition-colors overflow-hidden" title="プロフィール設定">
             <i class="fa-solid fa-user text-[10px]"></i>
           </div>
-          <span id="userName" onclick="openProfileModal()" class="text-[11px] font-bold text-slate-700 dark:text-slate-300 max-w-[120px] truncate cursor-pointer hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">...</span>
+          <span id="userName" onclick="goToProfileScreen()" class="text-[11px] font-bold text-slate-700 dark:text-slate-300 max-w-[120px] truncate cursor-pointer hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">...</span>
           <button onclick="handleSignOut()" class="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 text-xs pl-1" title="ログアウト">
             <i class="fa-solid fa-right-from-bracket"></i>
           </button>
         </div>
 
+        <!-- ゲスト用ログインボタン (未ログイン時 且つ お試し時のみ表示) -->
         <div id="guestHeaderArea" class="hidden md:flex items-center">
           <button onclick="openAuthModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:brightness-110 border border-indigo-500/30 rounded-xl text-xs font-bold text-white transition-all shadow-md shadow-indigo-500/10">
             <i class="fa-solid fa-right-to-bracket text-[10px]"></i> <span>ログイン</span>
           </button>
         </div>
 
-        <!-- 3本線メニューボタン（新規ハンバーガーメニュー：ドロワーの起点） -->
+        <!-- メニューボタン（ドロワーの起点） -->
         <button onclick="toggleDrawerMenu(true)" class="p-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-colors shrink-0" aria-label="メニューを開く">
           <i class="fa-solid fa-bars text-lg md:text-xl"></i>
         </button>
@@ -200,7 +201,7 @@
           </button>
         </div>
 
-        <!-- アカウント状態インジケータ（ドロワー内） -->
+        <!-- アカウント状態インジケータ -->
         <div id="drawerAccountBox" class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/55 dark:border-slate-850 flex items-center justify-between">
           <div class="flex items-center gap-2.5 min-w-0">
             <div id="drawerAvatar" class="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center font-bold text-xs">G</div>
@@ -233,6 +234,11 @@
             <span class="flex items-center gap-2.5"><i class="fa-solid fa-file-circle-plus text-sm text-pink-500 w-4"></i> 新規作成</span>
             <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
           </button>
+
+          <button onclick="navigateFromDrawer('profile')" class="w-full flex items-center justify-between p-3 rounded-xl text-left text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-500 transition-colors">
+            <span class="flex items-center gap-2.5"><i class="fa-solid fa-user-gear text-sm text-slate-400 w-4"></i> 設定 / プロフィール</span>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+          </button>
         </div>
       </div>
 
@@ -240,9 +246,9 @@
       <div class="border-t border-slate-200 dark:border-slate-900 pt-4 space-y-2">
         <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium">
           <span>バージョン</span>
-          <span>v2.1.0-Release</span>
+          <span>v2.2.0-Release</span>
         </div>
-        <p class="text-[9px] text-slate-450 dark:text-slate-500 leading-normal">
+        <p class="text-[9px] text-slate-400 dark:text-slate-500 leading-normal">
           © 2026 TripFlow Inc. すべての旅行計画を美しくスマートに。
         </p>
       </div>
@@ -257,7 +263,6 @@
     </p>
   </div>
 
-  <!-- ランディング画面 -->
   <div id="screen-welcome" class="max-w-5xl mx-auto px-4 mt-6 md:mt-12">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
       <div class="lg:col-span-7 space-y-4 md:space-y-6 text-left">
@@ -339,11 +344,11 @@
   </div>
 
   <div id="screen-home" class="max-w-4xl mx-auto px-4 mt-6 space-y-6 screen-hidden">
-    <!-- 👤 新機能: 進化したプロフィール「マイ・ダッシュボード」 -->
+    <!-- 👤 マイ・ダッシュボード -->
     <div class="glass-card rounded-2xl p-5 border border-indigo-500/10 space-y-4">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-200 dark:border-slate-800/60">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-200 dark:border-slate-800/60 text-left">
         <div class="flex items-center gap-3.5 text-left w-full md:w-auto">
-          <!-- 洗練されたカラーグラデーションアバター -->
+          <!-- アバター -->
           <div id="welcomeAvatar" class="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-extrabold shadow-md border border-slate-300/20 shrink-0">
             T
           </div>
@@ -354,11 +359,11 @@
               </h2>
               <span id="welcomeUserStyleBadge" class="text-[9px] font-extrabold px-2 py-0.5 rounded-full text-slate-600 dark:text-slate-300 badge-sub">取得中</span>
             </div>
-            <!-- 自己紹介・バイオ表示 -->
+            <!-- 自己紹介 -->
             <p id="dashboardBioText" class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed italic truncate max-w-md">
               自己紹介が登録されていません。
             </p>
-            <!-- SNSリンク表示 -->
+            <!-- SNSリンク -->
             <div id="dashboardSnsArea" class="flex items-center gap-3 mt-1.5 text-[10px] text-slate-400 dark:text-slate-500">
               <span id="dashboardSnsSpan" class="font-semibold truncate max-w-[200px]">
                 <i class="fa-solid fa-network-wired mr-1 text-slate-500"></i> 未登録
@@ -366,38 +371,38 @@
             </div>
           </div>
         </div>
-        <div class="flex gap-2 w-full md:w-auto">
-          <button onclick="openProfileModal()" class="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-200 dark:bg-slate-900 hover:bg-slate-300 dark:hover:bg-slate-800 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-300 transition-all border border-slate-300 dark:border-slate-800/80">
+        <div class="flex gap-2 w-full md:w-auto shrink-0">
+          <button onclick="goToProfileScreen()" class="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-200 dark:bg-slate-900 hover:bg-slate-300 dark:hover:bg-slate-800 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-300 transition-all border border-slate-300 dark:border-slate-800/80">
             <i class="fa-solid fa-user-gear text-indigo-500"></i> <span>プロフィール設定</span>
           </button>
         </div>
       </div>
 
-      <!-- 📊 新機能: 実績・統計スタッツ表示カード -->
+      <!-- 📊 実績・統計スタッツ表示カード（スマホ時はアイコン非表示） -->
       <div class="grid grid-cols-3 gap-3">
-        <div class="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-3 rounded-xl flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500 shrink-0">
+        <div class="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-2.5 sm:p-3 rounded-xl flex items-center gap-2 sm:gap-3 justify-center sm:justify-start">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/10 hidden sm:flex items-center justify-center text-indigo-500 shrink-0">
             <i class="fa-solid fa-route text-xs"></i>
           </div>
-          <div class="min-w-0">
+          <div class="min-w-0 text-center sm:text-left">
             <span class="text-[9px] text-slate-400 block font-semibold leading-none mb-1">総プラン数</span>
             <span id="statTotalTrips" class="text-xs sm:text-sm font-black text-slate-800 dark:text-white font-mono">0</span>
           </div>
         </div>
-        <div class="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-3 rounded-xl flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+        <div class="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-2.5 sm:p-3 rounded-xl flex items-center gap-2 sm:gap-3 justify-center sm:justify-start">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 hidden sm:flex items-center justify-center text-emerald-500 shrink-0">
             <i class="fa-solid fa-globe text-xs"></i>
           </div>
-          <div class="min-w-0">
+          <div class="min-w-0 text-center sm:text-left">
             <span class="text-[9px] text-slate-400 block font-semibold leading-none mb-1">公開プラン</span>
             <span id="statPublicTrips" class="text-xs sm:text-sm font-black text-slate-800 dark:text-white font-mono">0</span>
           </div>
         </div>
-        <div class="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-3 rounded-xl flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+        <div class="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-2.5 sm:p-3 rounded-xl flex items-center gap-2 sm:gap-3 justify-center sm:justify-start">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/10 hidden sm:flex items-center justify-center text-amber-500 shrink-0">
             <i class="fa-solid fa-wallet text-xs"></i>
           </div>
-          <div class="min-w-0">
+          <div class="min-w-0 text-center sm:text-left">
             <span class="text-[9px] text-slate-400 block font-semibold leading-none mb-1">全プラン総予算</span>
             <span id="statTotalBudget" class="text-xs sm:text-sm font-black text-slate-800 dark:text-white font-mono">0円</span>
           </div>
@@ -406,8 +411,8 @@
     </div>
 
     <!-- ３大クイックナビゲーション -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="glass-card rounded-2xl p-5 border border-indigo-500/10 hover:border-indigo-500/25 transition-all text-center flex flex-col justify-between">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+      <div class="glass-card rounded-2xl p-5 border border-indigo-500/10 hover:border-indigo-500/25 transition-all flex flex-col justify-between">
         <div>
           <div class="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-500 mx-auto mb-3">
             <i class="fa-solid fa-route text-lg"></i>
@@ -420,7 +425,7 @@
         </button>
       </div>
 
-      <div class="glass-card rounded-2xl p-5 border border-emerald-500/10 hover:border-emerald-500/25 transition-all text-center flex flex-col justify-between">
+      <div class="glass-card rounded-2xl p-5 border border-emerald-500/10 hover:border-emerald-500/25 transition-all flex flex-col justify-between">
         <div>
           <div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 mx-auto mb-3">
             <i class="fa-solid fa-compass text-lg"></i>
@@ -433,7 +438,7 @@
         </button>
       </div>
 
-      <div class="glass-card rounded-2xl p-5 border border-pink-500/10 hover:border-pink-500/25 transition-all text-center flex flex-col justify-between">
+      <div class="glass-card rounded-2xl p-5 border border-pink-500/10 hover:border-pink-500/25 transition-all flex flex-col justify-between">
         <div>
           <div class="w-10 h-10 bg-pink-500/10 rounded-xl flex items-center justify-center text-pink-500 mx-auto mb-3">
             <i class="fa-solid fa-file-circle-plus text-lg"></i>
@@ -450,17 +455,17 @@
 
   <div id="screen-myplans" class="max-w-4xl mx-auto px-4 mt-6 space-y-6 screen-hidden">
     <div class="glass-card rounded-2xl p-5 border border-indigo-500/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-      <div>
+      <div class="text-left">
         <h2 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
           <i class="fa-solid fa-route text-indigo-500"></i> マイプラン専用ダッシュボード
         </h2>
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">あなたが作成したすべてのオリジナル旅行計画を個別に管理・編集・公開できます。</p>
       </div>
-      <div class="flex gap-2">
-        <button onclick="startNewTripCreation()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition-all">
+      <div class="flex gap-2 w-full md:w-auto">
+        <button onclick="startNewTripCreation()" class="flex-1 md:flex-initial px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition-all">
           <i class="fa-solid fa-plus mr-1"></i> 新規追加
         </button>
-        <button onclick="goHome()" class="px-4 py-1.5 bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-800 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors">
+        <button onclick="goHome()" class="flex-1 md:flex-initial px-4 py-1.5 bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-800 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors">
           閉じる
         </button>
       </div>
@@ -487,7 +492,7 @@
     </div>
 
     <!-- プランの一覧（カード表示） -->
-    <div class="space-y-4">
+    <div class="space-y-4 text-left">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="w-1.5 h-4 bg-indigo-500 rounded-full"></span>
@@ -554,7 +559,98 @@
     </div>
   </div>
 
-  <!-- ナビゲーション画面 -->
+  <div id="screen-profile" class="max-w-3xl mx-auto px-4 mt-6 space-y-6 screen-hidden text-left">
+    <div class="glass-card rounded-2xl p-5 border border-indigo-500/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+      <div>
+        <h2 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-user-gear text-indigo-500"></i> プロフィール＆環境設定
+        </h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">アバター背景、優先移動手段、緊急連絡先などを管理します。</p>
+      </div>
+      <button onclick="goHome()" class="px-4 py-1.5 bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-800 hover:bg-slate-300 transition-colors shrink-0">
+        閉じる
+      </button>
+    </div>
+
+    <div class="glass-card rounded-2xl p-6 space-y-6">
+      <div class="space-y-4">
+        <!-- アバターと旅行スタイル -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">アバター背景テーマカラー</label>
+            <div class="flex items-center gap-2 flex-wrap">
+              <button onclick="selectProfileAvatar('indigo', 'fa-user')" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-indigo-700 text-white flex items-center justify-center text-xs border-2 avatar-option border-transparent hover:scale-105 transition-transform" id="avatar-indigo" title="インディゴ"><i class="fa-solid fa-user"></i></button>
+              <button onclick="selectProfileAvatar('emerald', 'fa-compass')" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-emerald-700 text-white flex items-center justify-center text-xs border-2 avatar-option border-transparent hover:scale-105 transition-transform" id="avatar-emerald" title="エメラルド"><i class="fa-solid fa-compass"></i></button>
+              <button onclick="selectProfileAvatar('rose', 'fa-heart')" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-500 to-rose-700 text-white flex items-center justify-center text-xs border-2 avatar-option border-transparent hover:scale-105 transition-transform" id="avatar-rose" title="ローズ"><i class="fa-solid fa-heart"></i></button>
+              <button onclick="selectProfileAvatar('amber', 'fa-plane')" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-700 text-white flex items-center justify-center text-xs border-2 avatar-option border-transparent hover:scale-105 transition-transform" id="avatar-amber" title="アンバー"><i class="fa-solid fa-plane"></i></button>
+              <button onclick="selectProfileAvatar('purple', 'fa-motorcycle')" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-500 to-purple-700 text-white flex items-center justify-center text-xs border-2 avatar-option border-transparent hover:scale-105 transition-transform" id="avatar-purple" title="パープル"><i class="fa-solid fa-motorcycle"></i></button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">旅行スタイル（旅の好み）</label>
+            <select id="profileTripStyle" class="w-full px-2 py-1.5 rounded-lg premium-input text-xs cursor-pointer">
+              <option value="all">特に指定なし（何でも！）</option>
+              <option value="gourmet">グルメ中心・食べ歩き派</option>
+              <option value="onsen">温泉・まったり癒やし派</option>
+              <option value="active">アクティブ観光・周遊派</option>
+              <option value="drive">ドライブ・絶景ロード派</option>
+              <option value="walk">のんびり散策・散歩派</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">お名前（表示名）</label>
+            <input type="text" id="profileDisplayName" class="w-full px-3 py-2 rounded-xl premium-input text-xs" placeholder="表示名">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">デフォルト優先移動手段</label>
+            <select id="profileDefaultTransport" class="w-full px-2 py-2 rounded-xl premium-input text-xs cursor-pointer">
+              <option value="train">電車・新幹線</option>
+              <option value="car">レンタカー・自家用車</option>
+              <option value="bus">路線バス・高速バス</option>
+              <option value="walk">徒歩移動</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 自己紹介 -->
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">自己紹介（バイオ）</label>
+          <textarea id="profileBio" rows="2" maxlength="150" class="w-full px-3 py-2 rounded-xl premium-input text-xs resize-none" placeholder="旅行好きな理由やよく行くエリアなどを簡単に入力してください。"></textarea>
+        </div>
+
+        <!-- SNSリンク -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">SNS / 個人Webリンク</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-link text-[10px]"></i></span>
+              <input type="text" id="profileSnsLink" class="w-full pl-8 pr-3 py-2 rounded-xl premium-input text-xs" placeholder="example.com や アカウントID">
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">緊急連絡先・血液型メモ等</label>
+            <input type="text" id="profileEmergencyMemo" class="w-full px-3 py-2 rounded-xl premium-input text-xs" placeholder="例: 家族(090-xxxx), A型">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">新しいパスワードに変更 (任意)</label>
+            <input type="password" id="profileNewPassword" class="w-full px-3 py-2 rounded-xl premium-input text-xs font-mono tracking-widest" placeholder="変更しない場合は空欄">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-900">
+        <button onclick="goHome()" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-900 hover:bg-slate-300 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 rounded-xl transition-all">キャンセル</button>
+        <button onclick="handleUpdateProfileSubmit()" class="px-4 py-1.5 bg-gradient-to-r from-indigo-500 to-blue-600 text-xs font-bold text-white rounded-xl transition-all shadow-md shadow-indigo-500/10">更新を保存</button>
+      </div>
+    </div>
+  </div>
+
   <div id="screen-navi" class="max-w-4xl mx-auto px-3 mt-4 space-y-3 screen-hidden">
     <div id="naviDaySelectorArea" class="flex flex-col gap-1.5">
       <div id="naviDaySelectorContainer" class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar shrink-0"></div>
@@ -587,7 +683,7 @@
           </div>
           <span class="transition-transform duration-200 group-open:rotate-180"><i class="fa-solid fa-chevron-down"></i></span>
         </summary>
-        <div class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800/60 space-y-2.5">
+        <div class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800/60 space-y-2.5 text-left">
           <div class="flex flex-col gap-2">
             <label class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
               <input type="radio" name="time-mode" value="real" checked class="w-4 h-4 text-indigo-600 bg-slate-200 border-slate-300">
@@ -609,7 +705,6 @@
     </div>
   </div>
 
-  <!-- 行程表タイムライン表示画面 -->
   <div id="screen-timeline" class="max-w-2xl mx-auto px-4 mt-6 space-y-6 screen-hidden">
     <!-- 閲覧専用表示バナー（みんなのプランから閲覧中） -->
     <div id="timelineReadOnlyBanner" class="hidden bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-2xl flex items-center justify-between text-left">
@@ -634,7 +729,6 @@
     <div id="timelineContainer" class="space-y-0 relative pl-4 md:pl-8"></div>
   </div>
 
-  <!-- 行程エディタ画面 -->
   <div id="screen-edit" class="max-w-6xl mx-auto px-4 mt-6 space-y-6 screen-hidden text-left">
     <div class="glass-card rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
       <div class="flex items-center gap-3 w-full md:w-auto">
@@ -663,7 +757,7 @@
         <input type="text" id="tripTitle" class="w-full text-sm sm:text-base font-bold px-4 py-2.5 rounded-xl premium-input text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500" placeholder="例: 北海道グルメ＆絶景ドライブの旅">
       </div>
 
-      <!-- 🌐 新機能: 一般公開トグル設定 -->
+      <!-- 一般公開トグル設定 -->
       <div class="border-t border-slate-200 dark:border-slate-800/80 pt-4 flex flex-col gap-3">
         <div class="flex items-center justify-between">
           <div class="text-left">
@@ -677,7 +771,7 @@
           </label>
         </div>
 
-        <!-- 公開ON時に滑らかに表示される旅の紹介テキストエリア -->
+        <!-- 公開ON時に表示される紹介文 -->
         <div id="tripDescriptionArea" class="hidden transition-all duration-300 space-y-2">
           <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">旅の紹介文・みどころ (最大300文字)</label>
           <textarea id="tripDescription" rows="2" maxlength="300" class="w-full text-xs px-4 py-2.5 rounded-xl premium-input text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 resize-none" placeholder="この旅行の魅力やルートの工夫点、おすすめシーズンなどを紹介してください。"></textarea>
@@ -685,6 +779,7 @@
       </div>
     </div>
 
+    <!-- 表示する日程タブ -->
     <div class="glass-card rounded-2xl p-4 space-y-2">
       <div class="flex items-center gap-2">
         <span class="w-1.5 h-3.5 bg-pink-500 rounded-full"></span>
@@ -693,6 +788,7 @@
       <div id="editorDayFilterContainer" class="flex flex-wrap items-center gap-1.5 pt-1"></div>
     </div>
 
+    <!-- プランエディタブロック -->
     <div class="glass-card rounded-2xl p-4 md:p-6 space-y-4">
       <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800/80">
         <div class="flex items-center gap-2">
@@ -711,6 +807,7 @@
       </div>
     </div>
 
+    <!-- 行程自動集計分析 -->
     <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
       <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase"><i class="fa-regular fa-clock text-indigo-500 mr-1"></i>旅程の自動集計分析</h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -733,13 +830,13 @@
       </div>
     </div>
 
+    <!-- ルートプレビュー -->
     <div class="glass-card rounded-2xl p-4">
       <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-3 uppercase"><i class="fa-solid fa-route text-indigo-500 mr-1"></i>リアルタイム行程ルートプレビュー</h2>
       <div id="editorTimelinePreview" class="relative py-2"></div>
     </div>
   </div>
 
-  <!-- 認証用モーダル -->
   <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
     <div class="glass-card rounded-2xl w-full max-w-sm p-6 border border-slate-200 dark:border-slate-800 space-y-4 text-left">
       <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-900 pb-2">
@@ -788,100 +885,6 @@
     </div>
   </div>
 
-  <!-- 👤 プロフィール＆多機能設定モーダル -->
-  <div id="profileModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
-    <div class="glass-card rounded-2xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-800 space-y-4 text-left max-h-[90vh] overflow-y-auto hide-scrollbar">
-      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-900 pb-2">
-        <h3 class="text-sm font-bold text-slate-900 dark:text-white"><i class="fa-solid fa-user-gear text-indigo-500 mr-1.5"></i>プロフィール＆環境設定</h3>
-        <button onclick="closeProfileModal()" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-
-      <div class="space-y-4">
-        <!-- アバターと旅行スタイル -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">アバター背景テーマカラー</label>
-            <div class="flex items-center gap-2 flex-wrap">
-              <!-- ベクターグラデーションの選択肢 -->
-              <button onclick="selectProfileAvatar('indigo', 'fa-user')" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-indigo-700 text-white flex items-center justify-center text-xs border-2 avatar-option border-transparent hover:scale-105 transition-transform" id="avatar-indigo" title="インディゴ"><i class="fa-solid fa-user"></i></button>
-              <button onclick="selectProfileAvatar('emerald', 'fa-compass')" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-emerald-700 text-white flex items-center justify-center text-xs border-2 avatar-option border-transparent hover:scale-105 transition-transform" id="avatar-emerald" title="エメラルド"><i class="fa-solid fa-compass"></i></button>
-              <button onclick="selectProfileAvatar('rose', 'fa-heart')" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-500 to-rose-700 text-white flex items-center justify-center text-xs border-2 avatar-option border-transparent hover:scale-105 transition-transform" id="avatar-rose" title="ローズ"><i class="fa-solid fa-heart"></i></button>
-              <button onclick="selectProfileAvatar('amber', 'fa-plane')" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-700 text-white flex items-center justify-center text-xs border-2 avatar-option border-transparent hover:scale-105 transition-transform" id="avatar-amber" title="アンバー"><i class="fa-solid fa-plane"></i></button>
-              <button onclick="selectProfileAvatar('purple', 'fa-motorcycle')" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-500 to-purple-700 text-white flex items-center justify-center text-xs border-2 avatar-option border-transparent hover:scale-105 transition-transform" id="avatar-purple" title="パープル"><i class="fa-solid fa-motorcycle"></i></button>
-            </div>
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">旅行スタイル（旅の好み）</label>
-            <select id="profileTripStyle" class="w-full px-2 py-1.5 rounded-lg premium-input text-xs cursor-pointer">
-              <option value="all">特に指定なし（何でも！）</option>
-              <option value="gourmet">グルメ中心・食べ歩き派</option>
-              <option value="onsen">温泉・まったり癒やし派</option>
-              <option value="active">アクティブ観光・周遊派</option>
-              <option value="drive">ドライブ・絶景ロード派</option>
-              <option value="walk">のんびり散策・散歩派</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">お名前（表示名）</label>
-            <input type="text" id="profileDisplayName" class="w-full px-3 py-2 rounded-xl premium-input text-xs" placeholder="表示名">
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">デフォルト優先移動手段</label>
-            <select id="profileDefaultTransport" class="w-full px-2 py-2 rounded-xl premium-input text-xs cursor-pointer">
-              <option value="train">電車・新幹線</option>
-              <option value="car">レンタカー・自家用車</option>
-              <option value="bus">路線バス・高速バス</option>
-              <option value="walk">徒歩移動</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- 自己紹介・バイオ編集エリア -->
-        <div>
-          <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">自己紹介（バイオ）</label>
-          <textarea id="profileBio" rows="2" maxlength="150" class="w-full px-3 py-2 rounded-xl premium-input text-xs resize-none" placeholder="旅行好きな理由やよく行くエリアなどを簡単に入力してください。"></textarea>
-        </div>
-
-        <!-- SNSリンク (Twitter/Instagram等のアカウント入力用) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">SNS / 個人Webリンク</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-link text-[10px]"></i></span>
-              <input type="text" id="profileSnsLink" class="w-full pl-8 pr-3 py-2 rounded-xl premium-input text-xs" placeholder="example.com や アカウントID">
-            </div>
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">緊急連絡先・血液型メモ等</label>
-            <input type="text" id="profileEmergencyMemo" class="w-full px-3 py-2 rounded-xl premium-input text-xs" placeholder="例: 家族(090-xxxx), A型">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-4">
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">新しいパスワードに変更 (任意)</label>
-            <input type="password" id="profileNewPassword" class="w-full px-3 py-2 rounded-xl premium-input text-xs font-mono tracking-widest" placeholder="変更しない場合は空欄">
-          </div>
-        </div>
-
-        <div class="bg-slate-100 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800/80">
-          <p class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">💡 端末テーマ同期</p>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-            TripFlowは端末の設定変更を感知して、自動でダーク/ライトの配色デザインに切り替わります。
-          </p>
-        </div>
-      </div>
-
-      <div class="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-900">
-        <button onclick="closeProfileModal()" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-900 hover:bg-slate-300 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 rounded-xl transition-all">キャンセル</button>
-        <button onclick="handleUpdateProfileSubmit()" class="px-4 py-1.5 bg-gradient-to-r from-indigo-500 to-blue-600 text-xs font-bold text-white rounded-xl transition-all shadow-md shadow-indigo-500/10">更新を保存</button>
-      </div>
-    </div>
-  </div>
-
   <!-- 確認ダイアログ -->
   <div id="confirmDialog" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
     <div class="glass-card rounded-2xl w-full max-w-sm p-5 border border-slate-200 dark:border-slate-800">
@@ -894,7 +897,7 @@
     </div>
   </div>
 
-  <!-- 3択チェックモーダル -->
+  <!-- 3択チェック離脱ガードモーダル -->
   <div id="save-check-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
     <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full mx-4 p-6 shadow-2xl border border-gray-100 dark:border-gray-700 transform scale-95 transition-transform duration-200" id="save-check-modal-content">
       <div class="flex items-center gap-3 text-amber-500 mb-3 text-left">
@@ -973,7 +976,7 @@ let userProfile = {
   snsLink: ''
 };
 
-// サンドボックス(お試し用)北海道観光サンプルデータ（1泊2日・計14ステップ構成）
+// サンドボックス用北海道観光サンプルデータ（1泊2日・計14ステップ構成）
 const sandboxSampleTrip = [
   // Day 1
   { day: 1, type: "train", from: "新函館北斗駅", to: "函館駅", line: "JR快速はこだてライナー", start: "10:00", end: "10:20", cost: "440" },
@@ -988,7 +991,7 @@ const sandboxSampleTrip = [
   { day: 2, type: "eat", place: "温泉旅館朝食", memo: "和食バイキング朝食", detail: "ハーフバイキング＆特製温泉粥", start: "08:00", end: "09:00", cost: "0" },
   { day: 2, type: "car", from: "湯の川温泉", to: "函館山ロープウェイ山麓駅", line: "湯の川・元町ベイラインを海岸沿いドライブ", start: "09:30", end: "09:55", cost: "0" },
   { day: 2, type: "stay", place: "函館山ロープウェイ", memo: "ロープウェイで展望台へ", detail: "昼間のきらめく函館湾を一望！", start: "10:00", end: "11:15", cost: "1500" },
-  { day: 2, type: "walk", from: "ロープウェイ山麓駅", to: "元町ハリストス正教会", line: "美しい石畳のハチマン坂を経由", start: "11:15", end: "11:25", cost: "0" },
+  { day: 2, type: "walk", from: "ロープウェイ山麓駅", to: "元町ハリストス正教会", line: "美しい石畳 of ハチマン坂を経由", start: "11:15", end: "11:25", cost: "0" },
   { day: 2, type: "stay", place: "元町教会群エリア", memo: "異国情緒あふれる洋館街を撮影", detail: "大三坂や元町カトリック教会散策", start: "11:25", end: "12:30", cost: "200" },
   { day: 2, type: "eat", place: "元町レトロ茶房", memo: "大正レトロな館でお茶", detail: "特製抹茶パフェとドリップ珈琲", start: "12:40", end: "13:40", cost: "1200" },
   { day: 2, type: "car", from: "元町エリア", to: "新函館北斗駅", line: "レンタカー返却後、北海道新幹線にて出発地へ", start: "13:50", end: "14:40", cost: "2000" }
@@ -1064,7 +1067,6 @@ function updateDrawerAccountState() {
     userMail.textContent = currentUser.email;
     authBtn.textContent = 'ログアウト';
     
-    // アバター背景にカラー適用
     const firstLetter = (currentUser.displayName || currentUser.email).substring(0, 1).toUpperCase();
     avatar.textContent = firstLetter;
     
@@ -1202,7 +1204,7 @@ window.selectProfileAvatar = function(color, icon) {
   }
 }
 
-window.openProfileModal = function() {
+window.goToProfileScreen = function() {
   document.getElementById('profileDisplayName').value = currentUser ? (currentUser.displayName || "") : "ゲストユーザー";
   document.getElementById('profileNewPassword').value = "";
   document.getElementById('profileTripStyle').value = userProfile.tripStyle || "all";
@@ -1212,11 +1214,7 @@ window.openProfileModal = function() {
   document.getElementById('profileSnsLink').value = userProfile.snsLink || "";
   
   selectProfileAvatar(userProfile.avatarColor || 'indigo', userProfile.avatarIcon || 'fa-user');
-  document.getElementById('profileModal').classList.remove('opacity-0', 'pointer-events-none');
-}
-
-window.closeProfileModal = function() {
-  document.getElementById('profileModal').classList.add('opacity-0', 'pointer-events-none');
+  safeNavigate('profile');
 }
 
 window.handleUpdateProfileSubmit = async function() {
@@ -1264,7 +1262,7 @@ window.handleUpdateProfileSubmit = async function() {
 
       showToast("👤 プロフィール設定を保存しました！", "success");
       syncUserInterfaceElements(currentUser);
-      closeProfileModal();
+      goHome();
     } catch (e) {
       if(e.code === "auth/requires-recent-login") {
         showToast("⚠️ セキュリティ保護のため、再ログイン後に変更してください。", "error");
@@ -1276,7 +1274,7 @@ window.handleUpdateProfileSubmit = async function() {
     localStorage.setItem('tripflow_local_profile', JSON.stringify(userProfile));
     showToast("👤 プロフィール設定を一時保存しました！(お試し中)", "success");
     syncUserInterfaceElements(null);
-    closeProfileModal();
+    goHome();
   }
 }
 
@@ -1361,6 +1359,7 @@ onAuthStateChanged(auth, async (user) => {
     
     welcomeScreen.classList.add('screen-hidden'); 
     userInfoArea.classList.remove('hidden');
+    // ログイン時はPCヘッダーログインボタンを確実に非表示に
     guestHeaderArea.classList.add('hidden');
     
     try {
@@ -1374,12 +1373,13 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     syncUserInterfaceElements(user);
-    // 初期画面はホーム
     showScreen('home'); 
     fetchTripsFromCloud();
   } else {
     currentUser = null;
     userInfoArea.classList.add('hidden');
+    
+    // サンドボックス(お試し)時、または未ログイン時のみログインボタンを表示
     guestHeaderArea.classList.remove('hidden');
     
     const localProfile = localStorage.getItem('tripflow_local_profile');
@@ -1438,11 +1438,12 @@ window.launchSandboxDemo = function() {
 
 function hideAllScreens() {
   document.getElementById('screen-home').classList.add('screen-hidden');
-  document.getElementById('screen-myplans').classList.add('screen-hidden'); // 自分のプラン画面
+  document.getElementById('screen-myplans').classList.add('screen-hidden'); 
   document.getElementById('screen-navi').classList.add('screen-hidden');
   document.getElementById('screen-timeline').classList.add('screen-hidden');
   document.getElementById('screen-edit').classList.add('screen-hidden');
   document.getElementById('screen-discover').classList.add('screen-hidden'); 
+  document.getElementById('screen-profile').classList.add('screen-hidden'); 
   document.getElementById('btnBackToHome').classList.add('hidden');
   document.getElementById('btnSwitchTimeline').classList.add('hidden');
   document.getElementById('btnSwitchNavi').classList.add('hidden');
@@ -1585,6 +1586,9 @@ window.showScreen = function(screenName) {
       document.getElementById('screen-myplans').classList.remove('screen-hidden');
       subHeader.textContent = "MY PLANS DASHBOARD";
       renderMyPlansList();
+    } else if (screenName === 'profile') {
+      document.getElementById('screen-profile').classList.remove('screen-hidden');
+      subHeader.textContent = "USER SETTINGS";
     }
   }
 }
@@ -1650,7 +1654,6 @@ async function fetchTripsFromCloud() {
     allTripsCache.sort((a, b) => (b.isSample ? 1 : 0) - (a.isSample ? 1 : 0));
     updateDashboardStats();
     
-    // 現在マイプラン画面が表示されている場合はリストを更新
     if (!document.getElementById('screen-myplans').classList.contains('screen-hidden')) {
       renderMyPlansList();
     }
@@ -1728,7 +1731,7 @@ window.filterMyPlans = function() {
     });
   }
 
-  // ソートロジック
+  // ソート
   if (sortVal === 'updated') {
     filtered.sort((a, b) => b.updatedAt - a.updatedAt);
   } else if (sortVal === 'budget-high') {
@@ -2776,9 +2779,13 @@ window.saveCurrentTripToCloud = async function() {
       isSample: false,
       updatedAt: Date.now() 
     });
+    
     showToast("💾 クラウドに保存・上書きしました！", "success");
     fetchTripsFromCloud();
-    showScreen('myplans'); 
+    
+    // 強制的にホーム画面へ戻さないよう修正。編集画面を維持して表示を同期。
+    document.getElementById('editorStatusText').textContent = `マイデータ編集モード (保存完了)`;
+    
   } catch (e) { showToast("保存失敗: " + e.message, "error"); }
 }
 
