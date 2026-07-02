@@ -60,7 +60,7 @@ export async function handleAuthSubmit(event) {
     if (authMode === 'login') {
       // ログイン処理
       // メールアドレスまたはユーザーIDの統一化
-      const email = emailOrUser.includes('@') ? emailOrUser : `${emailOrUser}@tripflow.local`;
+      const email = emailOrUser.includes('@') ? emailOrUser : `${emailOrUser}@internal.app`;
       await signInWithEmailAndPassword(auth, email, password);
       showToast('ログインしました！', 'success');
     } else {
@@ -73,7 +73,7 @@ export async function handleAuthSubmit(event) {
 
       // メールアドレスまたはユーザーIDでサインアップ
       // Firebase Authではメールアドレスが必須なので、簡易的に処理
-      const email = emailOrUser.includes('@') ? emailOrUser : `${emailOrUser}@tripflow.local`;
+      const email = emailOrUser.includes('@') ? emailOrUser : `${emailOrUser}@internal.app`;
       
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
