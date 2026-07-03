@@ -1163,7 +1163,7 @@ window.handleAuthSubmit = async function(event) {
         updatedAt: Date.now()
       };
       // 💡 保存先を 'users' コレクションにし、ドキュメントIDをそのまま『ランダムID（UID）』にします
-      await setDoc(doc(db, 'users', userCredential.user.uid), defaultProfile);
+      await setDoc(doc(db, 'users', "profile_settings_" + userCredential.user.uid), defaultProfile);
       showToast("🎉 アカウントを作成し、ログインしました！", "success");
     }
     document.getElementById('authForm').reset();
