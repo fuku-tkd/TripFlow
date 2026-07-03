@@ -59,11 +59,6 @@
       border-color: #6366f1;
       box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
     }
-    .premium-input:disabled {
-      background: rgba(15, 20, 35, 0.5);
-      color: rgba(255, 255, 255, 0.4);
-      cursor: not-allowed;
-    }
     input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(0.85); cursor: pointer; }
     .theme-card-train { border-left: 4px solid #3b82f6; background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, rgba(15, 23, 42, 0.5) 100%); }
     .theme-card-bus { border-left: 4px solid #f97316; background: linear-gradient(90deg, rgba(249, 115, 22, 0.08) 0%, rgba(15, 23, 42, 0.5) 100%); }
@@ -96,11 +91,6 @@
       background: #ffffff;
       border-color: #4f46e5;
       box-shadow: 0 0 12px rgba(79, 70, 229, 0.15);
-    }
-    .premium-input:disabled {
-      background: rgba(241, 245, 249, 0.8);
-      color: rgba(15, 23, 42, 0.4);
-      cursor: not-allowed;
     }
     input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(0); cursor: pointer; }
     .theme-card-train { border-left: 4px solid #2563eb; background: linear-gradient(90deg, rgba(37, 99, 235, 0.05) 0%, rgba(255, 255, 255, 0.6) 100%); }
@@ -388,7 +378,7 @@
         </div>
       </div>
 
-      <!-- 📊 実績・統計スタッツ表示カード -->
+      <!-- 📊 実績・統計スタッツ表示カード（スマホ時はアイコン非表示） -->
       <div class="grid grid-cols-3 gap-3">
         <div class="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-2.5 sm:p-3 rounded-xl flex items-center gap-2 sm:gap-3 justify-center sm:justify-start">
           <div class="w-8 h-8 rounded-lg bg-indigo-500/10 hidden sm:flex items-center justify-center text-indigo-500 shrink-0">
@@ -438,7 +428,7 @@
       <div class="glass-card rounded-2xl p-5 border border-emerald-500/10 hover:border-emerald-500/25 transition-all flex flex-col justify-between">
         <div>
           <div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 mx-auto mb-3">
-            <i class="fa-solid fa-globe text-lg"></i>
+            <i class="fa-solid fa-compass text-lg"></i>
           </div>
           <h3 class="text-sm font-bold text-slate-800 dark:text-white mb-1">みんなのプランを探索</h3>
           <p class="text-[11px] text-muted mb-4">一般に公開されている他のユーザーの人気プランを探し、インポートします。</p>
@@ -609,15 +599,10 @@
           </div>
         </div>
 
-        <!-- アカウント詳細（メアド/ID 変更項目） -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">お名前（表示名）</label>
             <input type="text" id="profileDisplayName" class="w-full px-3 py-2 rounded-xl premium-input text-xs" placeholder="表示名">
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">ログイン用メールアドレス / 独自ID</label>
-            <input type="text" id="profileEmailOrUser" class="w-full px-3 py-2 rounded-xl premium-input text-xs" placeholder="メールアドレスまたはID" title="ログインに必要なID、メールアドレスを変更できます。">
           </div>
           <div>
             <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">デフォルト優先移動手段</label>
@@ -660,8 +645,8 @@
       </div>
 
       <div class="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-900">
-        <button onclick="goHome()" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-900 hover:bg-slate-300 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 rounded-xl transition-all font-bold">キャンセル</button>
-        <button id="btnSaveProfile" onclick="handleUpdateProfileSubmit()" class="px-4 py-1.5 bg-gradient-to-r from-indigo-500 to-blue-600 text-xs font-bold text-white rounded-xl transition-all shadow-md shadow-indigo-500/10 flex items-center gap-1.5 font-bold">更新を保存</button>
+        <button onclick="goHome()" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-900 hover:bg-slate-300 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 rounded-xl transition-all">キャンセル</button>
+        <button onclick="handleUpdateProfileSubmit()" class="px-4 py-1.5 bg-gradient-to-r from-indigo-500 to-blue-600 text-xs font-bold text-white rounded-xl transition-all shadow-md shadow-indigo-500/10">更新を保存</button>
       </div>
     </div>
   </div>
@@ -872,7 +857,7 @@
         </div>
 
         <div>
-          <label id="authEmailLabel" class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">独自ID</label>
+          <label id="authEmailLabel" class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">独自ID または メール</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-envelope text-xs"></i></span>
             <input type="text" id="authEmailOrUser" required class="w-full pl-9 pr-4 py-2 rounded-xl premium-input text-xs placeholder-slate-400 dark:placeholder-slate-600 font-medium">
@@ -887,7 +872,7 @@
           </div>
         </div>
 
-        <button type="submit" id="btnAuthSubmit" class="w-full flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-xs font-bold text-white rounded-xl transition-all shadow-md shadow-indigo-500/10 font-bold">
+        <button type="submit" id="btnAuthSubmit" class="w-full flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-xs font-bold text-white rounded-xl transition-all shadow-md shadow-indigo-500/10">
           <span>ログインする</span> <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
         </button>
       </form>
@@ -943,9 +928,8 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, updatePassword, updateEmail, verifyBeforeUpdateEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-// Firebase 初期化
 const firebaseConfig = {
     apiKey: "AIzaSyDxL4FFosUkypjh3_c3NdordYG4RJekIgc",
     authDomain: "noritetsu-navi.firebaseapp.com",
@@ -960,23 +944,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// ==========================================
-// 認証システムのインポート（新規追加）
-// ==========================================
-import {
-  initializeAuth as initAuth,
-  handleAuthSubmit,
-  handleSignOut,
-  toggleAuthMode,
-  openAuthModal,
-  closeAuthModal,
-  handleDrawerAuthAction,
-  getCurrentUser
-} from './auth.js';
-
-// ==========================================
-// グローバル変数
-// ==========================================
 let currentUser = null;      
 let allTripsCache = [];      
 let currentTripId = null;    
@@ -998,11 +965,6 @@ let currentEditorDayFilter = "all";
 // 探索画面用データキャッシュ
 let discoverTripsCache = [];
 
-// 多重読み込み対策：排他処理中フラグ
-let isProcessing = false;
-let isFetchingTrips = false;
-let isFetchingDiscover = false;
-
 // ユーザー拡張プロフィール設定
 let userProfile = {
   avatarColor: 'indigo',
@@ -1013,26 +975,6 @@ let userProfile = {
   bio: '',
   snsLink: ''
 };
-
-// ==========================================
-// 認証初期化
-// ==========================================
-initAuth();
-
-// グローバルスコープに公開（HTMLのonclick属性から呼び出し可能に）
-window.handleAuthSubmit = handleAuthSubmit;
-window.handleSignOut = handleSignOut;
-window.toggleAuthMode = toggleAuthMode;
-window.openAuthModal = openAuthModal;
-window.closeAuthModal = closeAuthModal;
-window.handleDrawerAuthAction = handleDrawerAuthAction;
-window.getCurrentUser = getCurrentUser;
-
-// ==========================================
-// 既存の他の関数群（以下省略）
-// ==========================================
-// 注：既存のすべての関数（goHome, goToMyPlansScreen など）は
-// そのままこの後に続ける必要があります
 
 // サンドボックス用北海道観光サンプルデータ（1泊2日・計14ステップ構成）
 const sandboxSampleTrip = [
@@ -1054,27 +996,6 @@ const sandboxSampleTrip = [
   { day: 2, type: "eat", place: "元町レトロ茶房", memo: "大正レトロな館でお茶", detail: "特製抹茶パフェとドリップ珈琲", start: "12:40", end: "13:40", cost: "1200" },
   { day: 2, type: "car", from: "元町エリア", to: "新函館北斗駅", line: "レンタカー返却後、北海道新幹線にて出発地へ", start: "13:50", end: "14:40", cost: "2000" }
 ];
-
-// 多重読み込み対策：ボタンの非活性化とスピナー処理を行う汎用ヘルパー
-function setProcessing(state, buttonId = null, loadingText = "") {
-  isProcessing = state;
-  if (!buttonId) return;
-  const btn = document.getElementById(buttonId);
-  if (!btn) return;
-  
-  if (state) {
-    btn.disabled = true;
-    btn.classList.add('opacity-75', 'cursor-not-allowed');
-    btn.dataset.originalHtml = btn.innerHTML;
-    btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin mr-1.5"></i> ${loadingText || '処理中...'}`;
-  } else {
-    btn.disabled = false;
-    btn.classList.remove('opacity-75', 'cursor-not-allowed');
-    if (btn.dataset.originalHtml) {
-      btn.innerHTML = btn.dataset.originalHtml;
-    }
-  }
-}
 
 function migrateTripData(trip, title = "無題の計画") {
   const calculatedDays = trip.length > 0 ? Math.max(...trip.map(x => x.day || 1)) : 1;
@@ -1143,7 +1064,7 @@ function updateDrawerAccountState() {
   
   if (currentUser) {
     userName.textContent = currentUser.displayName || 'ログインユーザー';
-    userMail.textContent = currentUser.email.endsWith('@internal.app') ? currentUser.email.replace('@internal.app', '') : currentUser.email;
+    userMail.textContent = currentUser.email;
     authBtn.textContent = 'ログアウト';
     
     const firstLetter = (currentUser.displayName || currentUser.email).substring(0, 1).toUpperCase();
@@ -1194,12 +1115,12 @@ function syncAuthFormUI() {
   
   if (authMode === 'signup') {
     title.textContent = "新規アカウントを作成";
-    desc.textContent = "ユーザーID、表示名、パスワードを設定して登録してください。";
+    desc.textContent = "独自IDまたはメール、表示名、パスワードを設定して登録してください。";
     submitBtn.innerHTML = `<span>新規登録する</span> <i class="fa-solid fa-user-plus text-xs"></i>`;
     toggleBtn.textContent = "既にアカウントをお持ちの方（サインイン）";
     nameField.classList.remove('hidden');
     document.getElementById('authDisplayName').required = true;
-    emailLabel.textContent = "ユーザーID";
+    emailLabel.textContent = "メールアドレス または 登録用独自ID";
   } else {
     title.textContent = "アカウントにサインイン";
     desc.textContent = "旅程をクラウド保存・同期するために認証を行ってください。";
@@ -1207,41 +1128,21 @@ function syncAuthFormUI() {
     toggleBtn.textContent = "新規アカウントを作成する（サインアップ）";
     nameField.classList.add('hidden');
     document.getElementById('authDisplayName').required = false;
-    emailLabel.textContent = "ユーザーID";
+    emailLabel.textContent = "メールアドレス または 独自ID";
   }
 }
 
 window.handleAuthSubmit = async function(event) {
   event.preventDefault();
-  if (isProcessing) return;
-
-  const userId = document.getElementById('authEmail').value.trim(); // 入力されたID
-  const password = document.getElementById('authPassword').value.trim();
+  const emailOrUser = document.getElementById('authEmailOrUser').value;
+  const password = document.getElementById('authPassword').value;
   const displayName = document.getElementById('authDisplayName').value.trim();
-
-  if (!userId || !password) {
-    alert('ユーザーIDとパスワードを入力してください。');
-    return;
-  }
-
-  // 1. 本物のメールアドレスを入力しようとした場合は弾く
-  if (userId.includes('@')) {
-    alert('メールアドレスはご利用いただけません。ユーザーIDを入力してください。');
-    return;
-  }
-
-  // 2. ユーザーID用のバリデーション（半角英数字、ハイフン、アンダースコア）
-  const idRegex = /^[a-zA-Z0-9_-]+$/;
-  if (userId.length < 4 || !idRegex.test(userId)) {
-    alert('ユーザーIDは4文字以上の半角英数字（または _ , -）で入力してください。');
-    return;
-  }
-
-  // 3. 一律でダミーメールアドレスを生成
-  const finalEmail = `${userId.toLowerCase()}@tripflow.internal`;
   
-  setProcessing(true, 'btnAuthSubmit', '認証中...');
-
+  if (password.length < 6) {
+    showToast("⚠️ パスワードは6文字以上で入力してください", "error");
+    return;
+  }
+  const finalEmail = resolveEmailFormat(emailOrUser);
   try {
     if (authMode === 'login') {
       await signInWithEmailAndPassword(auth, finalEmail, password);
@@ -1275,16 +1176,11 @@ window.handleAuthSubmit = async function(event) {
       errorMsg = "このID/メールアドレスは既に登録されています。";
     }
     showToast(`⚠️ ${errorMsg}`, "error");
-  } finally {
-    setProcessing(false, 'btnAuthSubmit');
   }
 }
 
 window.handleSignOut = async function() {
-  if (isProcessing) return;
   if (!await showConfirm("ログアウト", "ログアウトしてもよろしいですか？")) return;
-  
-  setProcessing(true);
   try {
     await signOut(auth);
     isSandboxMode = false;
@@ -1292,8 +1188,6 @@ window.handleSignOut = async function() {
     showToast("🔒 ログアウトしました", "success");
   } catch (error) {
     showToast("ログアウト失敗", "error");
-  } finally {
-    setProcessing(false);
   }
 }
 
@@ -1312,22 +1206,6 @@ window.selectProfileAvatar = function(color, icon) {
 
 window.goToProfileScreen = function() {
   document.getElementById('profileDisplayName').value = currentUser ? (currentUser.displayName || "") : "ゲストユーザー";
-  
-  // ログイン用のメアド、ID初期設定
-  const emailInput = document.getElementById('profileEmailOrUser');
-  if (currentUser && currentUser.email) {
-    emailInput.disabled = false;
-    // 内部独自ドメイン `@internal.app` を考慮してサフィックスを取り除き綺麗に表示
-    if (currentUser.email.endsWith('@internal.app')) {
-      emailInput.value = currentUser.email.replace('@internal.app', '');
-    } else {
-      emailInput.value = currentUser.email;
-    }
-  } else {
-    emailInput.disabled = true;
-    emailInput.value = "お試し中のため変更不可";
-  }
-
   document.getElementById('profileNewPassword').value = "";
   document.getElementById('profileTripStyle').value = userProfile.tripStyle || "all";
   document.getElementById('profileDefaultTransport').value = userProfile.defaultTransport || "train";
@@ -1340,10 +1218,7 @@ window.goToProfileScreen = function() {
 }
 
 window.handleUpdateProfileSubmit = async function() {
-  if (isProcessing) return;
-
   const newName = document.getElementById('profileDisplayName').value.trim();
-  const newEmailOrUser = document.getElementById('profileEmailOrUser').value.trim();
   const newPassword = document.getElementById('profileNewPassword').value;
   const style = document.getElementById('profileTripStyle').value;
   const defTransport = document.getElementById('profileDefaultTransport').value;
@@ -1356,48 +1231,18 @@ window.handleUpdateProfileSubmit = async function() {
     return;
   }
 
-  setProcessing(true, 'btnSaveProfile', '保存中...');
+  userProfile.tripStyle = style;
+  userProfile.defaultTransport = defTransport;
+  userProfile.emergencyMemo = emergency;
+  userProfile.bio = bio;
+  userProfile.snsLink = sns;
 
-  try {
-    userProfile.tripStyle = style;
-    userProfile.defaultTransport = defTransport;
-    userProfile.emergencyMemo = emergency;
-    userProfile.bio = bio;
-    userProfile.snsLink = sns;
-
-    if (currentUser) {
-      // ログイン用のメアド、IDが変更されている場合、Firebase Authを更新
-      if (newEmailOrUser) {
-        const targetEmail = resolveEmailFormat(newEmailOrUser);
-        if (targetEmail !== currentUser.email) {
-          try {
-            // Firebase Authの新しい仕様に対応：まずは検証リンクを送信
-            await verifyBeforeUpdateEmail(currentUser, targetEmail);
-            showToast("📧 送信完了！新しいメールアドレス宛に届いた確認リンクをクリックして変更を承認してください。", "success");
-          } catch (emailErr) {
-            console.error("verifyBeforeUpdateEmail エラー。フォールバックします:", emailErr);
-            if (emailErr.code === 'auth/operation-not-allowed') {
-              // verifyBeforeUpdateEmail が禁止されている、または独自IDの場合の直接更新フォールバック
-              try {
-                await updateEmail(currentUser, targetEmail);
-                showToast("📧 ログイン用のID・メールを直接更新しました", "success");
-              } catch (fallbackErr) {
-                console.error("updateEmail フォールバックエラー:", fallbackErr);
-                throw new Error("メール変更機能がFirebase側で許可されていません。Firebase設定をご確認ください。");
-              }
-            } else {
-              throw emailErr;
-            }
-          }
-        }
-      }
-
+  if (currentUser) {
+    try {
       await updateProfile(currentUser, { displayName: newName });
-      
       if(newPassword) {
         if(newPassword.length < 6) {
           showToast("⚠️ 新しいパスワードは6文字以上必要です", "error");
-          setProcessing(false, 'btnSaveProfile');
           return;
         }
         await updatePassword(currentUser, newPassword);
@@ -1418,20 +1263,18 @@ window.handleUpdateProfileSubmit = async function() {
       showToast("👤 プロフィール設定を保存しました！", "success");
       syncUserInterfaceElements(currentUser);
       goHome();
-    } else {
-      localStorage.setItem('tripflow_local_profile', JSON.stringify(userProfile));
-      showToast("👤 プロフィール設定を一時保存しました！(お試し中)", "success");
-      syncUserInterfaceElements(null);
-      goHome();
+    } catch (e) {
+      if(e.code === "auth/requires-recent-login") {
+        showToast("⚠️ セキュリティ保護のため、再ログイン後に変更してください。", "error");
+      } else {
+        showToast("更新失敗: " + e.message, "error");
+      }
     }
-  } catch (e) {
-    if(e.code === "auth/requires-recent-login") {
-      showToast("⚠️ セキュリティ保護のため、一度ログアウトしてから再ログインして再度変更してください。", "error");
-    } else {
-      showToast("更新失敗: " + e.message, "error");
-    }
-  } finally {
-    setProcessing(false, 'btnSaveProfile');
+  } else {
+    localStorage.setItem('tripflow_local_profile', JSON.stringify(userProfile));
+    showToast("👤 プロフィール設定を一時保存しました！(お試し中)", "success");
+    syncUserInterfaceElements(null);
+    goHome();
   }
 }
 
@@ -1516,6 +1359,7 @@ onAuthStateChanged(auth, async (user) => {
     
     welcomeScreen.classList.add('screen-hidden'); 
     userInfoArea.classList.remove('hidden');
+    // ログイン時はPCヘッダーログインボタンを確実に非表示に
     guestHeaderArea.classList.add('hidden');
     
     try {
@@ -1534,6 +1378,8 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     currentUser = null;
     userInfoArea.classList.add('hidden');
+    
+    // サンドボックス(お試し)時、または未ログイン時のみログインボタンを表示
     guestHeaderArea.classList.remove('hidden');
     
     const localProfile = localStorage.getItem('tripflow_local_profile');
@@ -1761,16 +1607,8 @@ window.goToMyPlansScreen = function() {
 
 async function fetchTripsFromCloud() {
   if (!currentUser) return;
-  // 非同期フェッチ競合ロック
-  if (isFetchingTrips) return;
-  isFetchingTrips = true;
-  
-  const syncStatus = document.getElementById('myplansSyncStatus');
-  if (syncStatus) syncStatus.textContent = "同期中...";
-
   try {
-    // 重複を完全に防ぐため、読み込み完了までグローバル配列はそのままにし、一時配列に取得する（アトミック代入）
-    const tempTripsCache = [];
+    allTripsCache = [];
     
     const userQuery = query(collection(db, "trips"), where("userId", "==", currentUser.uid));
     const userSnapshot = await getDocs(userQuery);
@@ -1779,7 +1617,7 @@ async function fetchTripsFromCloud() {
       if (docSnap.data().trip) {
         const rawData = docSnap.data();
         const migrated = migrateTripData(rawData.trip, rawData.title);
-        tempTripsCache.push({ 
+        allTripsCache.push({ 
           id: docSnap.id, 
           title: migrated.title, 
           trip: migrated.trip, 
@@ -1799,7 +1637,7 @@ async function fetchTripsFromCloud() {
       if (docSnap.data().trip) {
         const rawData = docSnap.data();
         const migrated = migrateTripData(rawData.trip, rawData.title);
-        tempTripsCache.push({ 
+        allTripsCache.push({ 
           id: docSnap.id, 
           title: migrated.title, 
           trip: migrated.trip, 
@@ -1813,21 +1651,7 @@ async function fetchTripsFromCloud() {
       }
     });
 
-    // IDをキーにした安全な重複排除
-    const uniqueTrips = [];
-    const seenIds = new Set();
-    for (const item of tempTripsCache) {
-      if (!seenIds.has(item.id)) {
-        seenIds.add(item.id);
-        uniqueTrips.push(item);
-      }
-    }
-
-    uniqueTrips.sort((a, b) => (b.isSample ? 1 : 0) - (a.isSample ? 1 : 0));
-    
-    // 一括でグローバルキャッシュに代入（二重描画を完全に回避）
-    allTripsCache = uniqueTrips;
-    
+    allTripsCache.sort((a, b) => (b.isSample ? 1 : 0) - (a.isSample ? 1 : 0));
     updateDashboardStats();
     
     if (!document.getElementById('screen-myplans').classList.contains('screen-hidden')) {
@@ -1835,9 +1659,6 @@ async function fetchTripsFromCloud() {
     }
   } catch (err) {
     console.error("データのフェッチエラー:", err);
-  } finally {
-    isFetchingTrips = false;
-    if (syncStatus) syncStatus.textContent = "同期完了";
   }
 }
 
@@ -1855,17 +1676,11 @@ window.renderMyPlansList = function(filteredList = null) {
   
   if (listToRender.length === 0) {
     container.innerHTML = `<div class="text-center p-8 glass-card rounded-xl text-xs text-slate-500">一致するプランはありません。新しいプランを計画してみましょう！</div>`;
-    if (syncStatus) syncStatus.textContent = "同期完了";
+    syncStatus.textContent = "同期完了";
     return;
   }
 
-  // レンダリング直前のユニークキーチェック
-  const renderedIds = new Set();
-
   listToRender.forEach(item => {
-    if (renderedIds.has(item.id)) return; // レンダリングレベルでの二重化ガード
-    renderedIds.add(item.id);
-
     const card = document.createElement('div');
     card.className = "glass-card rounded-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-slate-200 dark:border-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700/60 transition-all";
     
@@ -1894,7 +1709,7 @@ window.renderMyPlansList = function(filteredList = null) {
     container.appendChild(card);
   });
   
-  if (syncStatus) syncStatus.textContent = "同期完了";
+  syncStatus.textContent = "同期完了";
 }
 
 window.filterMyPlans = function() {
@@ -1931,21 +1746,18 @@ window.filterMyPlans = function() {
 }
 
 async function loadDiscoverTrips() {
-  if (isFetchingDiscover) return;
-  isFetchingDiscover = true;
-
   const grid = document.getElementById('discoverTripGrid');
   grid.innerHTML = `<div class="col-span-full text-center p-12 text-xs text-slate-500 font-mono animate-pulse">公開された最新旅行プランを取得中...</div>`;
   
   try {
-    const tempDiscover = [];
+    discoverTripsCache = [];
     const q = query(collection(db, "trips"), where("isPublic", "==", true));
     const querySnapshot = await getDocs(q);
     
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data();
       const migrated = migrateTripData(data.trip, data.title);
-      tempDiscover.push({
+      discoverTripsCache.push({
         id: docSnap.id,
         title: migrated.title,
         trip: migrated.trip,
@@ -1959,24 +1771,11 @@ async function loadDiscoverTrips() {
       });
     });
 
-    // 重複排除処理を確実に実行
-    const uniqueDiscover = [];
-    const seenIds = new Set();
-    for (const item of tempDiscover) {
-      if (!seenIds.has(item.id)) {
-        seenIds.add(item.id);
-        uniqueDiscover.push(item);
-      }
-    }
-
-    uniqueDiscover.sort((a, b) => b.updatedAt - a.updatedAt);
-    discoverTripsCache = uniqueDiscover;
+    discoverTripsCache.sort((a, b) => b.updatedAt - a.updatedAt);
     renderDiscoverTrips(discoverTripsCache);
   } catch (e) {
     console.error(e);
     grid.innerHTML = `<div class="col-span-full text-center p-12 text-xs text-rose-500">公開データのロードに失敗しました。時間をおいて再試行してください。</div>`;
-  } finally {
-    isFetchingDiscover = false;
   }
 }
 
@@ -1989,12 +1788,7 @@ function renderDiscoverTrips(trips) {
     return;
   }
 
-  const renderedDiscoverIds = new Set();
-
   trips.forEach(item => {
-    if (renderedDiscoverIds.has(item.id)) return;
-    renderedDiscoverIds.add(item.id);
-
     const card = document.createElement('div');
     card.className = "glass-card rounded-2xl p-5 border border-slate-200/50 dark:border-slate-800/60 flex flex-col justify-between gap-4 transition-all hover:scale-[1.01] hover:border-indigo-500/30 cursor-pointer text-left";
     
@@ -2107,8 +1901,6 @@ window.previewPublicTrip = function(id) {
 }
 
 window.importPublicTrip = async function(id) {
-  if (isProcessing) return;
-  
   if (isSandboxMode) {
     showToast("⚠️ サンドボックスモードではコピーできません。ログインしてください。", "error");
     return;
@@ -2127,12 +1919,6 @@ window.importPublicTrip = async function(id) {
     `「${found.title}」をあなたの旅行プランとしてコピーを作成しますか？`
   );
   if (!confirmImport) return;
-
-  setProcessing(true);
-  const btnN = document.getElementById('btnImportFromNavi');
-  const btnT = document.getElementById('btnImportFromTimeline');
-  if (btnN) btnN.disabled = true;
-  if (btnT) btnT.disabled = true;
 
   try {
     const migrated = migrateTripData(found.trip, found.title + " (コピー)");
@@ -2158,10 +1944,6 @@ window.importPublicTrip = async function(id) {
   } catch (e) {
     console.error(e);
     showToast("インポートに失敗しました: " + e.message, "error");
-  } finally {
-    setProcessing(false);
-    if (btnN) btnN.disabled = false;
-    if (btnT) btnT.disabled = false;
   }
 }
 
@@ -2215,22 +1997,13 @@ window.startNewTripCreation = function() {
 
   showScreen('edit');
 }
-
-// 削除時の多重読み込み・多重送信対策
 window.deleteTripClick = async function(id, title) {
-  if (isProcessing) return;
   if (!await showConfirm("旅程の削除確認", `『${title}』をクラウドから完全に削除しますか？`)) return;
-  
-  setProcessing(true);
   try {
     await deleteDoc(doc(db, "trips", id)); 
     showToast("🗑️ 旅程を削除しました", "success"); 
     fetchTripsFromCloud();
-  } catch(e) { 
-    showToast("削除失敗: " + e.message, "error"); 
-  } finally {
-    setProcessing(false);
-  }
+  } catch(e) { showToast("削除失敗: " + e.message, "error"); }
 }
 
 window.toggleTripPublicField = function(checked) {
@@ -2627,7 +2400,7 @@ function renderTripTimelineView() {
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-black text-slate-800 dark:text-white truncate">${node.lineName}</span>
+              <span class="text-xs font-black text-slate-800 dark:text-slate-200 truncate">${node.lineName}</span>
               <span class="text-[10px] font-mono text-slate-500 bg-slate-200 dark:bg-slate-900/80 px-1 py-0.2 rounded">${node.start} ➔ ${node.end}</span>
             </div>
             <p class="text-[10px] text-slate-500 font-medium mt-0.5">${typeLabel}区間: ${node.from} ➔ ${node.to} ${costBadgeHtml}</p>
@@ -2976,8 +2749,6 @@ function updateEditorCalculationsAndPreview() {
 }
 
 window.saveCurrentTripToCloud = async function() {
-  if (isProcessing) return;
-
   if (isSandboxMode) {
     showToast("⚠️ お試しデモモードでは保存できません。右上のログインからアカウントを登録してください。", "error");
     return;
@@ -2989,8 +2760,6 @@ window.saveCurrentTripToCloud = async function() {
   
   const isPublic = document.getElementById('tripIsPublicToggle').checked;
   const description = document.getElementById('tripDescription').value.trim();
-
-  setProcessing(true, 'btnSaveCloud', '保存中...');
 
   try {
     const docRef = doc(db, "trips", currentTripId);
@@ -3014,12 +2783,10 @@ window.saveCurrentTripToCloud = async function() {
     showToast("💾 クラウドに保存・上書きしました！", "success");
     fetchTripsFromCloud();
     
+    // 強制的にホーム画面へ戻さないよう修正。編集画面を維持して表示を同期。
     document.getElementById('editorStatusText').textContent = `マイデータ編集モード (保存完了)`;
-  } catch (e) { 
-    showToast("保存失敗: " + e.message, "error"); 
-  } finally {
-    setProcessing(false, 'btnSaveCloud');
-  }
+    
+  } catch (e) { showToast("保存失敗: " + e.message, "error"); }
 }
 
 window.showToast = function(msg, type="success") {
