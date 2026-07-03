@@ -1298,6 +1298,11 @@ function applyAvatarVisual(elementId, color, icon, isLarge = false, letter = "T"
 }
 
 function syncUserInterfaceElements(user) {
+  const guestHeaderArea = document.getElementById('guestHeaderArea');
+  const userInfoArea = document.getElementById('userInfoArea');
+  if (guestHeaderArea) guestHeaderArea.classList.toggle('hidden', !!user); // userがいればhiddenをつける、いなければ外す
+  if (userInfoArea) userInfoArea.classList.toggle('hidden', !user);      // userがいればhiddenを外す、いなければつける
+  
   const nameToDisplay = user ? (user.displayName || (user.email ? user.email.split('@')[0] : 'ユーザー')) : 'ゲスト';
   const firstLetter = nameToDisplay.substring(0, 1).toUpperCase();
   
@@ -1348,59 +1353,60 @@ function updateDashboardStats() {
   document.getElementById('statTotalBudget').textContent = `${totalBudget.toLocaleString()}円`;
 }
 
-// 認証状態の監視
 onAuthStateChanged(auth, async (user) => {
-  const guestArea = document.getElementById('guestHeaderArea'); // ログインボタンがあるエリア
-  const userArea = document.getElementById('userInfoArea');   // ログイン後のユーザー情報エリア
-  const userNameLabel = document.getElementById('userName');   // ヘッダーのユーザー名
+  const welcomeScreen = document.getElementById('screen-welcome');
+  const userInfoArea = document.getElementById('userInfoArea');
+  const guestHeaderArea = document.getElementById('guestHeaderArea');
   
-  // ドロワー（メニュー）内の要素も連動させる場合
-  const drawerUserName = document.getElementById('drawerUserName');
-  const drawerUserMail = document.getElementById('drawerUserMail');
-  const drawerAuthBtn = document.getElementById('drawerAuthBtn');
-
   if (user) {
-    console.log("👋 ログイン中:", user.uid);
+    currentUser = user;
+    isSandboxMode = false;
+    document.getElementById('sandboxBanner').classList.add('hidden');
     
-    // 🔓 ログイン済み：ログインボタンを消して、ユーザー情報を表示
-    if (guestArea) guestArea.classList.add('hidden');
-    if (userArea) userArea.classList.remove('hidden');
-
-    // ユーザー名の表示更新
-    let displayName = user.displayName || "ゲスト";
+    welcomeScreen.classList.add('screen-hidden'); 
+    userInfoArea.classList.remove('hidden');
+    // ログイン時はPCヘッダーログインボタンを確実に非表示に
+    guestHeaderArea.classList.add('hidden');
     
-    // Firestoreのusersコレクションからプロファイルを取得して反映する場合
     try {
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (userDoc.exists() && userDoc.data().name) {
-        displayName = userDoc.data().name;
+      const pDoc = await getDoc(doc(db, 'users', "profile_settings_" + user.uid));
+      if(pDoc.exists()) {
+        const migrated = migrateUserProfile(pDoc.data());
+        userProfile = { ...userProfile, ...migrated };
       }
-    } catch (e) {
-      console.error("ユーザー情報の取得に失敗:", e);
+    } catch(e) {
+      console.log("プロフィール取得スキップ:", e);
     }
 
-    if (userNameLabel) userNameLabel.textContent = displayName;
-    
-    // ドロワー（サイドメニュー）側の表示も更新
-    if (drawerUserName) drawerUserName.textContent = displayName;
-    if (drawerUserMail) {
-      // internal.app を隠して、ログインIDっぽく見せる表示調整
-      const displayId = user.email ? user.email.split('@')[0] : "user";
-      drawerUserMail.textContent = `@${displayId}`;
-    }
-    if (drawerAuthBtn) drawerAuthBtn.textContent = "ログアウト";
-
+    syncUserInterfaceElements(user);
+    showScreen('home'); 
+    fetchTripsFromCloud();
   } else {
-    console.log("🔒 未ログイン状態");
+    currentUser = null;
+    userInfoArea.classList.add('hidden');
     
-    // 🔒 未ログイン：ログインボタンを表示して、ユーザー情報を消す
-    if (guestArea) guestArea.classList.remove('hidden');
-    if (userArea) userArea.classList.add('hidden');
+    // サンドボックス(お試し)時、または未ログイン時のみログインボタンを表示
+    guestHeaderArea.classList.remove('hidden');
+    
+    const localProfile = localStorage.getItem('tripflow_local_profile');
+    if (localProfile) {
+      try {
+        userProfile = { ...userProfile, ...migrateUserProfile(JSON.parse(localProfile)) };
+      } catch (e) {
+        console.error("ローカルプロフィール読み込み:", e);
+      }
+    }
 
-    // ドロワー（サイドメニュー）側をゲスト状態に戻す
-    if (drawerUserName) drawerUserName.textContent = "ゲストユーザー";
-    if (drawerUserMail) drawerUserMail.textContent = "ログインしていません";
-    if (drawerAuthBtn) drawerAuthBtn.textContent = "ログイン";
+    if (isSandboxMode) {
+      document.getElementById('sandboxBanner').classList.remove('hidden');
+      welcomeScreen.classList.add('screen-hidden');
+    } else {
+      document.getElementById('sandboxBanner').classList.add('hidden');
+      hideAllScreens();
+      welcomeScreen.classList.remove('screen-hidden');
+      document.getElementById('subHeaderTitle').textContent = "HOME";
+    }
+    syncUserInterfaceElements(null);
   }
 });
 
