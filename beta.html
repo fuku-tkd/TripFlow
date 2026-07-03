@@ -1364,7 +1364,7 @@ onAuthStateChanged(auth, async (user) => {
     guestHeaderArea.classList.add('hidden');
     
     try {
-      const pDoc = await getDoc(doc(db, 'users', user.uid));
+      const pDoc = await getDoc(doc(db, 'users', "profile_settings_" + user.uid));
       if(pDoc.exists()) {
         const migrated = migrateUserProfile(pDoc.data());
         userProfile = { ...userProfile, ...migrated };
