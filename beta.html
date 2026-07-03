@@ -1337,6 +1337,12 @@ function syncUserInterfaceElements(user) {
     }
   }
   updateDrawerAccountState();
+  // 💡 2. 【追記】ここでPCヘッダー側のログインボタン（guestHeaderArea）の表示・非表示を最終決定する
+  const guestHeaderArea = document.getElementById('guestHeaderArea');
+  if (guestHeaderArea) {
+    // userが存在すれば（ログイン済みなら）消す（hiddenを追加）、いなければ出す（hiddenを削除）
+    guestHeaderArea.classList.toggle('hidden', !!user);
+  }
 }
 
 function updateDashboardStats() {
