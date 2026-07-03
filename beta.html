@@ -1163,9 +1163,7 @@ window.handleAuthSubmit = async function(event) {
         updatedAt: Date.now()
       };
       // 💡 保存先を 'users' コレクションにし、ドキュメントIDをそのまま『ランダムID（UID）』にします
-      await setDoc(doc(db, 'users', userCredential.user.uid), defaultProfile), {
-        loginId: emailOrUser // ログインID（または入力値）も一緒にFirestore側に入れておくと後で便利です
-      });
+      await setDoc(doc(db, 'users', userCredential.user.uid), defaultProfile);
       showToast("🎉 アカウントを作成し、ログインしました！", "success");
     }
     document.getElementById('authForm').reset();
