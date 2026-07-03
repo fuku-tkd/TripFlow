@@ -1249,7 +1249,7 @@ window.handleUpdateProfileSubmit = async function() {
         await updatePassword(currentUser, newPassword);
       }
       
-      await setDoc(doc(db, 'users', currentUser.uid), {
+      await setDoc(doc(db, 'users', "profile_settings_" + currentUser.uid), {
         profileUserId: currentUser.uid,
         avatarColor: userProfile.avatarColor,
         avatarIcon: userProfile.avatarIcon,
