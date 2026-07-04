@@ -1642,58 +1642,48 @@ window.goToMyPlansScreen = function() {
 
 async function fetchTripsFromCloud() {
   if (!currentUser) return;
+  
+  // 💡 【追加】二重読み込み防止・連打対策のコア処理
+  // 読み込みを開始する前に、現在の配列とHTML表示領域を一度完全に空っぽ（リセット）にします
+  userTrips = []; 
+  const container = document.getElementById('tripsContainer');
+  if (container) container.innerHTML = '';
+
   try {
-    allTripsCache = [];
+    const q = query(
+      collection(db, 'trips'),
+      where('userId', '==', currentUser.uid),
+      orderBy('createdAt', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
     
-    const userQuery = query(collection(db, "trips"), where("userId", "==", currentUser.uid));
-    const userSnapshot = await getDocs(userQuery);
-    
-    userSnapshot.forEach((docSnap) => {
-      if (docSnap.data().trip) {
-        const rawData = docSnap.data();
-        const migrated = migrateTripData(rawData.trip, rawData.title);
-        allTripsCache.push({ 
-          id: docSnap.id, 
-          title: migrated.title, 
-          trip: migrated.trip, 
-          isPublic: rawData.isPublic || false,
-          description: rawData.description || "",
-          totalDays: migrated.totalDays,
-          totalBudget: migrated.totalBudget,
-          updatedAt: rawData.updatedAt || Date.now(),
-          isSample: false 
-        });
-      }
-    });
-
-    const sampleQuery = query(collection(db, "trips"), where("userId", "==", "sample"));
-    const sampleSnapshot = await getDocs(sampleQuery);
-    sampleSnapshot.forEach((docSnap) => {
-      if (docSnap.data().trip) {
-        const rawData = docSnap.data();
-        const migrated = migrateTripData(rawData.trip, rawData.title);
-        allTripsCache.push({ 
-          id: docSnap.id, 
-          title: migrated.title, 
-          trip: migrated.trip, 
-          isPublic: rawData.isPublic || false,
-          description: rawData.description || "",
-          totalDays: migrated.totalDays,
-          totalBudget: migrated.totalBudget,
-          updatedAt: rawData.updatedAt || Date.now(),
-          isSample: true 
-        });
-      }
-    });
-
-    allTripsCache.sort((a, b) => (b.isSample ? 1 : 0) - (a.isSample ? 1 : 0));
-    updateDashboardStats();
-    
-    if (!document.getElementById('screen-myplans').classList.contains('screen-hidden')) {
-      renderMyPlansList();
+    // 💡 もしデータが0件（空っぽ）だった場合の表示リセット処理
+    if (querySnapshot.empty) {
+      renderTrips(); // 空の配列を渡して「旅行計画がありません」の画面にする
+      return;
     }
-  } catch (err) {
-    console.error("データのフェッチエラー:", err);
+
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      userTrips.push({
+        id: docSnap.id,
+        title: data.title || '無題の旅行',
+        description: data.description || '',
+        startDate: data.startDate || '',
+        endDate: data.endDate || '',
+        days: data.days || 1,
+        style: data.style || 'all',
+        transport: data.transport || 'train',
+        status: data.status || 'planning',
+        isCloud: true,
+        updatedAt: data.updatedAt || Date.now()
+      });
+    });
+
+    renderTrips();
+  } catch (error) {
+    console.error("🔒 クラウドデータ取得失敗:", error);
+    showToast("⚠️ データの同期に失敗しました", "error");
   }
 }
 
