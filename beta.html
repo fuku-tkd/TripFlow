@@ -1643,12 +1643,6 @@ window.goToMyPlansScreen = function() {
 async function fetchTripsFromCloud() {
   if (!currentUser) return;
   
-  // 💡 【追加】二重読み込み防止・連打対策のコア処理
-  // 読み込みを開始する前に、現在の配列とHTML表示領域を一度完全に空っぽ（リセット）にします
-  userTrips = []; 
-  const container = document.getElementById('tripsContainer');
-  if (container) container.innerHTML = '';
-
   try {
     const q = query(
       collection(db, 'trips'),
@@ -1657,12 +1651,18 @@ async function fetchTripsFromCloud() {
     );
     const querySnapshot = await getDocs(q);
     
-    // 💡 もしデータが0件（空っぽ）だった場合の表示リセット処理
+    // 💡 1. Firestoreからデータが【無事に届いた直後】に、配列を一度だけリセットします
+    userTrips = []; 
+
+    // データが本当に0件（空っぽ）だった場合
     if (querySnapshot.empty) {
-      renderTrips(); // 空の配列を渡して「旅行計画がありません」の画面にする
+      const container = document.getElementById('tripsContainer');
+      if (container) container.innerHTML = ''; // 画面を空にする
+      renderTrips(); 
       return;
     }
 
+    // 2. 届いた最新データだけを配列に詰め直す
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data();
       userTrips.push({
@@ -1680,7 +1680,14 @@ async function fetchTripsFromCloud() {
       });
     });
 
+    // 💡 3. HTML側のコンテナ（#tripsContainer）の中身のクリアは、
+    // 配列の準備がすべて整ったこのタイミングで1回だけ行います
+    const container = document.getElementById('tripsContainer');
+    if (container) container.innerHTML = '';
+
+    // 4. 新しいデータで画面を描画
     renderTrips();
+    
   } catch (error) {
     console.error("🔒 クラウドデータ取得失敗:", error);
     showToast("⚠️ データの同期に失敗しました", "error");
