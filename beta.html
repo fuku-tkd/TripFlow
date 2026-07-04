@@ -1411,7 +1411,7 @@ onAuthStateChanged(auth, async (user) => {
     isSyncingAuthOrData = true; // ロックをかける（以降の高速な並列処理を通さない）
 
     try {
-      const pDoc = await getDoc(doc(db, 'users', "profile_settings_" + user.uid));
+      const pDoc = await getDoc(doc(db, 'users', "profile_settings_" + currentUser.uid));
       if(pDoc.exists()) {
         const migrated = migrateUserProfile(pDoc.data());
         userProfile = { ...userProfile, ...migrated };
