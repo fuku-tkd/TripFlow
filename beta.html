@@ -651,6 +651,18 @@
     </div>
   </div>
 
+  <div id="screen-summary" class="max-w-2xl mx-auto px-4 mt-6 space-y-6 screen-hidden">
+    <div id="summaryReadOnlyBanner" class="hidden bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-2xl flex items-center justify-between text-left">
+      <div class="min-w-0 pr-2">
+        <h4 class="text-xs font-black text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-eye mr-1"></i> 現在「みんなのプラン」をプレビュー表示中</h4>
+        <p class="text-[10px] text-slate-500 mt-0.5">閲覧専用です。保存や編集をするには自分のマイプランにインポートしてください。</p>
+      </div>
+      <button id="btnImportFromSummary" class="px-3.5 py-1.5 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 text-white font-black text-[11px] rounded-xl transition-all shadow-md shadow-indigo-500/20 shrink-0"><i class="fa-solid fa-copy mr-1"></i>インポートする</button>
+    </div>
+    
+    <div id="summaryMainDashboard" class="space-y-4"></div>
+  </div>
+  
   <div id="screen-navi" class="max-w-4xl mx-auto px-3 mt-4 space-y-3 screen-hidden">
     <div id="naviDaySelectorArea" class="flex flex-col gap-1.5">
       <div id="naviDaySelectorContainer" class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar shrink-0"></div>
@@ -721,7 +733,6 @@
         <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">全体の行動プランを一覧で俯瞰します。</p>
       </div>
     </div>
-    <div id="timelineSummaryContainer" class="space-y-4"></div>
     <div id="timelineContainer" class="space-y-0 relative pl-4 md:pl-8"></div>
   </div>
 
