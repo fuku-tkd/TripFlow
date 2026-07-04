@@ -725,7 +725,7 @@
         <span id="timelineTotalCost" class="text-sm sm:text-base font-black text-amber-500 font-mono">0円</span>
       </div>
     </div>
-
+    <div id="timelineSummaryContainer" class="space-y-4"></div>
     <div id="timelineContainer" class="space-y-0 relative pl-4 md:pl-8"></div>
   </div>
 
@@ -1657,6 +1657,11 @@ window.showScreen = function(screenName) {
     } else if (screenName === 'profile') {
       document.getElementById('screen-profile').classList.remove('screen-hidden');
       subHeader.textContent = "USER SETTINGS";
+    } else if (screenName === 'timeline') {
+      document.getElementById('screen-timeline').classList.remove('screen-hidden');
+      subHeader.textContent = isReadOnlyMode ? `PREVIEW TIMELINE` : `TRIP TIMELINE BROWSER`;
+      renderTripSummaryHeader();
+      renderTripTimelineView();
     }
   }
 }
@@ -1671,6 +1676,68 @@ window.goToDiscoverScreen = function() {
 
 window.goToMyPlansScreen = function() {
   safeNavigate('myplans');
+}
+
+/**
+ * 💡 新設: プラン概要（ヘッダー）専用描画関数
+ * ここから各種UIコンポーネント（お気に入りボタン、タグ、着せ替えなど）を
+ * タイムライン本体のループ処理を汚さずに自由自在に追加・拡張できます。
+ */
+function renderTripSummaryHeader() {
+  const container = document.getElementById('timelineSummaryContainer');
+  if (!container) return;
+  container.innerHTML = ""; // 呼び出しごとにリセット
+
+  let planDescription = "このプランの紹介文はまだありません。";
+  let authorHtml = "";
+
+  // 1. 閲覧モードに応じて、対象プランの「詳細データ」を特定する
+  if (isReadOnlyMode && typeof discoverTripsCache !== 'undefined') {
+    // 「みんなのプラン」のキャッシュからデータを参照
+    const found = discoverTripsCache.find(x => x.id === currentTripId);
+    if (found) {
+      planDescription = found.description || "このプランの紹介文はまだありません。";
+      
+      const firstLetter = (found.authorName || "旅").substring(0, 1).toUpperCase();
+      authorHtml = `
+        <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
+          <div class="flex items-center gap-2 text-xs">
+            <div class="w-5 h-5 rounded-full bg-${found.authorAvatarColor || 'indigo'}-500 text-white flex items-center justify-center font-bold text-[10px] shadow-sm">
+              ${firstLetter}
+            </div>
+            <span class="text-slate-500 dark:text-slate-400">作成者: <strong class="text-slate-700 dark:text-slate-200">${found.authorName || 'ゲスト'}</strong></span>
+          </div>
+          <div id="summaryHeaderActions" class="flex gap-2"></div>
+        </div>
+      `;
+    }
+  } else if (typeof allTripsCache !== 'undefined') {
+    // 自分の「マイプラン」から開いているとき
+    const found = allTripsCache.find(x => x.id === currentTripId);
+    if (found) {
+      planDescription = found.description || "このプランの紹介文はまだありません。";
+    }
+  }
+
+  // 2. 概要カードを美しく構築して流し込む
+  const summaryCard = document.createElement('div');
+  summaryCard.className = "p-4 text-left bg-gradient-to-br from-indigo-50/40 to-slate-50/50 dark:from-slate-900/80 dark:to-slate-900/30 rounded-2xl border border-indigo-100/20 dark:border-slate-800 shadow-sm animate-fade-in";
+  
+  summaryCard.innerHTML = `
+    <div id="summaryHeaderBadges" class="flex flex-wrap items-center gap-1.5 mb-2">
+      <span class="px-2 py-0.5 text-[9px] font-black bg-indigo-600 text-white rounded shadow-sm">🗺️ PLAN SUMMARY</span>
+    </div>
+
+    <p class="text-xs text-slate-600 dark:text-slate-400 whitespace-pre-wrap bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-900/60 leading-relaxed shadow-inner">
+      ${planDescription}
+    </p>
+
+    ${authorHtml}
+    
+    <div id="summaryHeaderExtension" class="mt-2 empty:hidden"></div>
+  `;
+
+  container.appendChild(summaryCard);
 }
 
 // 💡 【追加】Firestoreからのデータ取得が多重に走るのを絶対に防ぐためのフラグ
