@@ -1549,15 +1549,26 @@ window.safeNavigate = async function(targetScreenName) {
     const action = await showSaveCheckModal();
     
     if (action === 'save') {
-      const saveBtn = document.getElementById('btnSaveCloud');
-      if (saveBtn) {
-        saveBtn.click(); 
-      } else {
-        showScreen(targetScreenName);
+      // 💡 【大修正】身代わりクリックではなく、通常の保存処理（saveTripData）を実行して完了を待ちます
+      if (typeof window.saveTripData === 'function') {
+        try {
+          showToast("⏳ データを保存しています...", "info");
+          await window.saveTripData(); // 保存処理が終わるまでここで一時停止
+        } catch (e) {
+          console.error("ナビゲーション時の保存エラー:", e);
+          showToast("⚠️ 保存に失敗したため、移動を中断しました", "error");
+          return; // 保存に失敗した場合は画面を閉じずに中断する
+        }
       }
+      
+      // 💡 【重要】保存が正常に完了したら、自動的にターゲット画面へ終了（遷移）させる！
+      showScreen(targetScreenName);
+      if (targetScreenName === 'home') currentTripId = null;
+      
     } else if (action === 'discard') {
       showScreen(targetScreenName);
       if (targetScreenName === 'home') currentTripId = null;
+      
     } else {
       return;
     }
