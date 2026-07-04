@@ -1662,9 +1662,13 @@ window.goToMyPlansScreen = function() {
   safeNavigate('myplans');
 }
 
+// 💡 【追加】Firestoreからのデータ取得が多重に走るのを絶対に防ぐためのフラグ
+let isFetchingTripsActive = false;
+
 async function fetchTripsFromCloud() {
   if (!currentUser) return;
-  
+
+  // 💡 【超重要】すでにデータの取得処理が走っている最中なら、この後から来た呼び出しは強制終了（ブロック）する！
   if (isFetchingTripsActive) {
     console.log("🚫 クラウドデータの多重読み込みを完全にブロックしました");
     return;
@@ -1672,16 +1676,10 @@ async function fetchTripsFromCloud() {
   
   // 🔒 ロックをかける（処理中状態にする）
   isFetchingTripsActive = true;
-  
+
   try {
-    // 💡 1. 取得を開始する前に、キャッシュを一度完全に空っぽにします
-    // これにより、何回この関数が走っても絶対に重複（2回読み込み）しなくなります！
+    // 💡 データを詰め直す前に配列をクリア
     allTripsCache = [];
-  }
-  
-  // 🔒 ロックをかける（処理中状態にする）
-  isFetchingTripsActive = true;
-   
     
     // 自身の旅行データを取得
     const userQuery = query(collection(db, "trips"), where("userId", "==", currentUser.uid));
@@ -1726,18 +1724,21 @@ async function fetchTripsFromCloud() {
       }
     });
 
-    // 💡 2. データを並び替えて、統計を更新
+    // データを並び替えて、統計を更新
     allTripsCache.sort((a, b) => (b.isSample ? 1 : 0) - (a.isSample ? 1 : 0));
     updateDashboardStats();
     
-    // 💡 3. 準備がすべて整ったので、画面を表示（リライト）
-    // 「マイプラン」画面が開いている、あるいは開くタイミングなら確実に1回描画
+    // 画面にリストを反映
     if (typeof renderMyPlansList === 'function') {
       renderMyPlansList();
     }
     
   } catch (err) {
     console.error("データのフェッチエラー:", err);
+  } finally {
+    // 🔓 【最重要】すべての通信と描画が終わった後にだけ、ロックを解除する
+    // これにより、通信を待っている間に別のボタンが連打されても完全に無視されます
+    isFetchingTripsActive = false;
   }
 }
 
