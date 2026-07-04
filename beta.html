@@ -1382,6 +1382,10 @@ function updateDashboardStats() {
   document.getElementById('statTotalBudget').textContent = `${totalBudget.toLocaleString()}円`;
 }
 
+// 💡 【追加】多重フェッチ・連打を物理的に完全にシャットアウトするためのグローバルロック
+let isSyncingAuthOrData = false;
+
+// 認証状態の監視
 onAuthStateChanged(auth, async (user) => {
   const welcomeScreen = document.getElementById('screen-welcome');
   const userInfoArea = document.getElementById('userInfoArea');
@@ -1394,11 +1398,20 @@ onAuthStateChanged(auth, async (user) => {
     
     welcomeScreen.classList.add('screen-hidden'); 
     userInfoArea.classList.remove('hidden');
-    // ログイン時はPCヘッダーログインボタンを確実に非表示に
-    guestHeaderArea.classList.add('hidden');
     
+    if (guestHeaderArea) {
+      guestHeaderArea.classList.add('hidden');
+    }
+    
+    // 💡 【追加】もしすでに他の「ログイン/同期処理」が走っている場合は、このイベント（2回目以降）を完全に無視して破棄する
+    if (isSyncingAuthOrData) {
+      console.log("🚫 多重読み込みをブロックしました");
+      return;
+    }
+    isSyncingAuthOrData = true; // ロックをかける（以降の高速な並列処理を通さない）
+
     try {
-      const pDoc = await getDoc(doc(db, 'users', "profile_settings_" + user.uid));
+      const pDoc = await getDoc(doc(db, 'users', user.uid));
       if(pDoc.exists()) {
         const migrated = migrateUserProfile(pDoc.data());
         userProfile = { ...userProfile, ...migrated };
@@ -1409,14 +1422,23 @@ onAuthStateChanged(auth, async (user) => {
 
     syncUserInterfaceElements(user);
     showScreen('home'); 
-    fetchTripsFromCloud();
+    
+    // 確実に1回だけデータを取得させる
+    await fetchTripsFromCloud();
+    
+    // 全ての非同期同期処理が終わったらロックを解除
+    isSyncingAuthOrData = false;
+
   } else {
     currentUser = null;
     userInfoArea.classList.add('hidden');
     
-    // サンドボックス(お試し)時、または未ログイン時のみログインボタンを表示
-    guestHeaderArea.classList.remove('hidden');
+    if (guestHeaderArea) {
+      guestHeaderArea.classList.remove('hidden');
+    }
     
+    isSyncingAuthOrData = false; // 未ログイン時はフラグをリセット
+
     const localProfile = localStorage.getItem('tripflow_local_profile');
     if (localProfile) {
       try {
