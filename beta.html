@@ -10,7 +10,7 @@
 
 <script>
   // Tailwindのダークモードをシステム設定に同期
-  tailwind.config = {
+  tailwind.config = { 
     darkMode: 'media',
     theme: {
       extend: {
@@ -1134,15 +1134,33 @@ function syncAuthFormUI() {
 
 window.handleAuthSubmit = async function(event) {
   event.preventDefault();
+  
+  // 💡 【追加】多重送信防止のために、ログイン/登録ボタンを取得して無効化する
+  const submitBtn = document.querySelector('#authForm button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    // ボタンの文字を「処理中...」に変え、連打できない見た目（半透明）にする
+    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 処理中...`;
+    submitBtn.classList.add('opacity-50', 'pointer-events-none');
+  }
+
   const emailOrUser = document.getElementById('authEmailOrUser').value;
   const password = document.getElementById('authPassword').value;
   const displayName = document.getElementById('authDisplayName').value.trim();
   
   if (password.length < 6) {
     showToast("⚠️ パスワードは6文字以上で入力してください", "error");
+    // 💡 エラーで処理を抜ける場合も、ボタンを確実に元に戻す
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = authMode === 'login' ? 'ログインする' : '登録して始める';
+      submitBtn.classList.remove('opacity-50', 'pointer-events-none');
+    }
     return;
   }
+  
   const finalEmail = resolveEmailFormat(emailOrUser);
+  
   try {
     if (authMode === 'login') {
       await signInWithEmailAndPassword(auth, finalEmail, password);
@@ -1162,8 +1180,8 @@ window.handleAuthSubmit = async function(event) {
         snsLink: '',
         updatedAt: Date.now()
       };
-      // 💡 保存先を 'users' コレクションにし、ドキュメントIDをそのまま『ランダムID（UID）』にします
-      await setDoc(doc(db, 'users', "profile_settings_" + userCredential.user.uid), defaultProfile);
+      // 💡 先ほどの設計通り 'users' コレクションの UID に保存
+      await setDoc(doc(db, 'users', userCredential.user.uid), defaultProfile);
       showToast("🎉 アカウントを作成し、ログインしました！", "success");
     }
     document.getElementById('authForm').reset();
@@ -1177,6 +1195,13 @@ window.handleAuthSubmit = async function(event) {
       errorMsg = "このID/メールアドレスは既に登録されています。";
     }
     showToast(`⚠️ ${errorMsg}`, "error");
+  } finally {
+    // 💡 【追加】通信成功・通信失敗どちらになっても「最後に必ず」ボタンを元に戻す
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = authMode === 'login' ? 'ログインする' : '登録して始める';
+      submitBtn.classList.remove('opacity-50', 'pointer-events-none');
+    }
   }
 }
 
