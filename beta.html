@@ -857,7 +857,7 @@
         </div>
 
         <div>
-          <label id="authEmailLabel" class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">独自ID または メール</label>
+          <label id="authEmailLabel" class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">ID</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-envelope text-xs"></i></span>
             <input type="text" id="authEmailOrUser" required class="w-full pl-9 pr-4 py-2 rounded-xl premium-input text-xs placeholder-slate-400 dark:placeholder-slate-600 font-medium">
@@ -1115,12 +1115,12 @@ function syncAuthFormUI() {
   
   if (authMode === 'signup') {
     title.textContent = "新規アカウントを作成";
-    desc.textContent = "独自IDまたはメール、表示名、パスワードを設定して登録してください。";
+    desc.textContent = "ID、表示名、パスワードを設定して登録してください。";
     submitBtn.innerHTML = `<span>新規登録する</span> <i class="fa-solid fa-user-plus text-xs"></i>`;
     toggleBtn.textContent = "既にアカウントをお持ちの方（サインイン）";
     nameField.classList.remove('hidden');
     document.getElementById('authDisplayName').required = true;
-    emailLabel.textContent = "メールアドレス または 登録用独自ID";
+    emailLabel.textContent = "ID";
   } else {
     title.textContent = "アカウントにサインイン";
     desc.textContent = "旅程をクラウド保存・同期するために認証を行ってください。";
@@ -1128,7 +1128,7 @@ function syncAuthFormUI() {
     toggleBtn.textContent = "新規アカウントを作成する（サインアップ）";
     nameField.classList.add('hidden');
     document.getElementById('authDisplayName').required = false;
-    emailLabel.textContent = "メールアドレス または 独自ID";
+    emailLabel.textContent = "ID";
   }
 }
 
@@ -1192,7 +1192,7 @@ window.handleAuthSubmit = async function(event) {
     if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
       errorMsg = "IDまたはパスワードが正しくありません。";
     } else if (error.code === 'auth/email-already-in-use') {
-      errorMsg = "このID/メールアドレスは既に登録されています。";
+      errorMsg = "このIDは既に登録されています。";
     }
     showToast(`⚠️ ${errorMsg}`, "error");
   } finally {
