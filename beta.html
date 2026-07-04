@@ -1644,25 +1644,22 @@ async function fetchTripsFromCloud() {
   if (!currentUser) return;
   
   try {
+    // 💡 orderBy を削除し、where だけのシンプルなクエリにします（これでエラーを回避）
     const q = query(
       collection(db, 'trips'),
-      where('userId', '==', currentUser.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', currentUser.uid)
     );
     const querySnapshot = await getDocs(q);
     
-    // 💡 1. Firestoreからデータが【無事に届いた直後】に、配列を一度だけリセットします
     userTrips = []; 
 
-    // データが本当に0件（空っぽ）だった場合
     if (querySnapshot.empty) {
       const container = document.getElementById('tripsContainer');
-      if (container) container.innerHTML = ''; // 画面を空にする
+      if (container) container.innerHTML = '';
       renderTrips(); 
       return;
     }
 
-    // 2. 届いた最新データだけを配列に詰め直す
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data();
       userTrips.push({
@@ -1676,16 +1673,18 @@ async function fetchTripsFromCloud() {
         transport: data.transport || 'train',
         status: data.status || 'planning',
         isCloud: true,
-        updatedAt: data.updatedAt || Date.now()
+        updatedAt: data.updatedAt || Date.now(),
+        createdAt: data.createdAt || 0 // 💡 並び替え用に取得
       });
     });
 
-    // 💡 3. HTML側のコンテナ（#tripsContainer）の中身のクリアは、
-    // 配列の準備がすべて整ったこのタイミングで1回だけ行います
+    // 💡 【追加】取得したデータを、新しく作成された順（降順）にJavaScript側で並び替える
+    userTrips.sort((a, b) => b.createdAt - a.createdAt);
+
+    // 最後に画面をクリアして描画
     const container = document.getElementById('tripsContainer');
     if (container) container.innerHTML = '';
 
-    // 4. 新しいデータで画面を描画
     renderTrips();
     
   } catch (error) {
