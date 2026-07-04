@@ -2054,6 +2054,9 @@ window.previewPublicTrip = function(id) {
   if (btnN) btnN.onclick = importFn;
   if (btnT) btnT.onclick = importFn;
 
+  // 💡 【新設！】プレビューするプランの全体データを渡して、専用概要エリアを描画する
+  renderTripSummaryHeader(found);
+
   showScreen('timeline');
   showToast(`👁️ 「${migrated.title}」をプレビューしています。`, "success");
 }
