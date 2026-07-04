@@ -1168,7 +1168,6 @@ window.handleAuthSubmit = async function(event) {
     } else {
       const userCredential = await createUserWithEmailAndPassword(auth, finalEmail, password);
       if (displayName) await updateProfile(userCredential.user, { displayName: displayName });
-      
       const defaultProfile = {
         profileUserId: userCredential.user.uid,
         avatarColor: 'indigo',
