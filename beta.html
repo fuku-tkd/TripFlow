@@ -1642,54 +1642,66 @@ window.goToMyPlansScreen = function() {
 
 async function fetchTripsFromCloud() {
   if (!currentUser) return;
-  
   try {
-    // 💡 orderBy を削除し、where だけのシンプルなクエリにします（これでエラーを回避）
-    const q = query(
-      collection(db, 'trips'),
-      where('userId', '==', currentUser.uid)
-    );
-    const querySnapshot = await getDocs(q);
+    // 💡 1. 取得を開始する前に、キャッシュを一度完全に空っぽ（リセット）にします
+    // これにより、何回この関数が走っても絶対に重複（2回読み込み）しなくなります！
+    allTripsCache = [];
     
-    userTrips = []; 
-
-    if (querySnapshot.empty) {
-      const container = document.getElementById('tripsContainer');
-      if (container) container.innerHTML = '';
-      renderTrips(); 
-      return;
-    }
-
-    querySnapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      userTrips.push({
-        id: docSnap.id,
-        title: data.title || '無題の旅行',
-        description: data.description || '',
-        startDate: data.startDate || '',
-        endDate: data.endDate || '',
-        days: data.days || 1,
-        style: data.style || 'all',
-        transport: data.transport || 'train',
-        status: data.status || 'planning',
-        isCloud: true,
-        updatedAt: data.updatedAt || Date.now(),
-        createdAt: data.createdAt || 0 // 💡 並び替え用に取得
-      });
+    // 自身の旅行データを取得
+    const userQuery = query(collection(db, "trips"), where("userId", "==", currentUser.uid));
+    const userSnapshot = await getDocs(userQuery);
+    
+    userSnapshot.forEach((docSnap) => {
+      if (docSnap.data().trip) {
+        const rawData = docSnap.data();
+        const migrated = migrateTripData(rawData.trip, rawData.title);
+        allTripsCache.push({ 
+          id: docSnap.id, 
+          title: migrated.title, 
+          trip: migrated.trip, 
+          isPublic: rawData.isPublic || false,
+          description: rawData.description || "",
+          totalDays: migrated.totalDays,
+          totalBudget: migrated.totalBudget,
+          updatedAt: rawData.updatedAt || Date.now(),
+          isSample: false 
+        });
+      }
     });
 
-    // 💡 【追加】取得したデータを、新しく作成された順（降順）にJavaScript側で並び替える
-    userTrips.sort((a, b) => b.createdAt - a.createdAt);
+    // サンプルデータを取得
+    const sampleQuery = query(collection(db, "trips"), where("userId", "==", "sample"));
+    const sampleSnapshot = await getDocs(sampleQuery);
+    sampleSnapshot.forEach((docSnap) => {
+      if (docSnap.data().trip) {
+        const rawData = docSnap.data();
+        const migrated = migrateTripData(rawData.trip, rawData.title);
+        allTripsCache.push({ 
+          id: docSnap.id, 
+          title: migrated.title, 
+          trip: migrated.trip, 
+          isPublic: rawData.isPublic || false,
+          description: rawData.description || "",
+          totalDays: migrated.totalDays,
+          totalBudget: migrated.totalBudget,
+          updatedAt: rawData.updatedAt || Date.now(),
+          isSample: true 
+        });
+      }
+    });
 
-    // 最後に画面をクリアして描画
-    const container = document.getElementById('tripsContainer');
-    if (container) container.innerHTML = '';
-
-    renderTrips();
+    // 💡 2. データを並び替えて、統計を更新
+    allTripsCache.sort((a, b) => (b.isSample ? 1 : 0) - (a.isSample ? 1 : 0));
+    updateDashboardStats();
     
-  } catch (error) {
-    console.error("🔒 クラウドデータ取得失敗:", error);
-    showToast("⚠️ データの同期に失敗しました", "error");
+    // 💡 3. 準備がすべて整ったので、画面を表示（リライト）
+    // 「マイプラン」画面が開いている、あるいは開くタイミングなら確実に1回描画
+    if (typeof renderMyPlansList === 'function') {
+      renderMyPlansList();
+    }
+    
+  } catch (err) {
+    console.error("データのフェッチエラー:", err);
   }
 }
 
