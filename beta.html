@@ -1013,13 +1013,13 @@ function migrateTripData(trip, title = "無題の計画") {
 
 function migrateUserProfile(rawData) {
   return {
-    avatarColor: rawProfile.avatarColor || 'indigo',
-    avatarIcon: rawProfile.avatarIcon || 'fa-user',
-    tripStyle: rawProfile.tripStyle || 'all',
-    defaultTransport: rawProfile.defaultTransport || 'train',
-    emergencyMemo: rawProfile.emergencyMemo || '',
-    bio: rawProfile.bio || '旅と日常をシームレスにつなぐ。',
-    snsLink: rawProfile.snsLink || ''
+    avatarColor: rawData.avatarColor || 'indigo',
+    avatarIcon: rawData.avatarIcon || 'fa-user',
+    tripStyle: rawData.tripStyle || 'all',
+    defaultTransport: rawData.defaultTransport || 'train',
+    emergencyMemo: rawData.emergencyMemo || '',
+    bio: rawData.bio || '旅と日常をシームレスにつなぐ。',
+    snsLink: rawData.snsLink || ''
   };
 }
 
