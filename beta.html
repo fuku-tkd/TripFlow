@@ -1664,10 +1664,24 @@ window.goToMyPlansScreen = function() {
 
 async function fetchTripsFromCloud() {
   if (!currentUser) return;
+  
+  if (isFetchingTripsActive) {
+    console.log("🚫 クラウドデータの多重読み込みを完全にブロックしました");
+    return;
+  }
+  
+  // 🔒 ロックをかける（処理中状態にする）
+  isFetchingTripsActive = true;
+  
   try {
     // 💡 1. 取得を開始する前に、キャッシュを一度完全に空っぽにします
     // これにより、何回この関数が走っても絶対に重複（2回読み込み）しなくなります！
     allTripsCache = [];
+  }
+  
+  // 🔒 ロックをかける（処理中状態にする）
+  isFetchingTripsActive = true;
+   
     
     // 自身の旅行データを取得
     const userQuery = query(collection(db, "trips"), where("userId", "==", currentUser.uid));
