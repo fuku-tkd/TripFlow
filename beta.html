@@ -1643,7 +1643,7 @@ window.goToMyPlansScreen = function() {
 async function fetchTripsFromCloud() {
   if (!currentUser) return;
   try {
-    // 💡 1. 取得を開始する前に、キャッシュを一度完全に空っぽ（リセット）にします
+    // 💡 1. 取得を開始する前に、キャッシュを一度完全に空っぽにします
     // これにより、何回この関数が走っても絶対に重複（2回読み込み）しなくなります！
     allTripsCache = [];
     
