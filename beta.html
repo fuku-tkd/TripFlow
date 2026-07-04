@@ -1179,6 +1179,7 @@ window.handleAuthSubmit = async function(event) {
         snsLink: '',
         updatedAt: Date.now()
       };
+      
       // 💡 先ほどの設計通り 'users' コレクションの UID に保存
       await setDoc(doc(db, 'users', userCredential.user.uid), defaultProfile);
       showToast("🎉 アカウントを作成し、ログインしました！", "success");
