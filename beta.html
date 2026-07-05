@@ -973,7 +973,9 @@ let userProfile = {
 };
 
 // 🔴 通常の関数（グローバル空間）との変数同期を100%確実にする設定
-window.getCurrentTripId = () => currentTripId;
+window.getCurrentTripId = () => {
+  return window.currentTripId || null;
+};
 window.setCurrentTripId = (val) => { currentTripId = val; };
 
 // 既存のコードが壊れないためのフォールバック定義
