@@ -923,7 +923,10 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, where, orderBy, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { 
+  getFirestore, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, where,
+  orderBy, onSnapshot, addDoc 
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -940,6 +943,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// 他の通常関数から確実にFirebaseオブジェクトを操作できるようにwindowに全開放
+window.db = db;
+window.firebaseModules = { collection, query, where, orderBy, onSnapshot, addDoc };
+
+// ----------------------------------------------------
+// ご提示いただいた大量の初期ステート（モジュール内部の実体）
+// ----------------------------------------------------
 let currentUser = null;      
 let allTripsCache = [];      
 let currentTripId = null;    
@@ -972,24 +982,52 @@ let userProfile = {
   snsLink: ''
 };
 
-// 🔴 通常の関数（グローバル空間）との変数同期を100%確実にする設定
-window.getCurrentTripId = () => {
-  return window.currentTripId || null;
+// ----------------------------------------------------
+// ⚠️ 重要：モジュール外の通常JavaScript（グローバル）と100%同期させるバインド設定
+// ----------------------------------------------------
+const syncVariables = {
+  currentUser: { get: () => currentUser, set: (v) => { currentUser = v; } },
+  allTripsCache: { get: () => allTripsCache, set: (v) => { allTripsCache = v; } },
+  currentTripId: { get: () => currentTripId, set: (v) => { currentTripId = v; } },
+  currentTripData: { get: () => currentTripData, set: (v) => { currentTripData = v; } },
+  isCustomTimeMode: { get: () => isCustomTimeMode, set: (v) => { isCustomTimeMode = v; } },
+  customTimeMinutes: { get: () => customTimeMinutes, set: (v) => { customTimeMinutes = v; } },
+  editingTripIsSample: { get: () => editingTripIsSample, set: (v) => { editingTripIsSample = v; } },
+  isSandboxMode: { get: () => isSandboxMode, set: (v) => { isSandboxMode = v; } },
+  authMode: { get: () => authMode, set: (v) => { authMode = v; } },
+  isReadOnlyMode: { get: () => isReadOnlyMode, set: (v) => { isReadOnlyMode = v; } },
+  previewingTripAuthorName: { get: () => previewingTripAuthorName, set: (v) => { previewingTripAuthorName = v; } },
+  currentNaviDay: { get: () => currentNaviDay, set: (v) => { currentNaviDay = v; } },
+  currentEditorDayFilter: { get: () => currentEditorDayFilter, set: (v) => { currentEditorDayFilter = v; } },
+  discoverTripsCache: { get: () => discoverTripsCache, set: (v) => { discoverTripsCache = v; } },
+  userProfile: { get: () => userProfile, set: (v) => { userProfile = v; } }
 };
-window.setCurrentTripId = (val) => { currentTripId = val; };
 
-// 既存のコードが壊れないためのフォールバック定義
-Object.defineProperty(window, 'currentTripId', { 
-  get: () => currentTripId, 
-  set: (v) => { currentTripId = v; } 
-});
-Object.defineProperty(window, 'currentTripData', { 
-  get: () => currentTripData, 
-  set: (v) => { currentTripData = v; } 
-});
-Object.defineProperty(window, 'allTripsCache', { 
-  get: () => allTripsCache, 
-  set: (v) => { allTripsCache = v; } 
+// 通常のスクリプト空間（window直下）にゲッターとセッターを全展開
+Object.defineProperties(window, syncVariables);
+
+// コメント読み込み関数が100%確実に最新のプランIDを掴み取るための安全なブリッジ関数
+window.getCurrentTripId = () => {
+  return currentTripId || window.currentTripId || null;
+};
+
+// ----------------------------------------------------
+// Firebase 認証状態の監視
+// ----------------------------------------------------
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    window.currentUser = user; // 二重保険
+    console.log("Logged in as:", user.uid);
+    if (typeof updateAuthUI === 'function') updateAuthUI(user);
+  } else {
+    currentUser = null;
+    window.currentUser = null;
+    console.log("No user signed in.");
+    if (typeof updateAuthUI === 'function') updateAuthUI(null);
+  }
+  if (typeof refreshTripList === 'function') refreshTripList();
+  if (typeof initDiscoverTab === 'function') initDiscoverTab();
 });
 
 // サンドボックス用北海道観光サンプルデータ（1泊2日・計14ステップ構成）
