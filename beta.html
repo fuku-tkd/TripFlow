@@ -1740,8 +1740,10 @@ function renderTripSummaryHeader() {
   let planDescription = "このプランの紹介文はまだありません。";
   let authorHtml = "";
 
+  // アプリ全体で共有されている正しいプランIDを取得（同期ブリッジ経由、なければそのまま）
   const activeTripId = typeof window.getCurrentTripId === 'function' ? window.getCurrentTripId() : currentTripId;
 
+  // 1. 閲覧モード（isReadOnlyMode）に応じてキャッシュから詳細データを引き出す
   if (isReadOnlyMode && typeof discoverTripsCache !== 'undefined') {
     const found = discoverTripsCache.find(x => x.id === activeTripId);
     if (found) {
@@ -1767,6 +1769,7 @@ function renderTripSummaryHeader() {
     }
   }
 
+  // 2. 現在の行程データ（currentTripData）から統計情報を動的に計算
   let totalCost = 0;
   let totalSpots = 0;
   let maxDay = 1;
@@ -1793,6 +1796,7 @@ function renderTripSummaryHeader() {
     endTime = rawEndTime !== "--:--" ? `${endDayNum}日目 ${rawEndTime}` : "--:--";
   }
 
+  // 3. UIの構築（カード型サマリーダッシュボード ＆ FirestoreコメントUI）
   const summaryCard = document.createElement('div');
   summaryCard.className = "p-5 text-left bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 rounded-2xl border border-indigo-100/40 dark:border-slate-800 shadow-sm space-y-4 animate-fade-in";
   
@@ -1859,12 +1863,13 @@ function renderTripSummaryHeader() {
 
   container.appendChild(summaryCard);
 
-  // 🔴 画面へのHTML生成が100%完了したあと、0.05秒待ってから確実にコメント処理をバインドする（ズレの解消）
+  // 画面にコメント欄が作られてから、0.05秒だけ安全に時間を置いてから読み込み監視をバインド
   setTimeout(() => {
     initFirestoreComments();
   }, 50);
 }
 
+// グローバルスコープでリアルタイム解除用リスナーを保持（プラン切り替え時の二重購読を防ぐ）
 window.currentCommentsUnsubscribe = null;
 
 function initFirestoreComments() {
@@ -1872,14 +1877,17 @@ function initFirestoreComments() {
   const btn = document.getElementById('commentSubmitBtn');
   const container = document.getElementById('commentListContainer');
   
+  // アプリ共通の正しいプランIDを取得
   const activeTripId = typeof window.getCurrentTripId === 'function' ? window.getCurrentTripId() : currentTripId;
   if (!input || !btn || !container || !activeTripId) return;
 
+  // 以前のリアルタイム購読が残っていたらバグ予防で確実にクリーンアップ
   if (typeof window.currentCommentsUnsubscribe === 'function') {
     window.currentCommentsUnsubscribe();
     window.currentCommentsUnsubscribe = null;
   }
 
+  // モジュールからエクスポートされた本物のFirestoreオブジェクト・関数を取得する
   const db = window.db;
   const mods = window.firebaseModules;
   if (!db || !mods) {
@@ -1895,6 +1903,8 @@ function initFirestoreComments() {
     }
 
     let html = "";
+    let commentNumber = 1; // 🟢 現在表示しているプラン専用のナンバーカウント（1番からスタート）
+
     snapshot.forEach(doc => {
       const c = doc.data();
       
@@ -1902,18 +1912,33 @@ function initFirestoreComments() {
         ? `<img src="${c.userPhoto}" class="w-4 h-4 rounded-full shadow-sm object-cover border border-slate-200 dark:border-slate-700" />`
         : `<div class="w-4 h-4 rounded-full bg-slate-400 text-white flex items-center justify-center text-[8px] font-bold">${(c.userName || '旅').substring(0,1).toUpperCase()}</div>`;
 
+      // 📅 送信日時のフォーマット（timestampから、正確で綺麗な「年/月/日 時:分」を生成）
+      let displayTime = c.time || '';
+      if (c.timestamp) {
+        const d = new Date(c.timestamp);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mi = String(d.getMinutes()).padStart(2, '0');
+        displayTime = `${yyyy}/${mm}/${dd} ${hh}:${mi}`;
+      }
+
       html += `
         <div class="p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-sm flex flex-col gap-1 text-left animate-fade-in">
           <div class="flex justify-between items-center text-[10px] text-slate-400">
             <div class="flex items-center gap-1.5">
+              <span class="px-1 py-0.2 text-[8px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-md border border-slate-200/40 dark:border-slate-700/50 font-mono">#${commentNumber}</span>
               ${avatarHtml}
               <span class="font-bold text-slate-600 dark:text-slate-400">${c.userName || 'ゲスト'}</span>
             </div>
-            <span class="text-[9px] opacity-70">${c.time || ''}</span>
+            <span class="text-[9px] opacity-70 font-mono"><i class="fa-regular fa-clock mr-1 opacity-60"></i>${displayTime}</span>
           </div>
-          <p class="text-slate-700 dark:text-slate-300 break-words leading-relaxed pl-5">${c.text}</p>
+          <p class="text-slate-700 dark:text-slate-300 break-words leading-relaxed pl-6">${c.text}</p>
         </div>
       `;
+      
+      commentNumber++; // 🟢 カウントアップ
     });
     
     container.innerHTML = html;
@@ -1923,7 +1948,6 @@ function initFirestoreComments() {
   try {
     const q = mods.query(mods.collection(db, "comments"), mods.where("tripId", "==", activeTripId), mods.orderBy("timestamp", "asc"));
     
-    // 🔴 読み込みに失敗（エラー）した場合は、「読み込み中...」のままにせず画面にエラーを直接表示させる防御策
     window.currentCommentsUnsubscribe = mods.onSnapshot(q, renderComments, (err) => {
       console.error("Firestore Listen Error:", err);
       container.innerHTML = `<p class="text-[11px] text-amber-500 italic p-2 text-center bg-amber-50/50 dark:bg-amber-950/20 rounded-xl border border-amber-500/20"><i class="fa-solid fa-triangle-exclamation mr-1"></i>読み込みエラーが発生しました<br><span class="text-[9px] opacity-80 font-mono text-slate-400">${err.message || err}</span></p>`;
