@@ -1842,7 +1842,7 @@ function renderTripSummaryHeader() {
         </span>
       </div>
       
-      <div id="commentListContainer" class="space-y-2.5 max-h-[180px] overflow-y-auto pr-1 text-xs style-scrollbar">
+      <div id="commentListContainer" class="space-y-2.5 max-h-[220px] overflow-y-auto pr-1 text-xs style-scrollbar">
         <p class="text-[11px] text-slate-400 dark:text-slate-500 italic p-1 text-center animate-pulse">
           <i class="fa-solid fa-circle-notch animate-spin mr-1"></i> コメントを読み込み中...
         </p>
@@ -1869,25 +1869,37 @@ function renderTripSummaryHeader() {
   }, 50);
 }
 
-// グローバルスコープでリアルタイム解除用リスナーを保持（プラン切り替え時の二重購読を防ぐ）
+// グローバルスコープでリアルタイム解除用リスナーを保持
 window.currentCommentsUnsubscribe = null;
+
+// グローバルに関数を定義して、HTML内の「返信」ボタンから呼び出せるようにする
+window.insertReplyAnchor = (num) => {
+  const input = document.getElementById('commentInput');
+  if (input) {
+    // 既存の文字の先頭または末尾に >>num を付与してフォーカス
+    const currentVal = input.value.trim();
+    if (currentVal) {
+      input.value = `>>${num} ${currentVal}`;
+    } else {
+      input.value = `>>${num} `;
+    }
+    input.focus();
+  }
+};
 
 function initFirestoreComments() {
   const input = document.getElementById('commentInput');
   const btn = document.getElementById('commentSubmitBtn');
   const container = document.getElementById('commentListContainer');
   
-  // アプリ共通の正しいプランIDを取得
   const activeTripId = typeof window.getCurrentTripId === 'function' ? window.getCurrentTripId() : currentTripId;
   if (!input || !btn || !container || !activeTripId) return;
 
-  // 以前のリアルタイム購読が残っていたらバグ予防で確実にクリーンアップ
   if (typeof window.currentCommentsUnsubscribe === 'function') {
     window.currentCommentsUnsubscribe();
     window.currentCommentsUnsubscribe = null;
   }
 
-  // モジュールからエクスポートされた本物のFirestoreオブジェクト・関数を取得する
   const db = window.db;
   const mods = window.firebaseModules;
   if (!db || !mods) {
@@ -1903,7 +1915,7 @@ function initFirestoreComments() {
     }
 
     let html = "";
-    let commentNumber = 1; // 🟢 現在表示しているプラン専用のナンバーカウント（1番からスタート）
+    let commentNumber = 1; // プラン内での連番
 
     snapshot.forEach(doc => {
       const c = doc.data();
@@ -1912,7 +1924,7 @@ function initFirestoreComments() {
         ? `<img src="${c.userPhoto}" class="w-4 h-4 rounded-full shadow-sm object-cover border border-slate-200 dark:border-slate-700" />`
         : `<div class="w-4 h-4 rounded-full bg-slate-400 text-white flex items-center justify-center text-[8px] font-bold">${(c.userName || '旅').substring(0,1).toUpperCase()}</div>`;
 
-      // 📅 送信日時のフォーマット（timestampから、正確で綺麗な「年/月/日 時:分」を生成）
+      // 📅 送信日時のフォーマット
       let displayTime = c.time || '';
       if (c.timestamp) {
         const d = new Date(c.timestamp);
@@ -1924,21 +1936,34 @@ function initFirestoreComments() {
         displayTime = `${yyyy}/${mm}/${dd} ${hh}:${mi}`;
       }
 
+      // 📝 本文内の「>>n」というアンカーリンク表現をハイライト装飾する処理
+      let parsedText = c.text || "";
+      // エスケープ処理（XSS対策）
+      parsedText = parsedText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      // &gt;&gt;数字（元は >>数字）を検知して色付きバッジにするリプレイス
+      parsedText = parsedText.replace(/&gt;&gt;(\d+)/g, '<span class="px-1.5 py-0.5 mx-0.5 text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded border border-indigo-500/20 font-mono">&gt;&gt;$1</span>');
+
       html += `
-        <div class="p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-sm flex flex-col gap-1 text-left animate-fade-in">
+        <div class="p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-sm flex flex-col gap-1 text-left animate-fade-in relative group">
           <div class="flex justify-between items-center text-[10px] text-slate-400">
             <div class="flex items-center gap-1.5">
               <span class="px-1 py-0.2 text-[8px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-md border border-slate-200/40 dark:border-slate-700/50 font-mono">#${commentNumber}</span>
               ${avatarHtml}
               <span class="font-bold text-slate-600 dark:text-slate-400">${c.userName || 'ゲスト'}</span>
             </div>
-            <span class="text-[9px] opacity-70 font-mono"><i class="fa-regular fa-clock mr-1 opacity-60"></i>${displayTime}</span>
+            
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] opacity-70 font-mono"><i class="fa-regular fa-clock mr-1 opacity-60"></i>${displayTime}</span>
+              <button onclick="window.insertReplyAnchor(${commentNumber})" class="text-[9px] font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 opacity-60 group-hover:opacity-100 transition-all flex items-center gap-0.5 cursor-pointer">
+                <i class="fa-solid fa-reply text-[8px]"></i>返信
+              </button>
+            </div>
           </div>
-          <p class="text-slate-700 dark:text-slate-300 break-words leading-relaxed pl-6">${c.text}</p>
+          <p class="text-slate-700 dark:text-slate-300 break-words leading-relaxed pl-6 pt-0.5">${parsedText}</p>
         </div>
       `;
       
-      commentNumber++; // 🟢 カウントアップ
+      commentNumber++;
     });
     
     container.innerHTML = html;
@@ -1950,7 +1975,7 @@ function initFirestoreComments() {
     
     window.currentCommentsUnsubscribe = mods.onSnapshot(q, renderComments, (err) => {
       console.error("Firestore Listen Error:", err);
-      container.innerHTML = `<p class="text-[11px] text-amber-500 italic p-2 text-center bg-amber-50/50 dark:bg-amber-950/20 rounded-xl border border-amber-500/20"><i class="fa-solid fa-triangle-exclamation mr-1"></i>読み込みエラーが発生しました<br><span class="text-[9px] opacity-80 font-mono text-slate-400">${err.message || err}</span></p>`;
+      container.innerHTML = `<p class="text-[11px] text-amber-500 italic p-2 text-center bg-amber-50/50 dark:bg-amber-950/20 rounded-xl border border-amber-500/20"><i class="fa-solid fa-triangle-exclamation mr-1"></i>読み込みエラーが発生しました</p>`;
     });
   } catch (err) {
     console.error("Snapshot binding failed: ", err);
@@ -1996,7 +2021,7 @@ function initFirestoreComments() {
       userId: userId,
       userName: userName,
       userPhoto: userPhoto,
-      text: text,
+      text: text, // >>1 本文 のような文字列がそのまま Firestore に安全に飛びます
       time: timeStr,
       timestamp: Date.now()
     };
