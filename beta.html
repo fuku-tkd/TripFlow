@@ -972,6 +972,24 @@ let userProfile = {
   snsLink: ''
 };
 
+// 🔴 通常の関数（グローバル空間）との変数同期を100%確実にする設定
+window.getCurrentTripId = () => currentTripId;
+window.setCurrentTripId = (val) => { currentTripId = val; };
+
+// 既存のコードが壊れないためのフォールバック定義
+Object.defineProperty(window, 'currentTripId', { 
+  get: () => currentTripId, 
+  set: (v) => { currentTripId = v; } 
+});
+Object.defineProperty(window, 'currentTripData', { 
+  get: () => currentTripData, 
+  set: (v) => { currentTripData = v; } 
+});
+Object.defineProperty(window, 'allTripsCache', { 
+  get: () => allTripsCache, 
+  set: (v) => { allTripsCache = v; } 
+});
+
 // サンドボックス用北海道観光サンプルデータ（1泊2日・計14ステップ構成）
 const sandboxSampleTrip = [
   // Day 1
