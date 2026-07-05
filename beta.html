@@ -1806,11 +1806,20 @@ function renderTripSummaryHeader() {
   initFirestoreComments();
 }
 
+// グローバルにリアルタイム監視解除関数を退避させて衝突を防ぐ
+window.currentCommentsUnsubscribe = null;
+
 function initFirestoreComments() {
   const input = document.getElementById('commentInput');
   const btn = document.getElementById('commentSubmitBtn');
   const container = document.getElementById('commentListContainer');
-  if (!input || !btn || !container || typeof currentTripId === 'undefined') return;
+  if (!input || !btn || !container || typeof currentTripId === 'undefined' || !currentTripId) return;
+
+  // 以前のリアルタイム購読が残っていたらバグ予防で一旦解除
+  if (typeof window.currentCommentsUnsubscribe === 'function') {
+    window.currentCommentsUnsubscribe();
+    window.currentCommentsUnsubscribe = null;
+  }
 
   // アプリ内のFirestore参照(db)を確保
   const firebaseDb = window.db || (typeof db !== 'undefined' ? db : null);
@@ -1830,7 +1839,7 @@ function initFirestoreComments() {
   // --- 1. リアルタイム読み込み ---
   const renderComments = (snapshot) => {
     if (snapshot.empty) {
-      container.innerHTML = `<p class="text-[11px] text-slate-400 dark:text-slate-500 italic p-1">最初のコメントを書いてみましょう！</p>`;
+      container.innerHTML = `<p class="text-[11px] text-slate-400 dark:text-slate-500 italic p-1 text-center py-2">最初のコメントを書いてみましょう！</p>`;
       return;
     }
 
@@ -1838,19 +1847,18 @@ function initFirestoreComments() {
     snapshot.forEach(doc => {
       const c = doc.data();
       
-      // アバターがある場合はアイコン、ない場合は頭文字を表示
       const avatarHtml = c.userPhoto 
-        ? `<img src="${c.userPhoto}" class="w-4 h-4 rounded-full shadow-sm" />`
+        ? `<img src="${c.userPhoto}" class="w-4 h-4 rounded-full shadow-sm object-cover border border-slate-200 dark:border-slate-700" />`
         : `<div class="w-4 h-4 rounded-full bg-slate-400 text-white flex items-center justify-center text-[8px] font-bold">${(c.userName || '旅').substring(0,1).toUpperCase()}</div>`;
 
       html += `
-        <div class="p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-sm flex flex-col gap-1 animate-fade-in">
+        <div class="p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-sm flex flex-col gap-1 text-left animate-fade-in">
           <div class="flex justify-between items-center text-[10px] text-slate-400">
             <div class="flex items-center gap-1.5">
               ${avatarHtml}
               <span class="font-bold text-slate-600 dark:text-slate-400">${c.userName || 'ゲスト'}</span>
             </div>
-            <span>${c.time || ''}</span>
+            <span class="text-[9px] opacity-70">${c.time || ''}</span>
           </div>
           <p class="text-slate-700 dark:text-slate-300 break-words leading-relaxed pl-5">${c.text}</p>
         </div>
@@ -1858,25 +1866,26 @@ function initFirestoreComments() {
     });
     
     container.innerHTML = html;
-    container.scrollTop = container.scrollHeight;
+    // 確実にスクロールさせるためのウェイト調整
+    setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
   };
 
   if (_query && _where && _orderBy && _onSnapshot) {
     const q = _query(_collection(firebaseDb, "comments"), _where("tripId", "==", currentTripId), _orderBy("timestamp", "asc"));
-    _onSnapshot(q, renderComments, (err) => console.error("Firestore Listen Error:", err));
+    window.currentCommentsUnsubscribe = _onSnapshot(q, renderComments, (err) => console.error("Firestore Listen Error:", err));
   } else {
-    firebaseDb.collection("comments")
+    window.currentCommentsUnsubscribe = firebaseDb.collection("comments")
       .where("tripId", "==", currentTripId)
       .orderBy("timestamp", "asc")
       .onSnapshot(renderComments, (err) => console.error("Firestore Listen Error:", err));
   }
 
-  // --- 2. コメント送信処理 (ID情報を紐づけて保存) ---
+  // --- 2. コメント送信処理 ---
   const submitComment = async () => {
     const text = input.value.trim();
     if (!text) return;
 
-    // ① 作品情報の特定 (IDとタイトル)
+    // ① 作品タイトル特定
     let tripTitle = "不明なプラン";
     if (typeof allTripsCache !== 'undefined') {
       const found = allTripsCache.find(x => x.id === currentTripId);
@@ -1887,19 +1896,21 @@ function initFirestoreComments() {
       if (found && found.title) tripTitle = found.title;
     }
 
-    // ② ユーザー情報の特定 (Authから取得)
+    // ② アプリ内Auth、または既存変数からユーザーを厳格特定
     let userId = "guest_user";
     let userName = "ゲスト";
     let userPhoto = "";
 
-    // HTML内の既存のFirebase Authオブジェクトを検知
+    // グローバルなログインオブジェクトやfirebase.auth()を二段構えで確認
     const auth = typeof firebase !== 'undefined' ? firebase.auth() : null;
-    const currentUser = auth ? auth.currentUser : null;
+    const currentUser = (typeof loginUser !== 'undefined' ? loginUser : null) || (auth ? auth.currentUser : null);
 
     if (currentUser) {
-      userId = currentUser.uid;
-      userName = currentUser.displayName || "匿名ユーザー";
-      userPhoto = currentUser.photoURL || "";
+      userId = currentUser.uid || currentUser.id || "guest_user";
+      userName = currentUser.displayName || currentUser.name || "匿名ユーザー";
+      userPhoto = currentUser.photoURL || currentUser.photo || "";
+    } else if (typeof userProfile !== 'undefined' && userProfile.name) {
+      userName = userProfile.name;
     } else if (!isReadOnlyMode) {
       userName = "作成者(自分)";
     }
@@ -1907,16 +1918,15 @@ function initFirestoreComments() {
     const now = new Date();
     const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-    // ご希望通りの完璧なデータ構造
     const commentData = {
-      tripId: currentTripId,       // 作品ID
-      tripTitle: tripTitle,       // 作品名
-      userId: userId,             // 書いた人のユーザーID
-      userName: userName,         // 書いた人の名前
-      userPhoto: userPhoto,       // 書いた人のアバターURL
-      text: text,                 // コメント内容
-      time: timeStr,              // 簡易表示用時間
-      timestamp: Date.now()       // 並び替え用タイムスタンプ
+      tripId: currentTripId,
+      tripTitle: tripTitle,
+      userId: userId,
+      userName: userName,
+      userPhoto: userPhoto,
+      text: text,
+      time: timeStr,
+      timestamp: Date.now()
     };
 
     try {
@@ -1925,14 +1935,24 @@ function initFirestoreComments() {
       } else {
         await firebaseDb.collection("comments").add(commentData);
       }
-      input.value = ""; // 入力欄をクリア
+      input.value = ""; // 成功時のみクリア
     } catch (error) {
       console.error("Error adding comment: ", error);
+      alert("コメントの送信に失敗しました。データベースの権限設定（Rules）などを確認してください。");
     }
   };
 
+  // 重複登録バグを防ぐため、毎回イベントをクリアしてから再セット
+  btn.onclick = null;
   btn.onclick = submitComment;
-  input.onkeypress = (e) => { if (e.key === 'Enter') submitComment(); };
+
+  input.onkeypress = null;
+  input.onkeypress = (e) => { 
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submitComment(); 
+    }
+  };
 }
 
 // 💡 【追加】Firestoreからのデータ取得が多重に走るのを絶対に防ぐためのフラグ
