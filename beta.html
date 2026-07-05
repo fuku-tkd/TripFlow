@@ -1740,9 +1740,12 @@ function renderTripSummaryHeader() {
   let planDescription = "このプランの紹介文はまだありません。";
   let authorHtml = "";
 
+  // アプリ全体で共有されている正しいプランIDを取得（同期ブリッジ経由、なければそのまま）
+  const activeTripId = typeof window.getCurrentTripId === 'function' ? window.getCurrentTripId() : currentTripId;
+
   // 1. 閲覧モード（isReadOnlyMode）に応じてキャッシュから詳細データを引き出す
   if (isReadOnlyMode && typeof discoverTripsCache !== 'undefined') {
-    const found = discoverTripsCache.find(x => x.id === currentTripId);
+    const found = discoverTripsCache.find(x => x.id === activeTripId);
     if (found) {
       planDescription = found.description || "このプランの紹介文はまだありません。";
       const firstLetter = (found.authorName || "旅").substring(0, 1).toUpperCase();
@@ -1760,7 +1763,7 @@ function renderTripSummaryHeader() {
       `;
     }
   } else if (typeof allTripsCache !== 'undefined') {
-    const found = allTripsCache.find(x => x.id === currentTripId);
+    const found = allTripsCache.find(x => x.id === activeTripId);
     if (found) {
       planDescription = found.description || "このプランの紹介文はまだありません。";
     }
@@ -1871,7 +1874,10 @@ function initFirestoreComments() {
   const input = document.getElementById('commentInput');
   const btn = document.getElementById('commentSubmitBtn');
   const container = document.getElementById('commentListContainer');
-  if (!input || !btn || !container || typeof currentTripId === 'undefined' || !currentTripId) return;
+  
+  // アプリ共通の正しいプランIDを取得
+  const activeTripId = typeof window.getCurrentTripId === 'function' ? window.getCurrentTripId() : currentTripId;
+  if (!input || !btn || !container || !activeTripId) return;
 
   // 以前のリアルタイム購読が残っていたらバグ予防で確実にクリーンアップ
   if (typeof window.currentCommentsUnsubscribe === 'function') {
@@ -1879,13 +1885,15 @@ function initFirestoreComments() {
     window.currentCommentsUnsubscribe = null;
   }
 
-  // もし何らかの理由で先頭のインポートが機能していない場合の防御策
-  if (typeof db === 'undefined' || !db) {
-    container.innerHTML = `<p class="text-[11px] text-red-400 italic p-1 text-center">Firestoreが初期化されていません</p>`;
+  // 🔴 モジュールからエクスポートされた本物のFirestoreオブジェクト・関数を取得する
+  const db = window.db;
+  const mods = window.firebaseModules;
+  if (!db || !mods) {
+    container.innerHTML = `<p class="text-[11px] text-red-400 italic p-1 text-center">Firestoreモジュールが初期化されていません</p>`;
     return;
   }
 
-  // --- 1. リアルタイム読み込み (Firebase v9〜v11の厳格なModular記述形式) ---
+  // --- 1. リアルタイム読み込み ---
   const renderComments = (snapshot) => {
     if (snapshot.empty) {
       container.innerHTML = `<p class="text-[11px] text-slate-400 dark:text-slate-500 italic p-1 text-center py-2">最初のコメントを書いてみましょう！</p>`;
@@ -1915,18 +1923,19 @@ function initFirestoreComments() {
     });
     
     container.innerHTML = html;
-    setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
+    setTimeout(() => { container.scrollTop = container.scrollHeight; }, 60);
   };
 
   try {
-    // 互換レイヤーを破棄し、直接モジュール関数を呼び出す
-    const q = query(collection(db, "comments"), where("tripId", "==", currentTripId), orderBy("timestamp", "asc"));
-    window.currentCommentsUnsubscribe = onSnapshot(q, renderComments, (err) => console.error("Firestore Listen Error:", err));
+    // 🔴 直接の関数呼び出し（queryなど）をやめ、mods経由で安全にモジュール関数を呼び出し、activeTripIdで絞り込み
+    const q = mods.query(mods.collection(db, "comments"), mods.where("tripId", "==", activeTripId), mods.orderBy("timestamp", "asc"));
+    window.currentCommentsUnsubscribe = mods.onSnapshot(q, renderComments, (err) => console.error("Firestore Listen Error:", err));
   } catch (err) {
     console.error("Snapshot binding failed: ", err);
+    container.innerHTML = `<p class="text-[11px] text-red-400 italic p-1 text-center">読み込み監視のバインドに失敗しました</p>`;
   }
 
-  // --- 2. コメント送信処理 (モジュール式＆アプリ内実データ厳格紐付け) ---
+  // --- 2. コメント送信処理 ---
   const submitComment = async () => {
     const text = input.value.trim();
     if (!text) return;
@@ -1934,23 +1943,25 @@ function initFirestoreComments() {
     // ① 現在の作品名（プラン名）の特定
     let tripTitle = "無題の計画";
     if (typeof allTripsCache !== 'undefined') {
-      const found = allTripsCache.find(x => x.id === currentTripId);
+      const found = allTripsCache.find(x => x.id === activeTripId);
       if (found && found.title) tripTitle = found.title;
     }
     if (tripTitle === "無題の計画" && typeof discoverTripsCache !== 'undefined') {
-      const found = discoverTripsCache.find(x => x.id === currentTripId);
+      const found = discoverTripsCache.find(x => x.id === activeTripId);
       if (found && found.title) tripTitle = found.title;
     }
 
-    // ② ログイン中のユーザー情報の特定（トップレベルで管理されている currentUser 変数を直参照）
+    // ② ログイン中のユーザー情報の特定
     let userId = "guest_user";
     let userName = "ゲスト";
     let userPhoto = "";
 
-    if (typeof currentUser !== 'undefined' && currentUser) {
-      userId = currentUser.uid || "guest_user";
-      userName = currentUser.displayName || currentUser.email?.split('@')[0] || "匿名ユーザー";
-      userPhoto = currentUser.photoURL || "";
+    // モジュール側の実体から安全にユーザーを特定
+    const currentAuthUser = window.currentUser;
+    if (currentAuthUser) {
+      userId = currentAuthUser.uid || "guest_user";
+      userName = currentAuthUser.displayName || currentAuthUser.email?.split('@')[0] || "匿名ユーザー";
+      userPhoto = currentAuthUser.photoURL || "";
     } else if (typeof userProfile !== 'undefined' && userProfile.name) {
       userName = userProfile.name;
     } else if (!isReadOnlyMode) {
@@ -1960,9 +1971,8 @@ function initFirestoreComments() {
     const now = new Date();
     const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-    // ご要望：作品ID、作品名、ユーザーID、ユーザー名、アバター、内容
     const commentData = {
-      tripId: currentTripId,
+      tripId: activeTripId,
       tripTitle: tripTitle,
       userId: userId,
       userName: userName,
@@ -1973,12 +1983,12 @@ function initFirestoreComments() {
     };
 
     try {
-      // インポートされている本物の addDoc / collection を直接呼び出し
-      await addDoc(collection(db, "comments"), commentData);
+      // 🔴 mods.addDoc / mods.collection を使用して送信
+      await mods.addDoc(mods.collection(db, "comments"), commentData);
       input.value = ""; // 成功時のみ入力欄クリア
     } catch (error) {
       console.error("Error adding comment: ", error);
-      alert("コメントの送信に失敗しました。FirebaseのFirestore Database側で「comments」コレクションへの読み書きルール(Rules)が許可されているかご確認ください。");
+      alert("コメントの送信に失敗しました。Firestore Database側で「comments」コレクションへの読み書きルール(Rules)が許可されているかご確認ください。");
     }
   };
 
