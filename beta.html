@@ -1674,10 +1674,6 @@ window.goToMyPlansScreen = function() {
   safeNavigate('myplans');
 }
 
-/**
- * 💡 改良版: プラン概要（サマリーダッシュボード）専用描画関数
- * 紹介文に加え、出発・到着時刻、合計予算、日数、作成者などを美しく一箇所に表示します。
- */
 function renderTripSummaryHeader() {
   const container = document.getElementById('timelineSummaryContainer');
   if (!container) return;
@@ -1718,6 +1714,8 @@ function renderTripSummaryHeader() {
   let maxDay = 1;
   let startTime = "--:--";
   let endTime = "--:--";
+  let startDayNum = 1;
+  let endDayNum = 1;
 
   if (currentTripData && currentTripData.length > 0) {
     // 予算とスポット数、日数の集計
@@ -1727,13 +1725,17 @@ function renderTripSummaryHeader() {
       if (item.day && item.day > maxDay) maxDay = item.day;
     });
 
-    // 出発時刻（1日目の最初の駅/路線の開始時刻）を取得
+    // 出発時刻と日数を取得
     const firstNode = currentTripData[0];
-    startTime = firstNode.arrival || firstNode.departure || firstNode.start || "--:--";
+    startDayNum = firstNode.day || 1;
+    const rawStartTime = firstNode.arrival || firstNode.departure || firstNode.start || "--:--";
+    startTime = rawStartTime !== "--:--" ? `${startDayNum}日目 ${rawStartTime}` : "--:--";
 
-    // 到着時刻（最終日の最後のノードの時刻）を取得
+    // 到着時刻と日数を取得
     const lastNode = currentTripData[currentTripData.length - 1];
-    endTime = lastNode.departure || lastNode.arrival || lastNode.end || "--:--";
+    endDayNum = lastNode.day || maxDay;
+    const rawEndTime = lastNode.departure || lastNode.arrival || lastNode.end || "--:--";
+    endTime = rawEndTime !== "--:--" ? `${endDayNum}日目 ${rawEndTime}` : "--:--";
   }
 
   // 3. UIの構築（カード型サマリーダッシュボード）
