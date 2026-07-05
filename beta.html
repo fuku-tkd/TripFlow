@@ -1806,7 +1806,7 @@ function renderTripSummaryHeader() {
   initFirestoreComments();
 }
 
-// グローバルにリアルタイム監視解除関数を退避させて衝突を防ぐ
+// グローバルスコープでリアルタイム解除用リスナーを保持（プラン切り替え時の二重購読を防ぐ）
 window.currentCommentsUnsubscribe = null;
 
 function initFirestoreComments() {
@@ -1815,28 +1815,19 @@ function initFirestoreComments() {
   const container = document.getElementById('commentListContainer');
   if (!input || !btn || !container || typeof currentTripId === 'undefined' || !currentTripId) return;
 
-  // 以前のリアルタイム購読が残っていたらバグ予防で一旦解除
+  // 以前のリアルタイム購読が残っていたらバグ予防で確実にクリーンアップ
   if (typeof window.currentCommentsUnsubscribe === 'function') {
     window.currentCommentsUnsubscribe();
     window.currentCommentsUnsubscribe = null;
   }
 
-  // アプリ内のFirestore参照(db)を確保
-  const firebaseDb = window.db || (typeof db !== 'undefined' ? db : null);
-  if (!firebaseDb) {
-    container.innerHTML = `<p class="text-[11px] text-red-400 italic p-1">Firestore (db) が初期化されていません</p>`;
+  // もし何らかの理由で先頭のインポートが機能していない場合の防御策
+  if (typeof db === 'undefined' || !db) {
+    container.innerHTML = `<p class="text-[11px] text-red-400 italic p-1 text-center">Firestoreが初期化されていません</p>`;
     return;
   }
 
-  // 各種関数の互換性担保
-  const _collection = typeof collection !== 'undefined' ? collection : (...args) => firebaseDb.collection(...args);
-  const _query = typeof query !== 'undefined' ? query : null;
-  const _where = typeof where !== 'undefined' ? where : null;
-  const _orderBy = typeof orderBy !== 'undefined' ? orderBy : null;
-  const _onSnapshot = typeof onSnapshot !== 'undefined' ? onSnapshot : null;
-  const _addDoc = typeof addDoc !== 'undefined' ? addDoc : (...args) => args[0].add(args[1]);
-
-  // --- 1. リアルタイム読み込み ---
+  // --- 1. リアルタイム読み込み (Firebase v9〜v11の厳格なModular記述形式) ---
   const renderComments = (snapshot) => {
     if (snapshot.empty) {
       container.innerHTML = `<p class="text-[11px] text-slate-400 dark:text-slate-500 italic p-1 text-center py-2">最初のコメントを書いてみましょう！</p>`;
@@ -1866,49 +1857,42 @@ function initFirestoreComments() {
     });
     
     container.innerHTML = html;
-    // 確実にスクロールさせるためのウェイト調整
     setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
   };
 
-  if (_query && _where && _orderBy && _onSnapshot) {
-    const q = _query(_collection(firebaseDb, "comments"), _where("tripId", "==", currentTripId), _orderBy("timestamp", "asc"));
-    window.currentCommentsUnsubscribe = _onSnapshot(q, renderComments, (err) => console.error("Firestore Listen Error:", err));
-  } else {
-    window.currentCommentsUnsubscribe = firebaseDb.collection("comments")
-      .where("tripId", "==", currentTripId)
-      .orderBy("timestamp", "asc")
-      .onSnapshot(renderComments, (err) => console.error("Firestore Listen Error:", err));
+  try {
+    // 互換レイヤーを破棄し、直接モジュール関数を呼び出す
+    const q = query(collection(db, "comments"), where("tripId", "==", currentTripId), orderBy("timestamp", "asc"));
+    window.currentCommentsUnsubscribe = onSnapshot(q, renderComments, (err) => console.error("Firestore Listen Error:", err));
+  } catch (err) {
+    console.error("Snapshot binding failed: ", err);
   }
 
-  // --- 2. コメント送信処理 ---
+  // --- 2. コメント送信処理 (モジュール式＆アプリ内実データ厳格紐付け) ---
   const submitComment = async () => {
     const text = input.value.trim();
     if (!text) return;
 
-    // ① 作品タイトル特定
-    let tripTitle = "不明なプラン";
+    // ① 現在の作品名（プラン名）の特定
+    let tripTitle = "無題の計画";
     if (typeof allTripsCache !== 'undefined') {
       const found = allTripsCache.find(x => x.id === currentTripId);
       if (found && found.title) tripTitle = found.title;
     }
-    if (tripTitle === "不明なプラン" && typeof discoverTripsCache !== 'undefined') {
+    if (tripTitle === "無題の計画" && typeof discoverTripsCache !== 'undefined') {
       const found = discoverTripsCache.find(x => x.id === currentTripId);
       if (found && found.title) tripTitle = found.title;
     }
 
-    // ② アプリ内Auth、または既存変数からユーザーを厳格特定
+    // ② ログイン中のユーザー情報の特定（トップレベルで管理されている currentUser 変数を直参照）
     let userId = "guest_user";
     let userName = "ゲスト";
     let userPhoto = "";
 
-    // グローバルなログインオブジェクトやfirebase.auth()を二段構えで確認
-    const auth = typeof firebase !== 'undefined' ? firebase.auth() : null;
-    const currentUser = (typeof loginUser !== 'undefined' ? loginUser : null) || (auth ? auth.currentUser : null);
-
-    if (currentUser) {
-      userId = currentUser.uid || currentUser.id || "guest_user";
-      userName = currentUser.displayName || currentUser.name || "匿名ユーザー";
-      userPhoto = currentUser.photoURL || currentUser.photo || "";
+    if (typeof currentUser !== 'undefined' && currentUser) {
+      userId = currentUser.uid || "guest_user";
+      userName = currentUser.displayName || currentUser.email?.split('@')[0] || "匿名ユーザー";
+      userPhoto = currentUser.photoURL || "";
     } else if (typeof userProfile !== 'undefined' && userProfile.name) {
       userName = userProfile.name;
     } else if (!isReadOnlyMode) {
@@ -1918,6 +1902,7 @@ function initFirestoreComments() {
     const now = new Date();
     const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
+    // ご要望：作品ID、作品名、ユーザーID、ユーザー名、アバター、内容
     const commentData = {
       tripId: currentTripId,
       tripTitle: tripTitle,
@@ -1930,19 +1915,16 @@ function initFirestoreComments() {
     };
 
     try {
-      if (typeof addDoc !== 'undefined') {
-        await _addDoc(_collection(firebaseDb, "comments"), commentData);
-      } else {
-        await firebaseDb.collection("comments").add(commentData);
-      }
-      input.value = ""; // 成功時のみクリア
+      // インポートされている本物の addDoc / collection を直接呼び出し
+      await addDoc(collection(db, "comments"), commentData);
+      input.value = ""; // 成功時のみ入力欄クリア
     } catch (error) {
       console.error("Error adding comment: ", error);
-      alert("コメントの送信に失敗しました。データベースの権限設定（Rules）などを確認してください。");
+      alert("コメントの送信に失敗しました。FirebaseのFirestore Database側で「comments」コレクションへの読み書きルール(Rules)が許可されているかご確認ください。");
     }
   };
 
-  // 重複登録バグを防ぐため、毎回イベントをクリアしてから再セット
+  // 重複登録を避けるため一度クリアして再セット
   btn.onclick = null;
   btn.onclick = submitComment;
 
