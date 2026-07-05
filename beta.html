@@ -1842,7 +1842,7 @@ function renderTripSummaryHeader() {
         </span>
       </div>
       
-      <div id="commentListContainer" class="space-y-2.5 max-h-[220px] overflow-y-auto pr-1 text-xs style-scrollbar">
+      <div id="commentListContainer" class="space-y-2.5 max-h-[220px] overflow-y-auto pr-1 text-xs style-scrollbar scroll-smooth">
         <p class="text-[11px] text-slate-400 dark:text-slate-500 italic p-1 text-center animate-pulse">
           <i class="fa-solid fa-circle-notch animate-spin mr-1"></i> コメントを読み込み中...
         </p>
@@ -1872,11 +1872,10 @@ function renderTripSummaryHeader() {
 // グローバルスコープでリアルタイム解除用リスナーを保持
 window.currentCommentsUnsubscribe = null;
 
-// グローバルに関数を定義して、HTML内の「返信」ボタンから呼び出せるようにする
+// 返信アンカー挿入処理
 window.insertReplyAnchor = (num) => {
   const input = document.getElementById('commentInput');
   if (input) {
-    // 既存の文字の先頭または末尾に >>num を付与してフォーカス
     const currentVal = input.value.trim();
     if (currentVal) {
       input.value = `>>${num} ${currentVal}`;
@@ -1887,6 +1886,7 @@ window.insertReplyAnchor = (num) => {
   }
 };
 
+// 🟢 新機能：>>n をクリックした際に対象のコメントまでスムーススクロールする処理
 window.scrollToCommentNumber = (num) => {
   const targetComment = document.getElementById(`comment-node-${num}`);
   const scrollContainer = document.getElementById('commentListContainer');
@@ -1956,15 +1956,16 @@ function initFirestoreComments() {
         displayTime = `${yyyy}/${mm}/${dd} ${hh}:${mi}`;
       }
 
-      // 📝 本文内の「>>n」というアンカーリンク表現をハイライト装飾する処理
+      // 📝 本文内の「>>n」をスクロール発火リンクに置き換える処理
       let parsedText = c.text || "";
-      // エスケープ処理（XSS対策）
       parsedText = parsedText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      // &gt;&gt;数字（元は >>数字）を検知して色付きバッジにするリプレイス
-      parsedText = parsedText.replace(/&gt;&gt;(\d+)/g, '<span class="px-1.5 py-0.5 mx-0.5 text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded border border-indigo-500/20 font-mono">&gt;&gt;$1</span>');
+      
+      // 🟢 リンクタグに変更して、クリック時に scrollToCommentNumber() を走らせる
+      parsedText = parsedText.replace(/&gt;&gt;(\d+)/g, '<button onclick="window.scrollToCommentNumber($1)" class="px-1.5 py-0.5 mx-0.5 text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded border border-indigo-500/20 font-mono transition-all hover:bg-indigo-500 hover:text-white cursor-pointer">&gt;&gt;$1</button>');
 
+      // 各コメントノードに一意の id="comment-node-連番" を付与
       html += `
-        <div class="p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-sm flex flex-col gap-1 text-left animate-fade-in relative group">
+        <div id="comment-node-${commentNumber}" class="p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-sm flex flex-col gap-1 text-left animate-fade-in relative group transition-all duration-500">
           <div class="flex justify-between items-center text-[10px] text-slate-400">
             <div class="flex items-center gap-1.5">
               <span class="px-1 py-0.2 text-[8px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-md border border-slate-200/40 dark:border-slate-700/50 font-mono">#${commentNumber}</span>
@@ -1987,19 +1988,16 @@ function initFirestoreComments() {
     });
     
     container.innerHTML = html;
+    
+    // 初回読み込み時は最下部へ即時スクロール（元からの仕様）
     setTimeout(() => { container.scrollTop = container.scrollHeight; }, 60);
   };
 
   try {
     const q = mods.query(mods.collection(db, "comments"), mods.where("tripId", "==", activeTripId), mods.orderBy("timestamp", "asc"));
-    
-    window.currentCommentsUnsubscribe = mods.onSnapshot(q, renderComments, (err) => {
-      console.error("Firestore Listen Error:", err);
-      container.innerHTML = `<p class="text-[11px] text-amber-500 italic p-2 text-center bg-amber-50/50 dark:bg-amber-950/20 rounded-xl border border-amber-500/20"><i class="fa-solid fa-triangle-exclamation mr-1"></i>読み込みエラーが発生しました</p>`;
-    });
+    window.currentCommentsUnsubscribe = mods.onSnapshot(q, renderComments, (err) => console.error(err));
   } catch (err) {
-    console.error("Snapshot binding failed: ", err);
-    container.innerHTML = `<p class="text-[11px] text-red-400 italic p-1 text-center">バインド失敗: ${err.message || err}</p>`;
+    console.error(err);
   }
 
   // --- 2. コメント送信処理 ---
@@ -2012,10 +2010,6 @@ function initFirestoreComments() {
       const found = allTripsCache.find(x => x.id === activeTripId);
       if (found && found.title) tripTitle = found.title;
     }
-    if (tripTitle === "無題の計画" && typeof discoverTripsCache !== 'undefined') {
-      const found = discoverTripsCache.find(x => x.id === activeTripId);
-      if (found && found.title) tripTitle = found.title;
-    }
 
     let userId = "guest_user";
     let userName = "ゲスト";
@@ -2026,10 +2020,6 @@ function initFirestoreComments() {
       userId = currentAuthUser.uid || "guest_user";
       userName = currentAuthUser.displayName || currentAuthUser.email?.split('@')[0] || "匿名ユーザー";
       userPhoto = currentAuthUser.photoURL || "";
-    } else if (typeof userProfile !== 'undefined' && userProfile.name) {
-      userName = userProfile.name;
-    } else if (!isReadOnlyMode) {
-      userName = "作成者(自分)";
     }
 
     const now = new Date();
@@ -2041,7 +2031,7 @@ function initFirestoreComments() {
       userId: userId,
       userName: userName,
       userPhoto: userPhoto,
-      text: text, // >>1 本文 のような文字列がそのまま Firestore に安全に飛びます
+      text: text,
       time: timeStr,
       timestamp: Date.now()
     };
@@ -2050,7 +2040,6 @@ function initFirestoreComments() {
       await mods.addDoc(mods.collection(db, "comments"), commentData);
       input.value = ""; 
     } catch (error) {
-      console.error("Error adding comment: ", error);
       alert("コメントの送信に失敗しました。");
     }
   };
