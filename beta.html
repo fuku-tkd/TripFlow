@@ -1887,6 +1887,26 @@ window.insertReplyAnchor = (num) => {
   }
 };
 
+window.scrollToCommentNumber = (num) => {
+  const targetComment = document.getElementById(`comment-node-${num}`);
+  const scrollContainer = document.getElementById('commentListContainer');
+  
+  if (targetComment && scrollContainer) {
+    // コンテナ内での相対的な位置を計算して滑らかにスクロール
+    const targetTop = targetComment.offsetTop - scrollContainer.offsetTop;
+    scrollContainer.scrollTo({
+      top: targetTop - 6, // 隙間微調整
+      behavior: 'smooth'
+    });
+
+    // 💡 ジャンプ先を分かりやすくするために一瞬フラッシュ（点滅）させる演出
+    targetComment.classList.add('ring-2', 'ring-indigo-500', 'dark:ring-indigo-400', 'bg-indigo-50/40', 'dark:bg-indigo-950/30');
+    setTimeout(() => {
+      targetComment.classList.remove('ring-2', 'ring-indigo-500', 'dark:ring-indigo-400', 'bg-indigo-50/40', 'dark:bg-indigo-950/30');
+    }, 1200);
+  }
+};
+
 function initFirestoreComments() {
   const input = document.getElementById('commentInput');
   const btn = document.getElementById('commentSubmitBtn');
