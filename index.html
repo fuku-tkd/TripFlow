@@ -3567,98 +3567,70 @@ window.backToThreadList = function() {
 };
 
 // コメント一覧のリアルタイムリッスン（エラー可視化強化）
-// コメント一覧のリアルタイムリッスン（エラーリンク自動抽出版）
 window.listenToComments = function(threadId) {
   if (unsubscribeComments) unsubscribeComments();
 
   const container = document.getElementById('bbs-comments-container');
-  if (!container) {
-    const errorMsg = "HTMLエラー: 'bbs-comments-container' がHTML内に存在しません。";
-    if (typeof showToast === 'function') showToast(errorMsg, "error"); else alert(errorMsg);
-    return;
-  }
+  if (!container) return;
   
-  // 読み込み中表示
-  container.innerHTML = `<div class="text-center p-6 text-xs text-slate-400 font-mono"><i class="fa-solid fa-spinner fa-spin mr-1"></i>コメントを読み込み中...</div>`;
-
   const { collection, query, where, orderBy, onSnapshot } = window.firebaseModules;
-  const q = query(
-    collection(window.db, "bbs_comments"), 
-    where("threadId", "==", threadId),
-    orderBy("createdAt", "asc")
-  );
+  const q = query(collection(window.db, "bbs_comments"), where("threadId", "==", threadId), orderBy("createdAt", "asc"));
 
   unsubscribeComments = onSnapshot(q, (snapshot) => {
     container.innerHTML = "";
-
     if (snapshot.empty) {
-      container.innerHTML = `<div class="text-center p-6 text-xs text-slate-500 italic">まだ発言がありません。最初のメッセージを投稿しましょう！</div>`;
+      container.innerHTML = `<div class="text-center p-6 text-xs text-slate-500 italic">まだ発言がありません。</div>`;
       return;
     }
 
-    snapshot.forEach((docSnap) => {
+    snapshot.docs.forEach((docSnap, i) => {
       const data = docSnap.data();
-      const timeStr = data.createdAt ? new Date(data.createdAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+      const num = i + 1;
+      // 日付と時間の整形
+      const dateObj = new Date(data.createdAt);
+      const dateStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} ${dateObj.getHours()}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
       
       const commentHtml = `
-        <div class="p-3 rounded-xl border bg-white/40 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800/80">
+        <div id="comment-${num}" class="p-3 rounded-xl border bg-white/40 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800/80 scroll-mt-20">
           <div class="flex justify-between items-center mb-1">
-            <span class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400">${data.authorName}</span>
-            <span class="text-[9px] text-slate-400 font-mono">${timeStr}</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] font-bold text-slate-400 bg-slate-200 px-1.5 py-0.5 rounded">#${num}</span>
+              <span class="text-[10px] font-bold text-indigo-500">${data.authorName}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] text-slate-400 font-mono">${dateStr}</span>
+              <button onclick="replyTo(${num})" class="text-[9px] text-indigo-600 font-bold hover:underline">返信</button>
+            </div>
           </div>
-          <p class="text-xs text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">${data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+          <p class="text-xs text-slate-800 leading-relaxed whitespace-pre-wrap">${formatText(data.text)}</p>
         </div>
       `;
       container.insertAdjacentHTML('beforeend', commentHtml);
     });
-    container.scrollTop = container.scrollHeight;
-
-  }, (error) => {
-    console.error("Firestore コメント読み込みエラー:", error);
-    
-    let displayError = `❌ 読み込み失敗: ${error.message || error}`;
-    
-    // 💡 インデックスエラーの場合に、メッセージ内からURLを正規表現で自動抽出する
-    if (error.message && error.message.includes("requires an index")) {
-      // URL（https://console.firebase.google.com/...）を抽出
-      const urlRegex = /(https:\/\/console\.firebase\.google\.com[^\s\s]*)/g;
-      const matches = error.message.match(urlRegex);
-      
-      if (matches && matches.length > 0) {
-        const targetUrl = matches[0];
-        displayError = `
-          <div class="space-y-3">
-            <p class="font-bold text-red-500 flex items-center gap-1">
-              <i class="fa-solid fa-triangle-exclamation"></i> Firestoreインデックス未作成エラー
-            </p>
-            <p class="text-[11px] text-slate-600 dark:text-slate-400">
-              コメントの絞り込みと並び替えに必要な「複合インデックス」がFirebase側に作成されていません。
-            </p>
-            <div class="pt-2">
-              <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" 
-                 class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> Firebaseコンソールでインデックスを作成する
-              </a>
-            </div>
-            <p class="text-[9px] text-slate-400 mt-1">※リンク先を開き「インデックスを作成」を押した後、有効になるまで数分かかります。</p>
-          </div>
-        `;
-      } else {
-        displayError = `⚠️ <b>Firestoreインデックス未作成</b><br>エラー文から自動生成URLの抽出に失敗しました。F12のコンソールログからリンクを確認してください。`;
-      }
-    } else if (error.code === "permission-denied") {
-      displayError = `❌ <b>閲覧権限エラー (permission-denied)</b><br><br>Firestoreのセキュリティルールで bbs_comments の読込が許可されているか確認してください。`;
-    }
-
-    // 画面にエラー（またはボタン付きリンク）を表示
-    container.innerHTML = `
-      <div class="p-4 rounded-xl border border-red-500/20 bg-red-50 dark:bg-red-950/20 text-xs leading-relaxed">
-        ${displayError}
-      </div>
-    `;
   });
 };
 
+// テキスト内の >>n をクリック可能なリンクに変換
+function formatText(text) {
+  // すべてのタグ（<や>）をエスケープしてから、>>n だけをリンクに変換
+  let escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  
+  // >>数字 をリンクに置換（javascript: ではなく #comment-n を使用）
+  return escaped.replace(/&gt;&gt;(\d+)/g, '<a href="#comment-$1" onclick="scrollToComment($1); return false;" class="text-indigo-600 font-bold hover:underline bg-indigo-50 px-1 rounded">>>$1</a>');
+}
+
+// 返信ボタン：入力欄に >>n を追加
+window.replyTo = function(num) {
+  const input = document.getElementById('bbs-new-comment-text');
+  input.value += `>>${num}\n`;
+  input.focus();
+};
+
+// スクロール処理
+window.scrollToComment = function(num) {
+  const el = document.getElementById(`comment-${num}`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 // コメントの投稿
 window.postComment = async function() {
   const commentInput = document.getElementById('bbs-new-comment-text');
