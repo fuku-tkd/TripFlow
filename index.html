@@ -235,6 +235,11 @@
             <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
           </button>
 
+          <button onclick="navigateFromDrawer('bbs')" class="w-full flex items-center justify-between p-3 rounded-xl text-left text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-amber-500/10 hover:text-amber-500 transition-colors">
+            <span class="flex items-center gap-2.5"><i class="fa-solid fa-comments text-sm text-amber-500 w-4"></i> 旅の掲示板</span>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+          </button>
+
           <button onclick="navigateFromDrawer('profile')" class="w-full flex items-center justify-between p-3 rounded-xl text-left text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-500 transition-colors">
             <span class="flex items-center gap-2.5"><i class="fa-solid fa-user-gear text-sm text-slate-400 w-4"></i> 設定 / プロフィール</span>
             <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
@@ -919,6 +924,83 @@
     </div>
   </div>
 
+  <!-- 💡 掲示板画面（メインコンテナ） -->
+  <div id="screen-bbs" class="max-w-4xl mx-auto px-4 mt-6 space-y-6 screen-hidden text-left">
+  
+    <!-- 掲示板共通ヘッダー -->
+    <div class="glass-card rounded-2xl p-5 border border-amber-500/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+      <div>
+        <h2 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-comments text-amber-500"></i> 旅のコミュニティ掲示板
+        </h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">旅行の計画やおすすめスポットについてみんなでスレッドを立てて語り合いましょう。</p>
+      </div>
+      <button onclick="goHome()" class="px-4 py-1.5 bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-800 hover:bg-slate-300 transition-colors">
+        <i class="fa-solid fa-chevron-left mr-1"></i> ホームに戻る
+      </button>
+    </div>
+
+    <!-- 📜 VIEW 1: スレッド一覧＆新規作成画面 -->
+    <div id="bbs-list-view" class="space-y-6">
+      <!-- スレッド新規作成カード -->
+      <div class="glass-card rounded-2xl p-4 md:p-5 space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+          <i class="fa-solid fa-plus-circle text-amber-500"></i> 新しいスレッドを立てる
+        </h3>
+        <div class="space-y-3">
+          <input type="text" id="bbs-new-thread-title" class="w-full text-xs font-bold px-4 py-2.5 rounded-xl premium-input" placeholder="スレッドのタイトル（例: 函館のおすすめ海鮮丼を教えて！）">
+          <div class="flex justify-end">
+            <button onclick="createNewThread()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-md transition-all">
+              スレッドを作成
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- スレッド一覧表示エリア -->
+      <div class="space-y-3">
+        <div class="flex items-center gap-2">
+          <span class="w-1.5 h-4 bg-amber-500 rounded-full"></span>
+          <h2 class="text-sm font-bold text-slate-800 dark:text-slate-200">スレッド一覧</h2>
+        </div>
+        <div id="bbs-threads-container" class="space-y-3">
+          <!-- 動的にスレッドが挿入されます -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 💬 VIEW 2: スレッド詳細＆会話（コメント）画面 -->
+    <div id="bbs-detail-view" class="space-y-6 hidden">
+      <!-- スレッド情報＆戻るボタン -->
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+        <button onclick="backToThreadList()" class="text-xs font-bold text-indigo-500 hover:text-indigo-600 flex items-center gap-1">
+          <i class="fa-solid fa-arrow-left"></i> スレッド一覧に戻る
+        </button>
+        <span id="bbs-active-thread-date" class="text-[10px] text-slate-400 font-mono"></span>
+      </div>
+
+      <h3 id="bbs-active-thread-title" class="text-base font-black text-slate-950 dark:text-white bg-slate-100/50 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-200/50 dark:border-slate-800/50">
+        スレッドタイトル
+      </h3>
+
+      <!-- コメント一覧 -->
+      <div id="bbs-comments-container" class="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+        <!-- 動的にコメントが挿入されます -->
+      </div>
+
+      <!-- コメント投稿フォーム -->
+      <div class="glass-card rounded-2xl p-4 space-y-3">
+        <textarea id="bbs-new-comment-text" rows="3" class="w-full text-xs px-4 py-2.5 rounded-xl premium-input resize-none" placeholder="コメントを入力してください（不適切な発言はお控えください）"></textarea>
+        <div class="flex justify-end">
+          <button onclick="postComment()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition-all">
+            <i class="fa-solid fa-paper-plane mr-1"></i> コメントを送信
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
   <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
 
 <script type="module">
@@ -1571,6 +1653,7 @@ function hideAllScreens() {
   document.getElementById('btnSwitchTimeline').classList.add('hidden');
   document.getElementById('btnSwitchNavi').classList.add('hidden');
   document.getElementById('btnSwitchEdit').classList.add('hidden');
+  document.getElementById('screen-bbs').classList.add('screen-hidden');
 }
 
 window.showSaveCheckModal = function() {
@@ -1728,6 +1811,11 @@ window.showScreen = function(screenName) {
       subHeader.textContent = isReadOnlyMode ? `PREVIEW TIMELINE` : `TRIP TIMELINE BROWSER`;
       renderTripSummaryHeader();
       renderTripTimelineView();
+    } else if (screenName === 'bbs') {
+      document.getElementById('screen-bbs').classList.remove('screen-hidden');
+      subHeader.textContent = "COMMUNITY BULLETIN BOARD";
+      backToThreadList(); // 画面遷移時は必ずスレッド一覧から表示
+      listenToThreads();  // スレッド一覧のリアルタイム同期を開始
     }
   }
 }
@@ -3368,6 +3456,244 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 setInterval(() => {
   if (!isCustomTimeMode && !document.getElementById('screen-navi').classList.contains('screen-hidden')) { updateNaviView(); }
 }, 15000);
+
+// ----------------------------------------------------
+// 💡 掲示板（BBS）機能 コアロジック（エラー可視化＆デバッグ強化版）
+// ----------------------------------------------------
+let activeThreadId = null;
+let unsubscribeThreads = null;
+let unsubscribeComments = null;
+
+// スレッド一覧のリアルタイムリッスン
+window.listenToThreads = function() {
+  if (unsubscribeThreads) unsubscribeThreads();
+
+  const { collection, query, orderBy, onSnapshot } = window.firebaseModules;
+  const q = query(collection(window.db, "bbs_threads"), orderBy("createdAt", "desc"));
+
+  unsubscribeThreads = onSnapshot(q, (snapshot) => {
+    const container = document.getElementById('bbs-threads-container');
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (snapshot.empty) {
+      container.innerHTML = `<div class="text-center p-6 text-xs text-slate-500 font-mono">スレッドがまだありません。最初のスレッドを立ててみましょう！</div>`;
+      return;
+    }
+
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const id = docSnap.id;
+      const dateStr = data.createdAt ? new Date(data.createdAt).toLocaleString('ja-JP', {index: 'short'}) : '不明';
+
+      const itemHtml = `
+        <div onclick="openThread('${id}', '${data.title.replace(/'/g, "\\'")}', '${dateStr}')" class="glass-card p-4 rounded-xl cursor-pointer hover:border-amber-500/30 transition-all flex justify-between items-center group">
+          <div class="min-w-0 flex-1 pr-3">
+            <h4 class="text-xs font-bold text-slate-800 dark:text-white group-hover:text-amber-500 transition-colors truncate">${data.title}</h4>
+            <span class="text-[9px] text-slate-400 block mt-1"><i class="fa-regular fa-clock mr-1"></i>${dateStr} ・ 作成者: ${data.authorName || 'ゲスト'}</span>
+          </div>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 group-hover:translate-x-0.5 transition-transform"></i>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', itemHtml);
+    });
+  }, (error) => {
+    console.error("スレッド読み込みエラー:", error);
+    if (typeof showToast === 'function') showToast(`⚠️ スレッド取得失敗: ${error.message}`, "error");
+  });
+};
+
+// スレッド新規作成
+window.createNewThread = async function() {
+  const titleInput = document.getElementById('bbs-new-thread-title');
+  const title = titleInput ? titleInput.value.trim() : "";
+
+  if (!title) {
+    if (typeof showToast === 'function') showToast("⚠️ スレッドのタイトルを入力してください", "error");
+    return;
+  }
+
+  const { collection, addDoc } = window.firebaseModules;
+  const authorName = window.currentUser ? (window.currentUser.displayName || 'ユーザー') : 'ゲスト';
+
+  try {
+    await addDoc(collection(window.db, "bbs_threads"), {
+      title: title,
+      authorName: authorName,
+      authorUid: window.currentUser ? window.currentUser.uid : 'guest',
+      createdAt: Date.now()
+    });
+    titleInput.value = "";
+    if (typeof showToast === 'function') showToast("🎉 スレッドを作成しました！", "success");
+  } catch (e) {
+    console.error("スレッド作成エラー:", e);
+    if (typeof showToast === 'function') showToast(`⚠️ 作成に失敗しました: ${e.message || e}`, "error");
+  }
+};
+
+// スレッド詳細画面を開く
+window.openThread = function(threadId, threadTitle, dateStr) {
+  activeThreadId = threadId;
+  
+  const listView = document.getElementById('bbs-list-view');
+  const detailView = document.getElementById('bbs-detail-view');
+  
+  if (!listView || !detailView) {
+    const errorMsg = "HTMLエラー: 'bbs-list-view' または 'bbs-detail-view' が見つかりません。";
+    if (typeof showToast === 'function') showToast(errorMsg, "error"); else alert(errorMsg);
+    return;
+  }
+
+  listView.classList.add('hidden');
+  detailView.classList.remove('hidden');
+  
+  document.getElementById('bbs-active-thread-title').textContent = threadTitle;
+  document.getElementById('bbs-active-thread-date').textContent = `作成日時: ${dateStr}`;
+
+  // コメント読み込み開始
+  listenToComments(threadId);
+};
+
+// スレッド一覧に戻る
+window.backToThreadList = function() {
+  activeThreadId = null;
+  if (unsubscribeComments) unsubscribeComments();
+  
+  const listView = document.getElementById('bbs-list-view');
+  const detailView = document.getElementById('bbs-detail-view');
+  
+  if (detailView) detailView.classList.add('hidden');
+  if (listView) listView.classList.remove('hidden');
+};
+
+// コメント一覧のリアルタイムリッスン（エラー可視化強化）
+// コメント一覧のリアルタイムリッスン（エラーリンク自動抽出版）
+window.listenToComments = function(threadId) {
+  if (unsubscribeComments) unsubscribeComments();
+
+  const container = document.getElementById('bbs-comments-container');
+  if (!container) {
+    const errorMsg = "HTMLエラー: 'bbs-comments-container' がHTML内に存在しません。";
+    if (typeof showToast === 'function') showToast(errorMsg, "error"); else alert(errorMsg);
+    return;
+  }
+  
+  // 読み込み中表示
+  container.innerHTML = `<div class="text-center p-6 text-xs text-slate-400 font-mono"><i class="fa-solid fa-spinner fa-spin mr-1"></i>コメントを読み込み中...</div>`;
+
+  const { collection, query, where, orderBy, onSnapshot } = window.firebaseModules;
+  const q = query(
+    collection(window.db, "bbs_comments"), 
+    where("threadId", "==", threadId),
+    orderBy("createdAt", "asc")
+  );
+
+  unsubscribeComments = onSnapshot(q, (snapshot) => {
+    container.innerHTML = "";
+
+    if (snapshot.empty) {
+      container.innerHTML = `<div class="text-center p-6 text-xs text-slate-500 italic">まだ発言がありません。最初のメッセージを投稿しましょう！</div>`;
+      return;
+    }
+
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const timeStr = data.createdAt ? new Date(data.createdAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+      
+      const commentHtml = `
+        <div class="p-3 rounded-xl border bg-white/40 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800/80">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400">${data.authorName}</span>
+            <span class="text-[9px] text-slate-400 font-mono">${timeStr}</span>
+          </div>
+          <p class="text-xs text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">${data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', commentHtml);
+    });
+    container.scrollTop = container.scrollHeight;
+
+  }, (error) => {
+    console.error("Firestore コメント読み込みエラー:", error);
+    
+    let displayError = `❌ 読み込み失敗: ${error.message || error}`;
+    
+    // 💡 インデックスエラーの場合に、メッセージ内からURLを正規表現で自動抽出する
+    if (error.message && error.message.includes("requires an index")) {
+      // URL（https://console.firebase.google.com/...）を抽出
+      const urlRegex = /(https:\/\/console\.firebase\.google\.com[^\s\s]*)/g;
+      const matches = error.message.match(urlRegex);
+      
+      if (matches && matches.length > 0) {
+        const targetUrl = matches[0];
+        displayError = `
+          <div class="space-y-3">
+            <p class="font-bold text-red-500 flex items-center gap-1">
+              <i class="fa-solid fa-triangle-exclamation"></i> Firestoreインデックス未作成エラー
+            </p>
+            <p class="text-[11px] text-slate-600 dark:text-slate-400">
+              コメントの絞り込みと並び替えに必要な「複合インデックス」がFirebase側に作成されていません。
+            </p>
+            <div class="pt-2">
+              <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" 
+                 class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Firebaseコンソールでインデックスを作成する
+              </a>
+            </div>
+            <p class="text-[9px] text-slate-400 mt-1">※リンク先を開き「インデックスを作成」を押した後、有効になるまで数分かかります。</p>
+          </div>
+        `;
+      } else {
+        displayError = `⚠️ <b>Firestoreインデックス未作成</b><br>エラー文から自動生成URLの抽出に失敗しました。F12のコンソールログからリンクを確認してください。`;
+      }
+    } else if (error.code === "permission-denied") {
+      displayError = `❌ <b>閲覧権限エラー (permission-denied)</b><br><br>Firestoreのセキュリティルールで bbs_comments の読込が許可されているか確認してください。`;
+    }
+
+    // 画面にエラー（またはボタン付きリンク）を表示
+    container.innerHTML = `
+      <div class="p-4 rounded-xl border border-red-500/20 bg-red-50 dark:bg-red-950/20 text-xs leading-relaxed">
+        ${displayError}
+      </div>
+    `;
+  });
+};
+
+// コメントの投稿
+window.postComment = async function() {
+  const commentInput = document.getElementById('bbs-new-comment-text');
+  const text = commentInput ? commentInput.value.trim() : "";
+
+  if (!text) {
+    if (typeof showToast === 'function') showToast("⚠️ メッセージを入力してください", "error");
+    return;
+  }
+  
+  if (!activeThreadId) {
+    const msg = "⚠️ エラー: スレッドIDが消失しています。もう一度一覧から開き直してください。";
+    if (typeof showToast === 'function') showToast(msg, "error"); else alert(msg);
+    return;
+  }
+
+  const { collection, addDoc } = window.firebaseModules;
+  const authorName = window.currentUser ? (window.currentUser.displayName || 'ユーザー') : 'ゲスト';
+
+  try {
+    await addDoc(collection(window.db, "bbs_comments"), {
+      threadId: activeThreadId,
+      text: text,
+      authorName: authorName,
+      authorUid: window.currentUser ? window.currentUser.uid : 'guest',
+      createdAt: Date.now()
+    });
+    commentInput.value = "";
+  } catch (e) {
+    console.error("コメント投稿エラー:", e);
+    const postErrorMsg = `⚠️ 送信に失敗しました: ${e.message || e}`;
+    if (typeof showToast === 'function') showToast(postErrorMsg, "error"); else alert(postErrorMsg);
+  }
+};
+
 </script>
 </body>
 </html>
