@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TripFlow - 旅行マネージャー</title>
-
+ 
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
 <script>
   // Tailwindのダークモードをシステム設定に同期
-  tailwind.config = {
+  tailwind.config = { 
     darkMode: 'media',
     theme: {
       extend: {
@@ -617,8 +617,8 @@
 
         <!-- 自己紹介 -->
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">自己紹介（バイオ）</label>
-          <textarea id="profileBio" rows="2" maxlength="150" class="w-full px-3 py-2 rounded-xl premium-input text-xs resize-none" placeholder="旅行好きな理由やよく行くエリアなどを簡単に入力してください。"></textarea>
+          <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">自己紹介</label>
+          <textarea id="bio" rows="2" maxlength="150" class="w-full px-3 py-2 rounded-xl premium-input text-xs resize-none" placeholder="自己紹介を入力してください"></textarea>
         </div>
 
         <!-- SNSリンク -->
@@ -720,12 +720,8 @@
         <h2 id="timelineDisplayTitle" class="text-sm md:text-base font-extrabold text-slate-900 dark:text-white">旅の行程表</h2>
         <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">全体の行動プランを一覧で俯瞰します。</p>
       </div>
-      <div class="text-right shrink-0">
-        <span class="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 block font-semibold">合計予算</span>
-        <span id="timelineTotalCost" class="text-sm sm:text-base font-black text-amber-500 font-mono">0円</span>
-      </div>
     </div>
-
+    <div id="timelineSummaryContainer" class="space-y-4"></div>
     <div id="timelineContainer" class="space-y-0 relative pl-4 md:pl-8"></div>
   </div>
 
@@ -857,7 +853,7 @@
         </div>
 
         <div>
-          <label id="authEmailLabel" class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">独自ID または メール</label>
+          <label id="authEmailLabel" class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">ID</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-envelope text-xs"></i></span>
             <input type="text" id="authEmailOrUser" required class="w-full pl-9 pr-4 py-2 rounded-xl premium-input text-xs placeholder-slate-400 dark:placeholder-slate-600 font-medium">
@@ -927,7 +923,10 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { 
+  getFirestore, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, where,
+  orderBy, onSnapshot, addDoc 
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -944,6 +943,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// 他の通常関数から確実にFirebaseオブジェクトを操作できるようにwindowに全開放
+window.db = db;
+window.firebaseModules = { collection, query, where, orderBy, onSnapshot, addDoc };
+
+// ----------------------------------------------------
+// ご提示いただいた大量の初期ステート（モジュール内部の実体）
+// ----------------------------------------------------
 let currentUser = null;      
 let allTripsCache = [];      
 let currentTripId = null;    
@@ -975,6 +981,54 @@ let userProfile = {
   bio: '',
   snsLink: ''
 };
+
+// ----------------------------------------------------
+// ⚠️ 重要：モジュール外の通常JavaScript（グローバル）と100%同期させるバインド設定
+// ----------------------------------------------------
+const syncVariables = {
+  currentUser: { get: () => currentUser, set: (v) => { currentUser = v; } },
+  allTripsCache: { get: () => allTripsCache, set: (v) => { allTripsCache = v; } },
+  currentTripId: { get: () => currentTripId, set: (v) => { currentTripId = v; } },
+  currentTripData: { get: () => currentTripData, set: (v) => { currentTripData = v; } },
+  isCustomTimeMode: { get: () => isCustomTimeMode, set: (v) => { isCustomTimeMode = v; } },
+  customTimeMinutes: { get: () => customTimeMinutes, set: (v) => { customTimeMinutes = v; } },
+  editingTripIsSample: { get: () => editingTripIsSample, set: (v) => { editingTripIsSample = v; } },
+  isSandboxMode: { get: () => isSandboxMode, set: (v) => { isSandboxMode = v; } },
+  authMode: { get: () => authMode, set: (v) => { authMode = v; } },
+  isReadOnlyMode: { get: () => isReadOnlyMode, set: (v) => { isReadOnlyMode = v; } },
+  previewingTripAuthorName: { get: () => previewingTripAuthorName, set: (v) => { previewingTripAuthorName = v; } },
+  currentNaviDay: { get: () => currentNaviDay, set: (v) => { currentNaviDay = v; } },
+  currentEditorDayFilter: { get: () => currentEditorDayFilter, set: (v) => { currentEditorDayFilter = v; } },
+  discoverTripsCache: { get: () => discoverTripsCache, set: (v) => { discoverTripsCache = v; } },
+  userProfile: { get: () => userProfile, set: (v) => { userProfile = v; } }
+};
+
+// 通常のスクリプト空間（window直下）にゲッターとセッターを全展開
+Object.defineProperties(window, syncVariables);
+
+// コメント読み込み関数が100%確実に最新のプランIDを掴み取るための安全なブリッジ関数
+window.getCurrentTripId = () => {
+  return currentTripId || window.currentTripId || null;
+};
+
+// ----------------------------------------------------
+// Firebase 認証状態の監視
+// ----------------------------------------------------
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    window.currentUser = user; // 二重保険
+    console.log("Logged in as:", user.uid);
+    if (typeof updateAuthUI === 'function') updateAuthUI(user);
+  } else {
+    currentUser = null;
+    window.currentUser = null;
+    console.log("No user signed in.");
+    if (typeof updateAuthUI === 'function') updateAuthUI(null);
+  }
+  if (typeof refreshTripList === 'function') refreshTripList();
+  if (typeof initDiscoverTab === 'function') initDiscoverTab();
+});
 
 // サンドボックス用北海道観光サンプルデータ（1泊2日・計14ステップ構成）
 const sandboxSampleTrip = [
@@ -1011,15 +1065,15 @@ function migrateTripData(trip, title = "無題の計画") {
   };
 }
 
-function migrateUserProfile(rawProfile) {
+function migrateUserProfile(rawData) {
   return {
-    avatarColor: rawProfile.avatarColor || 'indigo',
-    avatarIcon: rawProfile.avatarIcon || 'fa-user',
-    tripStyle: rawProfile.tripStyle || 'all',
-    defaultTransport: rawProfile.defaultTransport || 'train',
-    emergencyMemo: rawProfile.emergencyMemo || '',
-    bio: rawProfile.bio || '旅と日常をシームレスにつなぐ。',
-    snsLink: rawProfile.snsLink || ''
+    avatarColor: rawData.avatarColor || 'indigo',
+    avatarIcon: rawData.avatarIcon || 'fa-user',
+    tripStyle: rawData.tripStyle || 'all',
+    defaultTransport: rawData.defaultTransport || 'train',
+    emergencyMemo: rawData.emergencyMemo || '',
+    bio: rawData.bio || '旅と日常をシームレスにつなぐ。',
+    snsLink: rawData.snsLink || ''
   };
 }
 
@@ -1115,12 +1169,12 @@ function syncAuthFormUI() {
   
   if (authMode === 'signup') {
     title.textContent = "新規アカウントを作成";
-    desc.textContent = "独自IDまたはメール、表示名、パスワードを設定して登録してください。";
+    desc.textContent = "ID、表示名、パスワードを設定して登録してください。";
     submitBtn.innerHTML = `<span>新規登録する</span> <i class="fa-solid fa-user-plus text-xs"></i>`;
     toggleBtn.textContent = "既にアカウントをお持ちの方（サインイン）";
     nameField.classList.remove('hidden');
     document.getElementById('authDisplayName').required = true;
-    emailLabel.textContent = "メールアドレス または 登録用独自ID";
+    emailLabel.textContent = "ID";
   } else {
     title.textContent = "アカウントにサインイン";
     desc.textContent = "旅程をクラウド保存・同期するために認証を行ってください。";
@@ -1128,21 +1182,39 @@ function syncAuthFormUI() {
     toggleBtn.textContent = "新規アカウントを作成する（サインアップ）";
     nameField.classList.add('hidden');
     document.getElementById('authDisplayName').required = false;
-    emailLabel.textContent = "メールアドレス または 独自ID";
+    emailLabel.textContent = "ID";
   }
 }
 
 window.handleAuthSubmit = async function(event) {
   event.preventDefault();
+  
+  // 💡 【追加】多重送信防止のために、ログイン/登録ボタンを取得して無効化する
+  const submitBtn = document.querySelector('#authForm button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    // ボタンの文字を「処理中...」に変え、連打できない見た目（半透明）にする
+    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 処理中...`;
+    submitBtn.classList.add('opacity-50', 'pointer-events-none');
+  }
+
   const emailOrUser = document.getElementById('authEmailOrUser').value;
   const password = document.getElementById('authPassword').value;
   const displayName = document.getElementById('authDisplayName').value.trim();
   
   if (password.length < 6) {
     showToast("⚠️ パスワードは6文字以上で入力してください", "error");
+    // 💡 エラーで処理を抜ける場合も、ボタンを確実に元に戻す
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = authMode === 'login' ? 'ログインする' : '登録して始める';
+      submitBtn.classList.remove('opacity-50', 'pointer-events-none');
+    }
     return;
   }
+  
   const finalEmail = resolveEmailFormat(emailOrUser);
+  
   try {
     if (authMode === 'login') {
       await signInWithEmailAndPassword(auth, finalEmail, password);
@@ -1150,7 +1222,6 @@ window.handleAuthSubmit = async function(event) {
     } else {
       const userCredential = await createUserWithEmailAndPassword(auth, finalEmail, password);
       if (displayName) await updateProfile(userCredential.user, { displayName: displayName });
-      
       const defaultProfile = {
         profileUserId: userCredential.user.uid,
         avatarColor: 'indigo',
@@ -1162,7 +1233,9 @@ window.handleAuthSubmit = async function(event) {
         snsLink: '',
         updatedAt: Date.now()
       };
-      await setDoc(doc(db, 'trips', 'profile_settings_' + userCredential.user.uid), defaultProfile);
+      
+      // 💡 先ほどの設計通り 'users' コレクションの UID に保存
+      await setDoc(doc(db, 'users', userCredential.user.uid), defaultProfile);
       showToast("🎉 アカウントを作成し、ログインしました！", "success");
     }
     document.getElementById('authForm').reset();
@@ -1173,9 +1246,16 @@ window.handleAuthSubmit = async function(event) {
     if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
       errorMsg = "IDまたはパスワードが正しくありません。";
     } else if (error.code === 'auth/email-already-in-use') {
-      errorMsg = "このID/メールアドレスは既に登録されています。";
+      errorMsg = "このIDは既に登録されています。";
     }
     showToast(`⚠️ ${errorMsg}`, "error");
+  } finally {
+    // 💡 【追加】通信成功・通信失敗どちらになっても「最後に必ず」ボタンを元に戻す
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = authMode === 'login' ? 'ログインする' : '登録して始める';
+      submitBtn.classList.remove('opacity-50', 'pointer-events-none');
+    }
   }
 }
 
@@ -1210,7 +1290,7 @@ window.goToProfileScreen = function() {
   document.getElementById('profileTripStyle').value = userProfile.tripStyle || "all";
   document.getElementById('profileDefaultTransport').value = userProfile.defaultTransport || "train";
   document.getElementById('profileEmergencyMemo').value = userProfile.emergencyMemo || "";
-  document.getElementById('profileBio').value = userProfile.bio || "";
+  document.getElementById('bio').value = userProfile.bio || "";
   document.getElementById('profileSnsLink').value = userProfile.snsLink || "";
   
   selectProfileAvatar(userProfile.avatarColor || 'indigo', userProfile.avatarIcon || 'fa-user');
@@ -1223,7 +1303,7 @@ window.handleUpdateProfileSubmit = async function() {
   const style = document.getElementById('profileTripStyle').value;
   const defTransport = document.getElementById('profileDefaultTransport').value;
   const emergency = document.getElementById('profileEmergencyMemo').value.trim();
-  const bio = document.getElementById('profileBio').value.trim();
+  const bio = document.getElementById('bio').value.trim();
   const sns = document.getElementById('profileSnsLink').value.trim();
 
   if(!newName) {
@@ -1248,7 +1328,7 @@ window.handleUpdateProfileSubmit = async function() {
         await updatePassword(currentUser, newPassword);
       }
       
-      await setDoc(doc(db, 'trips', 'profile_settings_' + currentUser.uid), {
+      await setDoc(doc(db, 'users', "profile_settings_" + currentUser.uid), {
         profileUserId: currentUser.uid,
         avatarColor: userProfile.avatarColor,
         avatarIcon: userProfile.avatarIcon,
@@ -1297,6 +1377,11 @@ function applyAvatarVisual(elementId, color, icon, isLarge = false, letter = "T"
 }
 
 function syncUserInterfaceElements(user) {
+  const guestHeaderArea = document.getElementById('guestHeaderArea');
+  const userInfoArea = document.getElementById('userInfoArea');
+  if (guestHeaderArea) guestHeaderArea.classList.toggle('hidden', !!user); // userがいればhiddenをつける、いなければ外す
+  if (userInfoArea) userInfoArea.classList.toggle('hidden', !user);      // userがいればhiddenを外す、いなければつける
+  
   const nameToDisplay = user ? (user.displayName || (user.email ? user.email.split('@')[0] : 'ユーザー')) : 'ゲスト';
   const firstLetter = nameToDisplay.substring(0, 1).toUpperCase();
   
@@ -1331,6 +1416,10 @@ function syncUserInterfaceElements(user) {
     }
   }
   updateDrawerAccountState();
+  if (guestHeaderArea) {
+    // userが存在すれば（ログイン済みなら）消す（hiddenを追加）、いなければ出す（hiddenを削除）
+    guestHeaderArea.classList.toggle('hidden', !!user);
+  }
 }
 
 function updateDashboardStats() {
@@ -1347,6 +1436,10 @@ function updateDashboardStats() {
   document.getElementById('statTotalBudget').textContent = `${totalBudget.toLocaleString()}円`;
 }
 
+// 💡 【追加】多重フェッチ・連打を物理的に完全にシャットアウトするためのグローバルロック
+let isSyncingAuthOrData = false;
+
+// 認証状態の監視
 onAuthStateChanged(auth, async (user) => {
   const welcomeScreen = document.getElementById('screen-welcome');
   const userInfoArea = document.getElementById('userInfoArea');
@@ -1359,11 +1452,20 @@ onAuthStateChanged(auth, async (user) => {
     
     welcomeScreen.classList.add('screen-hidden'); 
     userInfoArea.classList.remove('hidden');
-    // ログイン時はPCヘッダーログインボタンを確実に非表示に
-    guestHeaderArea.classList.add('hidden');
     
+    if (guestHeaderArea) {
+      guestHeaderArea.classList.add('hidden');
+    }
+    
+    // 💡 【追加】もしすでに他の「ログイン/同期処理」が走っている場合は、このイベント（2回目以降）を完全に無視して破棄する
+    if (isSyncingAuthOrData) {
+      console.log("🚫 多重読み込みをブロックしました");
+      return;
+    }
+    isSyncingAuthOrData = true; // ロックをかける（以降の高速な並列処理を通さない）
+
     try {
-      const pDoc = await getDoc(doc(db, 'trips', 'profile_settings_' + user.uid));
+      const pDoc = await getDoc(doc(db, 'users', "profile_settings_" + currentUser.uid));
       if(pDoc.exists()) {
         const migrated = migrateUserProfile(pDoc.data());
         userProfile = { ...userProfile, ...migrated };
@@ -1374,14 +1476,23 @@ onAuthStateChanged(auth, async (user) => {
 
     syncUserInterfaceElements(user);
     showScreen('home'); 
-    fetchTripsFromCloud();
+    
+    // 確実に1回だけデータを取得させる
+    await fetchTripsFromCloud();
+    
+    // 全ての非同期同期処理が終わったらロックを解除
+    isSyncingAuthOrData = false;
+
   } else {
     currentUser = null;
     userInfoArea.classList.add('hidden');
     
-    // サンドボックス(お試し)時、または未ログイン時のみログインボタンを表示
-    guestHeaderArea.classList.remove('hidden');
+    if (guestHeaderArea) {
+      guestHeaderArea.classList.remove('hidden');
+    }
     
+    isSyncingAuthOrData = false; // 未ログイン時はフラグをリセット
+
     const localProfile = localStorage.getItem('tripflow_local_profile');
     if (localProfile) {
       try {
@@ -1492,15 +1603,26 @@ window.safeNavigate = async function(targetScreenName) {
     const action = await showSaveCheckModal();
     
     if (action === 'save') {
-      const saveBtn = document.getElementById('btnSaveCloud');
-      if (saveBtn) {
-        saveBtn.click(); 
-      } else {
-        showScreen(targetScreenName);
+      // 💡 【大修正】身代わりクリックではなく、通常の保存処理（saveTripData）を実行して完了を待ちます
+      if (typeof window.saveTripData === 'function') {
+        try {
+          showToast("⏳ データを保存しています...", "info");
+          await window.saveTripData(); // 保存処理が終わるまでここで一時停止
+        } catch (e) {
+          console.error("ナビゲーション時の保存エラー:", e);
+          showToast("⚠️ 保存に失敗したため、移動を中断しました", "error");
+          return; // 保存に失敗した場合は画面を閉じずに中断する
+        }
       }
+      
+      // 💡 【重要】保存が正常に完了したら、自動的にターゲット画面へ終了（遷移）させる！
+      showScreen(targetScreenName);
+      if (targetScreenName === 'home') currentTripId = null;
+      
     } else if (action === 'discard') {
       showScreen(targetScreenName);
       if (targetScreenName === 'home') currentTripId = null;
+      
     } else {
       return;
     }
@@ -1589,6 +1711,11 @@ window.showScreen = function(screenName) {
     } else if (screenName === 'profile') {
       document.getElementById('screen-profile').classList.remove('screen-hidden');
       subHeader.textContent = "USER SETTINGS";
+    } else if (screenName === 'timeline') {
+      document.getElementById('screen-timeline').classList.remove('screen-hidden');
+      subHeader.textContent = isReadOnlyMode ? `PREVIEW TIMELINE` : `TRIP TIMELINE BROWSER`;
+      renderTripSummaryHeader();
+      renderTripTimelineView();
     }
   }
 }
@@ -1605,11 +1732,350 @@ window.goToMyPlansScreen = function() {
   safeNavigate('myplans');
 }
 
+function renderTripSummaryHeader() {
+  const container = document.getElementById('timelineSummaryContainer');
+  if (!container) return;
+  container.innerHTML = ""; // 初期化
+
+  let planDescription = "このプランの紹介文はまだありません。";
+  let authorHtml = "";
+
+  // アプリ全体で共有されている正しいプランIDを取得（同期ブリッジ経由、なければそのまま）
+  const activeTripId = typeof window.getCurrentTripId === 'function' ? window.getCurrentTripId() : currentTripId;
+
+  // 1. 閲覧モード（isReadOnlyMode）に応じてキャッシュから詳細データを引き出す
+  if (isReadOnlyMode && typeof discoverTripsCache !== 'undefined') {
+    const found = discoverTripsCache.find(x => x.id === activeTripId);
+    if (found) {
+      planDescription = found.description || "このプランの紹介文はまだありません。";
+      const firstLetter = (found.authorName || "旅").substring(0, 1).toUpperCase();
+      
+      authorHtml = `
+        <div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/60 pt-2.5 mt-1">
+          <div class="flex items-center gap-2 text-xs">
+            <div class="w-5 h-5 rounded-full bg-${found.authorAvatarColor || 'indigo'}-500 text-white flex items-center justify-center font-bold text-[10px] shadow-sm">
+              ${firstLetter}
+            </div>
+            <span class="text-slate-500 dark:text-slate-400">作成者: <strong class="text-slate-700 dark:text-slate-200">${found.authorName || 'ゲスト'}</strong></span>
+          </div>
+          <div id="summaryHeaderActions" class="flex gap-2"></div>
+        </div>
+      `;
+    }
+  } else if (typeof allTripsCache !== 'undefined') {
+    const found = allTripsCache.find(x => x.id === activeTripId);
+    if (found) {
+      planDescription = found.description || "このプランの紹介文はまだありません。";
+    }
+  }
+
+  // 2. 現在の行程データ（currentTripData）から統計情報を動的に計算
+  let totalCost = 0;
+  let totalSpots = 0;
+  let maxDay = 1;
+  let startTime = "--:--";
+  let endTime = "--:--";
+  let startDayNum = 1;
+  let endDayNum = 1;
+
+  if (currentTripData && currentTripData.length > 0) {
+    currentTripData.forEach(item => {
+      totalCost += (parseInt(item.cost) || 0);
+      if (item.type === 'station') totalSpots++;
+      if (item.day && item.day > maxDay) maxDay = item.day;
+    });
+
+    const firstNode = currentTripData[0];
+    startDayNum = firstNode.day || 1;
+    const rawStartTime = firstNode.arrival || firstNode.departure || firstNode.start || "--:--";
+    startTime = rawStartTime !== "--:--" ? `${startDayNum}日目 ${rawStartTime}` : "--:--";
+
+    const lastNode = currentTripData[currentTripData.length - 1];
+    endDayNum = lastNode.day || maxDay;
+    const rawEndTime = lastNode.departure || lastNode.arrival || lastNode.end || "--:--";
+    endTime = rawEndTime !== "--:--" ? `${endDayNum}日目 ${rawEndTime}` : "--:--";
+  }
+
+  // 3. UIの構築（カード型サマリーダッシュボード ＆ FirestoreコメントUI）
+  const summaryCard = document.createElement('div');
+  summaryCard.className = "p-5 text-left bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 rounded-2xl border border-indigo-100/40 dark:border-slate-800 shadow-sm space-y-4 animate-fade-in";
+  
+  summaryCard.innerHTML = `
+    <div id="summaryHeaderBadges" class="flex flex-wrap items-center gap-1.5">
+      <span class="px-2 py-0.5 text-[9px] font-black bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded shadow-sm tracking-wider">🗺️ TRIP SUMMARY</span>
+      <span class="px-2 py-0.5 text-[9px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded border border-indigo-100/30">${maxDay} 日間</span>
+      <span class="px-2 py-0.5 text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded">📍 ${totalSpots} スポット</span>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 bg-slate-50/50 dark:bg-slate-950/40 p-3 rounded-xl border border-slate-100 dark:border-slate-900">
+      <div class="flex flex-col justify-center border-r border-slate-200/60 dark:border-slate-800/60 pr-2">
+        <span class="text-[9px] text-slate-400 dark:text-slate-500 font-bold block mb-0.5"><i class="fa-regular fa-clock mr-1"></i>全体の移動スケジュール</span>
+        <div class="flex items-center gap-1 font-mono text-xs font-black text-slate-700 dark:text-slate-300">
+          <span class="text-indigo-500">${startTime}</span>
+          <span class="text-slate-400 font-normal">➔</span>
+          <span class="text-purple-500">${endTime}</span>
+        </div>
+      </div>
+      
+      <div class="flex flex-col justify-center pl-1">
+        <span class="text-[9px] text-slate-400 dark:text-slate-500 font-bold block mb-0.5">💰 全体予算目安</span>
+        <span class="text-sm md:text-base font-black text-amber-500 font-mono tracking-tight">
+          ${totalCost.toLocaleString()} <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">円</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="space-y-1">
+      <span class="text-[9px] text-slate-400 dark:text-slate-500 font-bold block"><i class="fa-solid fa-quote-left mr-1 opacity-70"></i>プラン紹介</span>
+      <p class="text-xs text-slate-600 dark:text-slate-400 whitespace-pre-wrap bg-white/80 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-900/60 leading-relaxed shadow-inner">
+        ${planDescription}
+      </p>
+    </div>
+
+    ${authorHtml}
+    
+    <div class="border-t border-slate-200/60 dark:border-slate-800/60 pt-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold tracking-wider block flex items-center gap-1.5">
+          <i class="fa-solid fa-comments text-indigo-500/80"></i> COMMENTS 
+          <span class="text-[9px] font-normal px-1 bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 rounded">Firestore</span>
+        </span>
+      </div>
+      
+      <div id="commentListContainer" class="space-y-2.5 max-h-[220px] overflow-y-auto pr-1 text-xs style-scrollbar scroll-smooth">
+        <p class="text-[11px] text-slate-400 dark:text-slate-500 italic p-1 text-center animate-pulse">
+          <i class="fa-solid fa-circle-notch animate-spin mr-1"></i> コメントを読み込み中...
+        </p>
+      </div>
+      
+      <div class="flex gap-2 pt-1">
+        <input type="text" id="commentInput" placeholder="この作品にコメントを書く... (Enterで送信)" 
+          class="flex-1 px-3.5 py-2 text-xs rounded-xl bg-white/70 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-500 dark:text-slate-100 text-slate-800 placeholder-slate-400/80 shadow-inner" />
+        <button id="commentSubmitBtn" 
+          class="px-4 py-2 text-xs font-bold bg-gradient-to-r from-indigo-500 to-indigo-600 hover:brightness-110 text-white rounded-xl shadow-md shadow-indigo-500/10 transition-all shrink-0 flex items-center gap-1">
+          <i class="fa-solid fa-paper-plane text-[10px]"></i><span>送信</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="summaryHeaderExtension" class="mt-2 empty:hidden"></div>
+  `;
+
+  container.appendChild(summaryCard);
+
+  // 画面にコメント欄が作られてから、0.05秒だけ安全に時間を置いてから読み込み監視をバインド
+  setTimeout(() => {
+    initFirestoreComments();
+  }, 50);
+}
+
+// グローバルスコープでリアルタイム解除用リスナーを保持
+window.currentCommentsUnsubscribe = null;
+
+// 返信アンカー挿入処理
+window.insertReplyAnchor = (num) => {
+  const input = document.getElementById('commentInput');
+  if (input) {
+    const currentVal = input.value.trim();
+    if (currentVal) {
+      input.value = `>>${num} ${currentVal}`;
+    } else {
+      input.value = `>>${num} `;
+    }
+    input.focus();
+  }
+};
+
+// 🟢 新機能：>>n をクリックした際に対象のコメントまでスムーススクロールする処理
+window.scrollToCommentNumber = (num) => {
+  const targetComment = document.getElementById(`comment-node-${num}`);
+  const scrollContainer = document.getElementById('commentListContainer');
+  
+  if (targetComment && scrollContainer) {
+    // コンテナ内での相対的な位置を計算して滑らかにスクロール
+    const targetTop = targetComment.offsetTop - scrollContainer.offsetTop;
+    scrollContainer.scrollTo({
+      top: targetTop - 6, // 隙間微調整
+      behavior: 'smooth'
+    });
+
+    // 💡 ジャンプ先を分かりやすくするために一瞬フラッシュ（点滅）させる演出
+    targetComment.classList.add('ring-2', 'ring-indigo-500', 'dark:ring-indigo-400', 'bg-indigo-50/40', 'dark:bg-indigo-950/30');
+    setTimeout(() => {
+      targetComment.classList.remove('ring-2', 'ring-indigo-500', 'dark:ring-indigo-400', 'bg-indigo-50/40', 'dark:bg-indigo-950/30');
+    }, 1200);
+  }
+};
+
+function initFirestoreComments() {
+  const input = document.getElementById('commentInput');
+  const btn = document.getElementById('commentSubmitBtn');
+  const container = document.getElementById('commentListContainer');
+  
+  const activeTripId = typeof window.getCurrentTripId === 'function' ? window.getCurrentTripId() : currentTripId;
+  if (!input || !btn || !container || !activeTripId) return;
+
+  if (typeof window.currentCommentsUnsubscribe === 'function') {
+    window.currentCommentsUnsubscribe();
+    window.currentCommentsUnsubscribe = null;
+  }
+
+  const db = window.db;
+  const mods = window.firebaseModules;
+  if (!db || !mods) {
+    container.innerHTML = `<p class="text-[11px] text-red-400 italic p-1 text-center">Firestoreモジュールが初期化されていません</p>`;
+    return;
+  }
+
+  // --- 1. リアルタイム読み込み ---
+  const renderComments = (snapshot) => {
+    if (snapshot.empty) {
+      container.innerHTML = `<p class="text-[11px] text-slate-400 dark:text-slate-500 italic p-1 text-center py-2">最初のコメントを書いてみましょう！</p>`;
+      return;
+    }
+
+    let html = "";
+    let commentNumber = 1; // プラン内での連番
+
+    snapshot.forEach(doc => {
+      const c = doc.data();
+      
+      const avatarHtml = c.userPhoto 
+        ? `<img src="${c.userPhoto}" class="w-4 h-4 rounded-full shadow-sm object-cover border border-slate-200 dark:border-slate-700" />`
+        : `<div class="w-4 h-4 rounded-full bg-slate-400 text-white flex items-center justify-center text-[8px] font-bold">${(c.userName || '旅').substring(0,1).toUpperCase()}</div>`;
+
+      // 📅 送信日時のフォーマット
+      let displayTime = c.time || '';
+      if (c.timestamp) {
+        const d = new Date(c.timestamp);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mi = String(d.getMinutes()).padStart(2, '0');
+        displayTime = `${yyyy}/${mm}/${dd} ${hh}:${mi}`;
+      }
+
+      // 📝 本文内の「>>n」をスクロール発火リンクに置き換える処理
+      let parsedText = c.text || "";
+      parsedText = parsedText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      
+      // 🟢 リンクタグに変更して、クリック時に scrollToCommentNumber() を走らせる
+      parsedText = parsedText.replace(/&gt;&gt;(\d+)/g, '<button onclick="window.scrollToCommentNumber($1)" class="px-1.5 py-0.5 mx-0.5 text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded border border-indigo-500/20 font-mono transition-all hover:bg-indigo-500 hover:text-white cursor-pointer">&gt;&gt;$1</button>');
+
+      // 各コメントノードに一意の id="comment-node-連番" を付与
+      html += `
+        <div id="comment-node-${commentNumber}" class="p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-sm flex flex-col gap-1 text-left animate-fade-in relative group transition-all duration-500">
+          <div class="flex justify-between items-center text-[10px] text-slate-400">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1 py-0.2 text-[8px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-md border border-slate-200/40 dark:border-slate-700/50 font-mono">#${commentNumber}</span>
+              ${avatarHtml}
+              <span class="font-bold text-slate-600 dark:text-slate-400">${c.userName || 'ゲスト'}</span>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] opacity-70 font-mono"><i class="fa-regular fa-clock mr-1 opacity-60"></i>${displayTime}</span>
+              <button onclick="window.insertReplyAnchor(${commentNumber})" class="text-[9px] font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 opacity-60 group-hover:opacity-100 transition-all flex items-center gap-0.5 cursor-pointer">
+                <i class="fa-solid fa-reply text-[8px]"></i>返信
+              </button>
+            </div>
+          </div>
+          <p class="text-slate-700 dark:text-slate-300 break-words leading-relaxed pl-6 pt-0.5">${parsedText}</p>
+        </div>
+      `;
+      
+      commentNumber++;
+    });
+    
+    container.innerHTML = html;
+    
+    // 初回読み込み時は最下部へ即時スクロール（元からの仕様）
+    setTimeout(() => { container.scrollTop = container.scrollHeight; }, 60);
+  };
+
+  try {
+    const q = mods.query(mods.collection(db, "comments"), mods.where("tripId", "==", activeTripId), mods.orderBy("timestamp", "asc"));
+    window.currentCommentsUnsubscribe = mods.onSnapshot(q, renderComments, (err) => console.error(err));
+  } catch (err) {
+    console.error(err);
+  }
+
+  // --- 2. コメント送信処理 ---
+  const submitComment = async () => {
+    const text = input.value.trim();
+    if (!text) return;
+
+    let tripTitle = "無題の計画";
+    if (typeof allTripsCache !== 'undefined') {
+      const found = allTripsCache.find(x => x.id === activeTripId);
+      if (found && found.title) tripTitle = found.title;
+    }
+
+    let userId = "guest_user";
+    let userName = "ゲスト";
+    let userPhoto = "";
+
+    const currentAuthUser = window.currentUser;
+    if (currentAuthUser) {
+      userId = currentAuthUser.uid || "guest_user";
+      userName = currentAuthUser.displayName || currentAuthUser.email?.split('@')[0] || "匿名ユーザー";
+      userPhoto = currentAuthUser.photoURL || "";
+    }
+
+    const now = new Date();
+    const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    const commentData = {
+      tripId: activeTripId,
+      tripTitle: tripTitle,
+      userId: userId,
+      userName: userName,
+      userPhoto: userPhoto,
+      text: text,
+      time: timeStr,
+      timestamp: Date.now()
+    };
+
+    try {
+      await mods.addDoc(mods.collection(db, "comments"), commentData);
+      input.value = ""; 
+    } catch (error) {
+      alert("コメントの送信に失敗しました。");
+    }
+  };
+
+  btn.onclick = null;
+  btn.onclick = submitComment;
+
+  input.onkeypress = null;
+  input.onkeypress = (e) => { 
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submitComment(); 
+    }
+  };
+}
+
+// 💡 【追加】Firestoreからのデータ取得が多重に走るのを絶対に防ぐためのフラグ
+let isFetchingTripsActive = false;
+
 async function fetchTripsFromCloud() {
   if (!currentUser) return;
+
+  // 💡 【超重要】すでにデータの取得処理が走っている最中なら、この後から来た呼び出しは強制終了（ブロック）する！
+  if (isFetchingTripsActive) {
+    console.log("🚫 クラウドデータの多重読み込みを完全にブロックしました");
+    return;
+  }
+  
+  // 🔒 ロックをかける（処理中状態にする）
+  isFetchingTripsActive = true;
+
   try {
+    // 💡 データを詰め直す前に配列をクリア
     allTripsCache = [];
     
+    // 自身の旅行データを取得
     const userQuery = query(collection(db, "trips"), where("userId", "==", currentUser.uid));
     const userSnapshot = await getDocs(userQuery);
     
@@ -1631,6 +2097,7 @@ async function fetchTripsFromCloud() {
       }
     });
 
+    // サンプルデータを取得
     const sampleQuery = query(collection(db, "trips"), where("userId", "==", "sample"));
     const sampleSnapshot = await getDocs(sampleQuery);
     sampleSnapshot.forEach((docSnap) => {
@@ -1651,14 +2118,21 @@ async function fetchTripsFromCloud() {
       }
     });
 
+    // データを並び替えて、統計を更新
     allTripsCache.sort((a, b) => (b.isSample ? 1 : 0) - (a.isSample ? 1 : 0));
     updateDashboardStats();
     
-    if (!document.getElementById('screen-myplans').classList.contains('screen-hidden')) {
+    // 画面にリストを反映
+    if (typeof renderMyPlansList === 'function') {
       renderMyPlansList();
     }
+    
   } catch (err) {
     console.error("データのフェッチエラー:", err);
+  } finally {
+    // 🔓 【最重要】すべての通信と描画が終わった後にだけ、ロックを解除する
+    // これにより、通信を待っている間に別のボタンが連打されても完全に無視されます
+    isFetchingTripsActive = false;
   }
 }
 
@@ -1895,6 +2369,9 @@ window.previewPublicTrip = function(id) {
   const btnT = document.getElementById('btnImportFromTimeline');
   if (btnN) btnN.onclick = importFn;
   if (btnT) btnT.onclick = importFn;
+
+  // 💡 【新設！】プレビューするプランの全体データを渡して、専用概要エリアを描画する
+  renderTripSummaryHeader(found);
 
   showScreen('timeline');
   showToast(`👁️ 「${migrated.title}」をプレビューしています。`, "success");
