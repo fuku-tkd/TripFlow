@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TripFlow - 旅行マネージャー</title>
-
+ 
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
@@ -207,7 +207,7 @@
             <div id="drawerAvatar" class="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center font-bold text-xs">G</div>
             <div class="min-w-0 text-left">
               <span id="drawerUserName" class="text-xs font-bold text-slate-800 dark:text-white truncate block">ゲストユーザー</span>
-              <span id="drawerUserMail" class="text-[9px] text-slate-400 truncate block">ログインしていません</span>
+              <span id="drawerUserId" class="text-[9px] text-slate-400 truncate block">ログインしていません</span>
             </div>
           </div>
           <button id="drawerAuthBtn" onclick="handleDrawerAuthAction()" class="px-2 py-1 bg-indigo-600/10 hover:bg-indigo-600 text-[10px] font-black text-indigo-500 hover:text-white rounded-lg transition-all"></button>
@@ -1112,13 +1112,25 @@ window.handleDrawerAuthAction = function() {
 function updateDrawerAccountState() {
   const userBox = document.getElementById('drawerAccountBox');
   const userName = document.getElementById('drawerUserName');
-  const userMail = document.getElementById('drawerUserMail');
+  const userId = document.getElementById('drawerUserId');
   const authBtn = document.getElementById('drawerAuthBtn');
   const avatar = document.getElementById('drawerAvatar');
   
   if (currentUser) {
     userName.textContent = currentUser.displayName || 'ログインユーザー';
-    userMail.textContent = currentUser.email;
+    let displayId = '--------';
+    if (currentUser.email) {
+      if (currentUser.email.endsWith('@internal.app')) {
+        // @internal.app が含まれている場合は、その手前までを切り出す
+        displayId = currentUser.email.split('@')[0];
+      } else {
+        // 通常のメールアドレス（Googleログイン等）の場合はそのまま表示、またはお好みで調整
+        displayId = currentUser.email;
+      }
+    }
+    
+    // 画面のID部分に反映
+    userId.textContent = `ID: ${displayId}`;
     authBtn.textContent = 'ログアウト';
     
     const firstLetter = (currentUser.displayName || currentUser.email).substring(0, 1).toUpperCase();
@@ -1132,7 +1144,7 @@ function updateDrawerAccountState() {
     else avatar.classList.add('bg-gradient-to-tr', 'from-indigo-500', 'to-indigo-700');
   } else {
     userName.textContent = 'ゲストユーザー';
-    userMail.textContent = 'ログインしていません';
+    userId.textContent = 'ログインしていません';
     authBtn.textContent = 'ログイン';
     avatar.textContent = 'G';
     avatar.className = "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white bg-slate-400";
